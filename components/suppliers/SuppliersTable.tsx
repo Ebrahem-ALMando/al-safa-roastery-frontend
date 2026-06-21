@@ -175,8 +175,7 @@ export function SuppliersTable({
       case "last_activity":
         return (
           <TableCell key={key} className="text-center text-xs">
-            <p className="text-muted-foreground">آخر تحديث</p>
-            <p className="mt-0.5">{formatArDateTime(supplier.updated_at)}</p>
+            {formatArDateTime(supplier.updated_at)}
           </TableCell>
         )
       case "email":

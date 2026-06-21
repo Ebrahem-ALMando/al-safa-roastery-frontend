@@ -99,6 +99,23 @@
 - ربط أحداث المستخدم
 - حوارات ونماذج وعناصر مرئية
 
+#### Canonical Administrative Form Pattern
+
+**Add Patient dialog** (`components/patients/add-patient-dialog.tsx` + `components/patients/patient-form-fields.tsx`) is the canonical UI/UX reference for all administrative create/edit forms.
+
+Every new administrative form (suppliers, customers, employees, items, etc.) must:
+
+- Reuse the same dialog shell (header gradient, scroll body, sticky footer, motion stagger).
+- Reuse the same header hierarchy: icon badge, title, description, required-note line with red `*`.
+- Reuse the same section/card grouping via `components/shared/forms/FormSection.tsx` and tokens in `administrative-form-styles.ts`.
+- Reuse the same typography, label sizes (`text-sm font-bold`), required-star styling (`text-destructive`), input height (`h-11` / `h-10`), borders, focus rings, placeholders, and footer buttons.
+- Change domain fields and business logic only — do not invent a separate visual language per module.
+
+Reference implementations:
+
+- Patient: `add-patient-dialog.tsx`, `edit-patient-dialog.tsx`, `patient-form-fields.tsx`
+- Supplier: `SupplierFormDialog.tsx`, `supplier-form-fields.tsx`
+
 ويمكن أن يحتوي على:
 
 - منطق عرض خفيف مشتق من props

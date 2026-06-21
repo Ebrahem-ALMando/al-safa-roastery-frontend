@@ -1,5 +1,3 @@
-import type { ResolvedOperationalDateRange } from "@/lib/date-scope/operational-date-scope.types"
-
 export const SUPPLIERS_TABLE_COLUMNS_STORAGE_KEY = "al-safa:suppliers-table-columns"
 
 export const SUPPLIERS_PAGE_CONFIG_KEY = "suppliers-page-config"
@@ -81,5 +79,3 @@ export type StoredSuppliersPeriod = {
   preset: SuppliersPeriodPreset
   custom?: SuppliersCustomPeriod
 }
-
-export const UNAVAILABLE_KPI_LABEL = "غير متاح حالياً"

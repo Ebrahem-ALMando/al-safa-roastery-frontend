@@ -16,7 +16,6 @@ export {
   SUPPLIER_TABLE_COLUMNS,
   DEFAULT_VISIBLE_SUPPLIER_COLUMNS,
   SUPPLIERS_PERIOD_LABELS_AR,
-  UNAVAILABLE_KPI_LABEL,
 } from "./lib/suppliers.constants"
 export {
   formatUsdAmount,

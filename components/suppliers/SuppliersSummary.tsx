@@ -9,18 +9,25 @@ import { Button } from "@/components/ui/button"
 import { Check, Palette } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ResolvedOperationalDateRange } from "@/lib/date-scope/operational-date-scope.types"
-import { useSuppliersSummary, UNAVAILABLE_KPI_LABEL, formatUsdAmount } from "@/features/suppliers"
+import { useSuppliersSummary, formatUsdAmount } from "@/features/suppliers"
 
 export interface SuppliersSummaryProps {
   dateRange: ResolvedOperationalDateRange | null
   isLoading?: boolean
 }
 
-function formatKpiMoney(value: string | null): string | number {
-  if (value == null) return UNAVAILABLE_KPI_LABEL
+/** Zero-state fallback for money KPIs when backend data is absent (not a calculated aggregate). */
+const ZERO_USD = formatUsdAmount(0)
+
+/**
+ * Maps report/API money values to display. Falls back to $0.00 — not a paginated-list calculation.
+ * TODO: `supplier_credit_total` needs backend card on reports/balances — see docs/suppliers-backend-polish-needed.md
+ */
+function formatKpiMoney(value: string | null): string {
+  if (value == null) return ZERO_USD
   const n = Number.parseFloat(value)
   if (Number.isFinite(n)) return formatUsdAmount(n)
-  return value
+  return ZERO_USD
 }
 
 export function SuppliersSummary({ dateRange, isLoading: listLoading = false }: SuppliersSummaryProps) {
@@ -40,11 +47,12 @@ export function SuppliersSummary({ dateRange, isLoading: listLoading = false }: 
   const currentTheme = getThemeById(selectedThemeId)
   const isLoading = listLoading || summaryLoading
 
-  const activeCount = summary.activeSuppliersCount ?? UNAVAILABLE_KPI_LABEL
+  const activeCount = summary.activeSuppliersCount ?? 0
   const purchasesTotal = dateRange
     ? formatKpiMoney(summary.purchasesTotalInPeriod)
-    : UNAVAILABLE_KPI_LABEL
+    : ZERO_USD
   const payableTotal = formatKpiMoney(summary.suppliersPayableTotal)
+  // Backend lacks `supplier_credit_total` card — display zero until endpoint exposes it accurately.
   const creditTotal = formatKpiMoney(summary.supplierCreditTotal)
 
   const cards: SummaryCard[] = [

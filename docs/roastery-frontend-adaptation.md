@@ -51,3 +51,6 @@ When creating new modules for Al Safa Roastery, use real roastery feature names:
 
 ## Next Planned Sprint
 Build the Suppliers module using the existing Patients page pattern as a UI reference, but create clean suppliers domain files (do not reuse patient files directly, use them as a template).
+
+## Canonical Administrative Form Pattern
+All administrative create/edit dialogs must follow the Add Patient dialog visual system. See **Canonical Administrative Form Pattern** in `docs/conventions.md`.

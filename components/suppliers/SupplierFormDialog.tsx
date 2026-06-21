@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Check, Loader2, Truck, X } from "lucide-react"
+import { motion } from "framer-motion"
+import { Check, Loader2, Pencil, Truck, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -10,121 +11,40 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/components/ui/custom-toast-with-icons"
 import { ApiRequestError } from "@/lib/api"
-import type {
-  CreateSupplierInput,
-  Supplier,
-  UpdateSupplierInput,
-} from "@/features/suppliers"
-
-export type SupplierFormState = {
-  code: string
-  name: string
-  contactPerson: string
-  phone: string
-  secondaryPhone: string
-  whatsapp: string
-  email: string
-  address: string
-  creditLimit: string
-  openingBalance: string
-  notes: string
-  isActive: boolean
-}
-
-export function emptySupplierForm(): SupplierFormState {
-  return {
-    code: "",
-    name: "",
-    contactPerson: "",
-    phone: "",
-    secondaryPhone: "",
-    whatsapp: "",
-    email: "",
-    address: "",
-    creditLimit: "",
-    openingBalance: "",
-    notes: "",
-    isActive: true,
-  }
-}
-
-function supplierToForm(supplier: Supplier): SupplierFormState {
-  return {
-    code: supplier.code ?? "",
-    name: supplier.name ?? "",
-    contactPerson: supplier.contact_person ?? "",
-    phone: supplier.phone ?? "",
-    secondaryPhone: supplier.secondary_phone ?? "",
-    whatsapp: supplier.whatsapp ?? "",
-    email: supplier.email ?? "",
-    address: supplier.address ?? "",
-    creditLimit: supplier.credit_limit != null ? String(supplier.credit_limit) : "",
-    openingBalance: "",
-    notes: supplier.notes ?? "",
-    isActive: supplier.is_active,
-  }
-}
-
-function formToCreatePayload(form: SupplierFormState): CreateSupplierInput {
-  const payload: CreateSupplierInput = {
-    name: form.name.trim(),
-    is_active: form.isActive,
-  }
-  if (form.code.trim()) payload.code = form.code.trim()
-  if (form.contactPerson.trim()) payload.contact_person = form.contactPerson.trim()
-  if (form.phone.trim()) payload.phone = form.phone.trim()
-  if (form.secondaryPhone.trim()) payload.secondary_phone = form.secondaryPhone.trim()
-  if (form.whatsapp.trim()) payload.whatsapp = form.whatsapp.trim()
-  if (form.email.trim()) payload.email = form.email.trim()
-  if (form.address.trim()) payload.address = form.address.trim()
-  if (form.notes.trim()) payload.notes = form.notes.trim()
-  if (form.creditLimit.trim()) {
-    const n = Number.parseFloat(form.creditLimit)
-    if (Number.isFinite(n)) payload.credit_limit = n
-  }
-  if (form.openingBalance.trim()) {
-    const n = Number.parseFloat(form.openingBalance)
-    if (Number.isFinite(n)) payload.opening_balance = n
-  }
-  return payload
-}
-
-function formToUpdatePayload(form: SupplierFormState): UpdateSupplierInput {
-  const payload: UpdateSupplierInput = {
-    name: form.name.trim(),
-    code: form.code.trim() || null,
-    contact_person: form.contactPerson.trim() || null,
-    phone: form.phone.trim() || null,
-    secondary_phone: form.secondaryPhone.trim() || null,
-    whatsapp: form.whatsapp.trim() || null,
-    email: form.email.trim() || null,
-    address: form.address.trim() || null,
-    notes: form.notes.trim() || null,
-    is_active: form.isActive,
-  }
-  if (form.creditLimit.trim()) {
-    const n = Number.parseFloat(form.creditLimit)
-    payload.credit_limit = Number.isFinite(n) ? n : null
-  } else {
-    payload.credit_limit = null
-  }
-  return payload
-}
+import { toast } from "@/components/ui/custom-toast-with-icons"
+import type { CreateSupplierInput, Supplier, UpdateSupplierInput } from "@/features/suppliers"
+import {
+  SupplierFormFields,
+  emptySupplierForm,
+  formToCreatePayload,
+  formToUpdatePayload,
+  supplierToForm,
+  type SupplierFormState,
+} from "./supplier-form-fields"
 
 function mapSubmitError(error: unknown): string {
   if (error instanceof ApiRequestError) {
-    if (error.status === 422) return error.message || "البيانات غير صحيحة"
+    if (error.status === 422) return "البيانات غير صحيحة"
     if (error.status === 401) return "غير مصرح"
+    if (error.status === 403) return "الحساب غير مفعل"
     if (error.status >= 500) return "حدث خطأ في النظام"
     if (error.status === 0) return "تحقق من الاتصال"
   }
   return "تحقق من الاتصال"
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+}
+const fadeUp = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
 }
 
 interface SupplierFormDialogProps {
@@ -160,16 +80,27 @@ export function SupplierFormDialog({
     }
   }, [open, mode, supplier])
 
-  function updateField<K extends keyof SupplierFormState>(key: K, value: SupplierFormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+  function handleOpenChange(next: boolean) {
+    onOpenChange(next)
+    if (!next) {
+      setForm(emptySupplierForm())
+      setFieldErrors({})
+    }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (submitting) return
 
-    if (form.name.trim().length < 1) {
+    const name = form.name.trim()
+    if (name.length < 1) {
       toast.error("اسم المورد مطلوب")
+      return
+    }
+
+    const normalizedEmail = form.email.trim()
+    if (normalizedEmail && !isValidEmail(normalizedEmail)) {
+      toast.error("صيغة البريد الإلكتروني غير صحيحة")
       return
     }
 
@@ -182,7 +113,7 @@ export function SupplierFormDialog({
         await onUpdate(supplier.id, formToUpdatePayload(form))
       }
       onSaved?.()
-      onOpenChange(false)
+      handleOpenChange(false)
     } catch (err) {
       if (err instanceof ApiRequestError && err.errors) {
         setFieldErrors(err.errors)
@@ -193,187 +124,133 @@ export function SupplierFormDialog({
     }
   }
 
-  const title = mode === "create" ? "إضافة مورد جديد" : "تعديل المورد"
-  const fieldError = (key: string) => fieldErrors[key]?.[0]
+  const isCreate = mode === "create"
+  const HeaderIcon = isCreate ? Truck : Pencil
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         dir="rtl"
         lang="ar"
         showCloseButton={false}
-        className="flex max-h-[min(92vh,720px)] flex-col gap-0 overflow-hidden rounded-2xl border-border/60 p-0 shadow-xl sm:max-w-[640px]"
+        className="flex max-h-[min(92vh,720px)] flex-col gap-0 overflow-hidden rounded-2xl border-border/60 p-0 shadow-xl sm:min-h-[min(52vh,400px)] sm:max-w-[640px]"
       >
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="shrink-0 border-b border-border/50 px-6 pb-4 pt-6">
-            <DialogHeader className="space-y-2 text-right">
+          <div className="relative z-10 shrink-0 border-b border-border/50 bg-gradient-to-b from-background via-background to-background/95 px-6 pb-4 pt-6 backdrop-blur-sm">
+            <DialogHeader className="space-y-2 text-right sm:text-right">
               <div className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Truck className="size-5" />
-                </span>
-                <div className="flex-1">
-                  <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
-                  <DialogDescription className="text-xs">
-                    <span className="text-destructive">*</span> اسم المورد حقل مطلوب.
+                <motion.span
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 18 }}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20"
+                  aria-hidden
+                >
+                  <HeaderIcon className="size-5" />
+                </motion.span>
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <DialogTitle className="text-lg font-bold leading-snug tracking-tight">
+                    {isCreate ? "إضافة مورد جديد" : "تعديل بيانات المورد"}
+                  </DialogTitle>
+                  <DialogDescription asChild>
+                    <div className="space-y-1 text-xs leading-relaxed text-muted-foreground">
+                      {isCreate ? (
+                        <>
+                          <p>
+                            املأ الحقول التالية بعناية لإنشاء ملف مورد جديد. يولّد النظام{" "}
+                            <span className="font-medium text-foreground/90">كود المورد تلقائياً</span>{" "}
+                            بعد الحفظ.
+                          </p>
+                          <p>
+                            <span className="text-destructive">*</span> يشير إلى حقل مطلوب.
+                          </p>
+                        </>
+                      ) : supplier ? (
+                        <>
+                          <p>
+                            <span className="font-medium text-foreground/90">{supplier.name}</span>
+                            {supplier.code ? <> — كود المورد: {supplier.code}</> : <> — دون كود</>}
+                          </p>
+                          <p>عدّل بيانات المورد ثم احفظ التغييرات.</p>
+                        </>
+                      ) : (
+                        <p>عدّل بيانات المورد ثم احفظ التغييرات.</p>
+                      )}
+                    </div>
                   </DialogDescription>
                 </div>
-                <button type="button" onClick={() => onOpenChange(false)} aria-label="إغلاق">
-                  <X className="size-4" />
+                <button
+                  type="button"
+                  onClick={() => handleOpenChange(false)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="إغلاق"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <path d="M1 1l12 12M13 1 1 13" />
+                  </svg>
                 </button>
               </div>
             </DialogHeader>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
-            <fieldset className="space-y-3 border-0 p-0">
-              <legend className="mb-2 text-sm font-semibold">معلومات المورد</legend>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="supplier-name">اسم المورد *</Label>
-                  <Input
-                    id="supplier-name"
-                    value={form.name}
-                    onChange={(e) => updateField("name", e.target.value)}
-                    autoFocus
-                  />
-                  {fieldError("name") ? (
-                    <p className="text-xs text-destructive">{fieldError("name")}</p>
-                  ) : null}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-code">الكود</Label>
-                  <Input
-                    id="supplier-code"
-                    value={form.code}
-                    onChange={(e) => updateField("code", e.target.value)}
-                    dir="ltr"
-                  />
-                  {fieldError("code") ? (
-                    <p className="text-xs text-destructive">{fieldError("code")}</p>
-                  ) : null}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-contact">الشخص المسؤول</Label>
-                  <Input
-                    id="supplier-contact"
-                    value={form.contactPerson}
-                    onChange={(e) => updateField("contactPerson", e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center justify-between rounded-lg border p-3 sm:col-span-2">
-                  <Label htmlFor="supplier-active">الحالة (فعال)</Label>
-                  <Switch
-                    id="supplier-active"
-                    checked={form.isActive}
-                    onCheckedChange={(v) => updateField("isActive", v)}
-                  />
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset className="space-y-3 border-0 p-0">
-              <legend className="mb-2 text-sm font-semibold">معلومات التواصل</legend>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-phone">الهاتف</Label>
-                  <Input
-                    id="supplier-phone"
-                    value={form.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-secondary-phone">هاتف إضافي</Label>
-                  <Input
-                    id="supplier-secondary-phone"
-                    value={form.secondaryPhone}
-                    onChange={(e) => updateField("secondaryPhone", e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-whatsapp">واتساب</Label>
-                  <Input
-                    id="supplier-whatsapp"
-                    value={form.whatsapp}
-                    onChange={(e) => updateField("whatsapp", e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-email">البريد الإلكتروني</Label>
-                  <Input
-                    id="supplier-email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => updateField("email", e.target.value)}
-                    dir="ltr"
-                  />
-                  {fieldError("email") ? (
-                    <p className="text-xs text-destructive">{fieldError("email")}</p>
-                  ) : null}
-                </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="supplier-address">العنوان</Label>
-                  <Textarea
-                    id="supplier-address"
-                    value={form.address}
-                    onChange={(e) => updateField("address", e.target.value)}
-                    rows={2}
-                  />
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset className="space-y-3 border-0 p-0">
-              <legend className="mb-2 text-sm font-semibold">المالية والملاحظات</legend>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="supplier-credit-limit">الحد الائتماني</Label>
-                  <Input
-                    id="supplier-credit-limit"
-                    type="number"
-                    step="0.01"
-                    value={form.creditLimit}
-                    onChange={(e) => updateField("creditLimit", e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                {mode === "create" ? (
-                  <div className="space-y-1.5">
-                    <Label htmlFor="supplier-opening-balance">الرصيد الافتتاحي</Label>
-                    <Input
-                      id="supplier-opening-balance"
-                      type="number"
-                      step="0.01"
-                      value={form.openingBalance}
-                      onChange={(e) => updateField("openingBalance", e.target.value)}
-                      dir="ltr"
-                    />
-                  </div>
-                ) : null}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="supplier-notes">ملاحظات</Label>
-                  <Textarea
-                    id="supplier-notes"
-                    value={form.notes}
-                    onChange={(e) => updateField("notes", e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </fieldset>
+          <div className="relative min-h-0 flex-1 overflow-y-auto">
+            <div className="pointer-events-none sticky top-0 z-[1] -mb-2 h-2 bg-gradient-to-b from-background to-transparent" />
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              animate="show"
+              className="space-y-3 px-6 py-4"
+            >
+              <motion.fieldset variants={fadeUp} className="min-w-0 space-y-0 border-0 p-0">
+                <SupplierFormFields
+                  form={form}
+                  onChange={setForm}
+                  idPrefix={isCreate ? "add-supplier" : "edit-supplier"}
+                  mode={mode}
+                  supplierCode={supplier?.code}
+                  fieldErrors={fieldErrors}
+                  nameFieldAutoFocus={isCreate}
+                />
+              </motion.fieldset>
+            </motion.div>
+            <div className="pointer-events-none sticky bottom-0 z-[1] -mt-2 h-2 bg-gradient-to-t from-background to-transparent" />
           </div>
 
-          <div className="shrink-0 border-t border-border/50 px-6 py-4">
-            <div className="flex gap-2">
-              <Button type="submit" className="rounded-xl gap-2" disabled={submitting}>
-                {submitting ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                {mode === "create" ? "حفظ المورد" : "حفظ التعديلات"}
+          <div className="shrink-0 border-t border-border/50 bg-gradient-to-t from-muted/30 to-background px-6 py-4">
+            <div className="flex w-full flex-wrap items-center justify-start gap-2">
+              <Button
+                type="submit"
+                className="min-w-36 rounded-xl shadow-sm gap-2"
+                disabled={submitting}
+                aria-busy={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                    <span>جارٍ الحفظ</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="size-4" aria-hidden />
+                    {isCreate ? "حفظ المورد" : "حفظ التغييرات"}
+                  </>
+                )}
               </Button>
-              <Button type="button" variant="outline" className="rounded-xl gap-2" onClick={() => onOpenChange(false)}>
-                <X className="size-4" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                className="rounded-xl gap-2"
+              >
+                <X className="size-4" aria-hidden />
                 إلغاء
               </Button>
             </div>
