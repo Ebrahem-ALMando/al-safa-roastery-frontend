@@ -28,6 +28,7 @@ import { SupplierColumnCustomizer } from "./SupplierColumnCustomizer"
 import { SupplierDetailsDialog } from "./SupplierDetailsDialog"
 import { SupplierFormDialog } from "./SupplierFormDialog"
 import { SupplierDeleteDialog } from "./SupplierDeleteDialog"
+import { SupplierDeactivateDialog } from "./SupplierDeactivateDialog"
 
 export function SuppliersView() {
   const {
@@ -73,6 +74,8 @@ export function SuppliersView() {
   const [detailsSupplier, setDetailsSupplier] = useState<Supplier | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Supplier | null>(null)
+  const [deactivateOpen, setDeactivateOpen] = useState(false)
+  const [deactivateTarget, setDeactivateTarget] = useState<Supplier | null>(null)
 
   function openCreate() {
     setFormMode("create")
@@ -94,6 +97,19 @@ export function SuppliersView() {
   function openDelete(supplier: Supplier) {
     setDeleteTarget(supplier)
     setDeleteOpen(true)
+  }
+
+  function openDeactivate(supplier: Supplier) {
+    setDeactivateTarget(supplier)
+    setDeactivateOpen(true)
+  }
+
+  function handleToggleActive(supplier: Supplier) {
+    if (supplier.is_active) {
+      openDeactivate(supplier)
+      return
+    }
+    void toggleSupplierActive(supplier).then(() => mutate())
   }
 
   const customFrom = customPeriod?.from ?? defaultCustomPeriod().from
@@ -215,10 +231,7 @@ export function SuppliersView() {
           onViewDetails={openDetails}
           onEdit={openEdit}
           onDelete={openDelete}
-          onToggleActive={async (supplier) => {
-            await toggleSupplierActive(supplier)
-            void mutate()
-          }}
+          onToggleActive={handleToggleActive}
         />
       </div>
 
@@ -252,6 +265,19 @@ export function SuppliersView() {
         supplierId={detailsSupplier?.id ?? null}
         fallbackSupplier={detailsSupplier}
         onEdit={openEdit}
+      />
+
+      <SupplierDeactivateDialog
+        open={deactivateOpen}
+        onOpenChange={(open) => {
+          setDeactivateOpen(open)
+          if (!open) setDeactivateTarget(null)
+        }}
+        supplier={deactivateTarget}
+        onDeactivate={async (supplier) => {
+          await toggleSupplierActive(supplier)
+          void mutate()
+        }}
       />
 
       <SupplierDeleteDialog

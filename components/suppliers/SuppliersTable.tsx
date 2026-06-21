@@ -240,7 +240,7 @@ export function SuppliersTable({
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onToggleActive(supplier)}>
                   <Power className="size-4" />
-                  {supplier.is_active ? "إيقاف" : "تفعيل"}
+                  {supplier.is_active ? "إلغاء التنشيط" : "تفعيل"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
