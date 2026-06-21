@@ -1,28 +1,11 @@
 "use client"
 
-import {
-  CheckCircle2,
-  Eye,
-  Pencil,
-  Phone,
-  Plus,
-  Search,
-  Truck,
-  User,
-  XCircle,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Plus, Search, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  formatArDateTime,
-  formatUsdAmount,
-  getBalanceStatusLabel,
-  type Supplier,
-  type SuppliersListMeta,
-} from "@/features/suppliers"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { type Supplier, type SuppliersListMeta } from "@/features/suppliers"
+import { SupplierCard } from "./supplier-card"
 
 interface SuppliersCardsProps {
   suppliers: Supplier[]
@@ -37,20 +20,26 @@ interface SuppliersCardsProps {
   onAddSupplier: () => void
   onViewDetails: (supplier: Supplier) => void
   onEdit: (supplier: Supplier) => void
+  onDelete?: (supplier: Supplier) => void
 }
 
 function SupplierCardSkeleton() {
   return (
-    <Card className="rounded-xl">
-      <CardHeader className="pb-2">
-        <Skeleton className="h-5 w-3/4" />
-        <Skeleton className="h-4 w-1/3" />
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border-2 border-border/40 bg-card p-5 shadow-xl space-y-4">
+      <div className="flex items-center gap-3">
+        <Skeleton className="size-12 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-3 w-1/3" />
+        </div>
+      </div>
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+      <div className="border-t border-border/40 pt-3 flex justify-between">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-24" />
+      </div>
+    </div>
   )
 }
 
@@ -65,8 +54,8 @@ export function SuppliersCards({
   canNext,
   onPageChange,
   onAddSupplier,
-  onViewDetails,
   onEdit,
+  onDelete,
 }: SuppliersCardsProps) {
   if (isLoading) {
     return (
@@ -103,80 +92,14 @@ export function SuppliersCards({
   return (
     <div className="space-y-4 overflow-x-hidden">
       <div className="grid min-w-0 gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3 *:min-w-0">
-        {suppliers.map((supplier) => {
-          const balanceInfo = getBalanceStatusLabel(supplier.current_balance)
-          return (
-            <Card
-              key={supplier.id}
-              className="rounded-xl border-border/60 shadow-sm transition-shadow hover:shadow-md"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{supplier.name}</p>
-                    <p className="mt-0.5 font-mono text-xs text-muted-foreground" dir="ltr">
-                      {supplier.code || "—"}
-                    </p>
-                  </div>
-                  {supplier.is_active ? (
-                    <Badge className="shrink-0 bg-emerald-500/10 text-emerald-700">
-                      <CheckCircle2 className="size-3" />
-                      فعال
-                    </Badge>
-                  ) : (
-                    <Badge className="shrink-0 bg-muted text-muted-foreground">
-                      <XCircle className="size-3" />
-                      موقوف
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {supplier.phone ? (
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Phone className="size-3.5 shrink-0" />
-                    <span dir="ltr">{supplier.phone}</span>
-                  </div>
-                ) : null}
-                {supplier.contact_person ? (
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <User className="size-3.5 shrink-0" />
-                    <span className="truncate">{supplier.contact_person}</span>
-                  </div>
-                ) : null}
-                <div>
-                  <p className="font-semibold" dir="ltr">
-                    {formatUsdAmount(supplier.current_balance)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{balanceInfo.label}</p>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  آخر تحديث: {formatArDateTime(supplier.updated_at)}
-                </p>
-              </CardContent>
-              <CardFooter className="gap-2 border-t border-border/40 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 gap-1 rounded-lg"
-                  onClick={() => onViewDetails(supplier)}
-                >
-                  <Eye className="size-3.5" />
-                  التفاصيل
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 gap-1 rounded-lg"
-                  onClick={() => onEdit(supplier)}
-                >
-                  <Pencil className="size-3.5" />
-                  تعديل
-                </Button>
-              </CardFooter>
-            </Card>
-          )
-        })}
+        {suppliers.map((supplier) => (
+          <SupplierCard
+            key={supplier.id}
+            supplier={supplier}
+            onEdit={onEdit}
+            onRequestDelete={onDelete}
+          />
+        ))}
       </div>
 
       {meta && meta.last_page > 1 ? (

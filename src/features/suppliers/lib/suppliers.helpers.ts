@@ -45,6 +45,40 @@ export function formatArDateTime(value: string | null | undefined): string {
   })
 }
 
+/** Short numeric date for table cells, e.g. 21/06/2026 */
+export function formatArShortDate(value: string | null | undefined): string {
+  if (!value) return "—"
+  const normalized = value.length === 10 ? `${value}T00:00:00` : value
+  const d = new Date(normalized)
+  if (Number.isNaN(d.getTime())) return "—"
+  return d.toLocaleDateString("ar-SA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+}
+
+const LAST_ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  purchase_invoice: "فاتورة شراء",
+  supplier_payment: "دفعة مورد",
+  supplier_return: "مرتجع مورد",
+}
+
+export function formatSupplierLastActivity(supplier: Supplier): {
+  primary: string
+  secondary: string | null
+} {
+  const activity = supplier.last_activity
+  if (!activity) {
+    return { primary: "لا توجد حركة بعد", secondary: null }
+  }
+  const typeName = LAST_ACTIVITY_TYPE_LABELS[activity.type] ?? activity.type
+  return {
+    primary: `${typeName} · ${activity.number}`,
+    secondary: formatArShortDate(activity.date),
+  }
+}
+
 export function findReportCardValue(
   cards: ReportCard[] | undefined,
   key: string

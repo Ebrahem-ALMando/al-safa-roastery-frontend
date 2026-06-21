@@ -1,0 +1,246 @@
+"use client"
+
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  CheckCircle2,
+  CreditCard,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Trash2,
+  Truck,
+  XCircle,
+} from "lucide-react"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  formatSupplierLastActivity,
+  formatUsdAmount,
+  getBalanceStatusLabel,
+  supplierInitials,
+  type Supplier,
+} from "@/features/suppliers"
+
+function supplierDetailsHref(id: number) {
+  return `/dashboard/suppliers/${id}`
+}
+
+type SupplierCardProps = {
+  supplier: Supplier
+  onEdit?: (supplier: Supplier) => void
+  onRequestDelete?: (supplier: Supplier) => void
+}
+
+export function SupplierCard({ supplier, onEdit, onRequestDelete }: SupplierCardProps) {
+  const router = useRouter()
+  const isActive = supplier.is_active
+  const balanceInfo = getBalanceStatusLabel(supplier.current_balance)
+  const lastActivity = formatSupplierLastActivity(supplier)
+
+  const goToDetails = () => {
+    router.push(supplierDetailsHref(supplier.id))
+  }
+
+  return (
+    <TooltipProvider>
+      <Card
+        role="button"
+        tabIndex={0}
+        dir="rtl"
+        className={`group relative flex min-w-0 flex-col justify-between overflow-hidden border-2 shadow-xl transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl ${
+          isActive
+            ? "border-primary/30 bg-linear-to-br from-white via-primary/5 to-primary/10 dark:from-card dark:via-primary/15 dark:to-primary/20"
+            : "border-red-600/50 bg-linear-to-br from-white via-red-50/60 to-red-100/30 dark:from-card dark:via-red-950/20 dark:to-red-900/10"
+        }`}
+        onClick={goToDetails}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault()
+            goToDetails()
+          }
+        }}
+      >
+        <div className="pointer-events-none absolute inset-0 opacity-5 transition-opacity duration-500 group-hover:opacity-10">
+          <div className="absolute -right-10 -top-10 h-20 w-20 rounded-full bg-linear-to-br from-primary/20 to-primary/30 blur-xl" />
+          <div className="absolute -bottom-8 -left-8 h-16 w-16 rounded-full bg-linear-to-tr from-primary/20 to-primary/30 blur-lg" />
+        </div>
+
+        <div
+          className={`absolute right-3 top-3 h-3 w-3 rounded-full animate-pulse ${
+            isActive ? "bg-primary shadow-lg shadow-primary/50" : "bg-red-400 shadow-lg shadow-red-400/50"
+          }`}
+        />
+
+        <CardHeader className="relative z-10 pb-3">
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center justify-start gap-2.5">
+              <Avatar className="h-12 w-12 shrink-0 ring-4 ring-primary/10 transition-all duration-300 group-hover:ring-primary/20">
+                <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                  {supplierInitials(supplier.name) || <Truck className="size-5" />}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-lg font-bold leading-tight text-foreground transition-colors duration-300 group-hover:text-primary">
+                  {supplier.name}
+                </p>
+                {supplier.code ? (
+                  <p className="mt-0.5 font-mono text-xs text-muted-foreground" dir="ltr">
+                    {supplier.code}
+                  </p>
+                ) : null}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ${
+                      isActive
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
+                        : "border-red-600/40 bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                    {isActive ? "فعال" : "موقوف"}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`px-2 py-0.5 text-[11px] font-medium ${
+                      balanceInfo.key === "payable"
+                        ? "border-amber-500/40 bg-amber-500/10 text-amber-700"
+                        : balanceInfo.key === "credit"
+                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
+                          : "border-border/60 bg-muted/30 text-muted-foreground"
+                    }`}
+                  >
+                    <CreditCard className="h-3 w-3" />
+                    {balanceInfo.label}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="relative z-10 space-y-3">
+          <div className="flex flex-col gap-1.5">
+            {supplier.contact_person ? (
+              <p className="text-sm text-muted-foreground">{supplier.contact_person}</p>
+            ) : null}
+            {supplier.phone ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="max-w-[200px] shrink-0">
+                  <Phone className="h-3.5 w-3.5" />
+                  <span className="truncate" dir="ltr">
+                    {supplier.phone}
+                  </span>
+                </Badge>
+                {supplier.email ? (
+                  <Badge variant="outline" className="max-w-[180px] shrink-0">
+                    <Mail className="h-3.5 w-3.5" />
+                    <span className="truncate">{supplier.email}</span>
+                  </Badge>
+                ) : null}
+              </div>
+            ) : null}
+            {supplier.address ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    className="max-w-[240px] cursor-default border-transparent bg-muted/60"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="max-w-[170px] truncate">{supplier.address}</span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="left" dir="rtl" className="rounded-md text-right shadow-lg">
+                  {supplier.address}
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
+
+          <div>
+            <p className="text-base font-semibold" dir="ltr">
+              {formatUsdAmount(supplier.current_balance)}
+            </p>
+            <p className="text-xs text-muted-foreground">{balanceInfo.label}</p>
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            <p>{lastActivity.primary}</p>
+            {lastActivity.secondary ? (
+              <p className="mt-0.5 text-[11px]">{lastActivity.secondary}</p>
+            ) : null}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border/60 pt-3">
+            <span className="text-xs text-muted-foreground">آخر نشاط</span>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-primary transition-all duration-200 group-hover:scale-110 hover:bg-primary/10 hover:text-primary"
+                    asChild
+                  >
+                    <Link
+                      href={supplierDetailsHref(supplier.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      <span className="sr-only">تفاصيل المورد</span>
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>تفاصيل المورد</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-primary transition-all duration-200 group-hover:scale-110 hover:bg-primary/10 hover:text-primary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit?.(supplier)
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span className="sr-only">تعديل</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>تعديل</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-600 transition-all duration-200 group-hover:scale-110 hover:bg-red-50 hover:text-red-700"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRequestDelete?.(supplier)
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span className="sr-only">حذف</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>حذف</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
+  )
+}

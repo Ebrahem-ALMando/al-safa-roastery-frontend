@@ -9,29 +9,24 @@ import { Button } from "@/components/ui/button"
 import { Check, Palette } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ResolvedOperationalDateRange } from "@/lib/date-scope/operational-date-scope.types"
-import { useSuppliersSummary, formatUsdAmount } from "@/features/suppliers"
+import { useSupplierSummary, formatUsdAmount } from "@/features/suppliers"
 
 export interface SuppliersSummaryProps {
   dateRange: ResolvedOperationalDateRange | null
   isLoading?: boolean
 }
 
-/** Zero-state fallback for money KPIs when backend data is absent (not a calculated aggregate). */
 const ZERO_USD = formatUsdAmount(0)
 
-/**
- * Maps report/API money values to display. Falls back to $0.00 — not a paginated-list calculation.
- * TODO: `supplier_credit_total` needs backend card on reports/balances — see docs/suppliers-backend-polish-needed.md
- */
-function formatKpiMoney(value: string | null): string {
+function formatKpiMoney(value: number | string | null | undefined): string {
   if (value == null) return ZERO_USD
-  const n = Number.parseFloat(value)
+  const n = typeof value === "number" ? value : Number.parseFloat(String(value))
   if (Number.isFinite(n)) return formatUsdAmount(n)
   return ZERO_USD
 }
 
 export function SuppliersSummary({ dateRange, isLoading: listLoading = false }: SuppliersSummaryProps) {
-  const { summary, isLoading: summaryLoading, error } = useSuppliersSummary(dateRange)
+  const { summary, isLoading: summaryLoading, error } = useSupplierSummary(dateRange)
   const [selectedThemeId, setSelectedThemeId] = useState("default")
   const [themeOpen, setThemeOpen] = useState(false)
 
@@ -47,13 +42,10 @@ export function SuppliersSummary({ dateRange, isLoading: listLoading = false }: 
   const currentTheme = getThemeById(selectedThemeId)
   const isLoading = listLoading || summaryLoading
 
-  const activeCount = summary.activeSuppliersCount ?? 0
-  const purchasesTotal = dateRange
-    ? formatKpiMoney(summary.purchasesTotalInPeriod)
-    : ZERO_USD
-  const payableTotal = formatKpiMoney(summary.suppliersPayableTotal)
-  // Backend lacks `supplier_credit_total` card — display zero until endpoint exposes it accurately.
-  const creditTotal = formatKpiMoney(summary.supplierCreditTotal)
+  const activeCount = summary?.active_suppliers_count ?? 0
+  const purchasesTotal = dateRange ? formatKpiMoney(summary?.purchases_total_in_period) : ZERO_USD
+  const payableTotal = formatKpiMoney(summary?.suppliers_payable_total)
+  const creditTotal = formatKpiMoney(summary?.supplier_credit_total)
 
   const cards: SummaryCard[] = [
     {

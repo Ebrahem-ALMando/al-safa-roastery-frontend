@@ -215,9 +215,9 @@ export function SupplierFormDialog({
                   onChange={setForm}
                   idPrefix={isCreate ? "add-supplier" : "edit-supplier"}
                   mode={mode}
-                  supplierCode={supplier?.code}
                   fieldErrors={fieldErrors}
                   nameFieldAutoFocus={isCreate}
+                  formKey={`${mode}-${supplier?.id ?? "new"}-${open}`}
                 />
               </motion.fieldset>
             </motion.div>

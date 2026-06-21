@@ -15,10 +15,14 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import type { SuppliersActiveStatus } from "@/features/suppliers"
+import type { BalanceStatusFilter } from "@/features/suppliers"
 
 export interface SuppliersFiltersValue {
   search: string
   isActive: SuppliersActiveStatus
+  balanceStatus: BalanceStatusFilter | "all"
+  balanceMin: string
+  balanceMax: string
 }
 
 interface SuppliersFiltersProps {
@@ -45,7 +49,11 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
   }, [localSearch, value.isActive])
 
   const hasActiveFilters =
-    Boolean(value.search.trim()) || value.isActive !== "all"
+    Boolean(value.search.trim()) ||
+    value.isActive !== "all" ||
+    value.balanceStatus !== "all" ||
+    value.balanceMin.trim() !== "" ||
+    value.balanceMax.trim() !== ""
 
   const statusLabel =
     value.isActive === "active"
@@ -53,6 +61,24 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
       : value.isActive === "inactive"
         ? "موقوف"
         : undefined
+
+  const balanceStatusLabel =
+    value.balanceStatus === "payable"
+      ? "مديونية"
+      : value.balanceStatus === "credit"
+        ? "دائن"
+        : value.balanceStatus === "settled"
+          ? "متوازن"
+          : undefined
+
+  const clearAll = () =>
+    onChange({
+      search: "",
+      isActive: "all",
+      balanceStatus: "all",
+      balanceMin: "",
+      balanceMax: "",
+    })
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 shadow-sm">
@@ -83,7 +109,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onChange({ search: "", isActive: "all" })}
+              onClick={clearAll}
               className="h-10 px-3 text-red-600 hover:bg-red-50 hover:text-red-700"
               type="button"
             >
@@ -97,7 +123,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
       <div
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          showAdvanced ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
+          showAdvanced ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4">
@@ -126,26 +152,62 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
             </Select>
           </div>
 
-          <div className="space-y-2 opacity-50" title="يتطلب دعم الخادم — راجع docs/suppliers-backend-polish-needed.md">
-            <Label className="text-xs text-muted-foreground">حالة الرصيد</Label>
-            <Select disabled value="all">
-              <SelectTrigger className="h-10 w-full">
+          <div className="space-y-2">
+            <Label htmlFor="suppliers-filter-balance-status" className="text-xs text-muted-foreground">
+              حالة الرصيد
+            </Label>
+            <Select
+              value={value.balanceStatus}
+              onValueChange={(selected) =>
+                onChange({
+                  ...value,
+                  balanceStatus: selected as BalanceStatusFilter | "all",
+                })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger id="suppliers-filter-balance-status" className="h-10 w-full">
                 <SelectValue placeholder="الكل" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="payable">مديونية (علينا)</SelectItem>
+                <SelectItem value="credit">دائن (لنا)</SelectItem>
+                <SelectItem value="settled">متوازن</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2 opacity-50" title="يتطلب دعم الخادم">
-            <Label className="text-xs text-muted-foreground">من الرصيد</Label>
-            <Input type="number" disabled placeholder="—" className="h-10" />
+          <div className="space-y-2">
+            <Label htmlFor="suppliers-filter-balance-min" className="text-xs text-muted-foreground">
+              من الرصيد
+            </Label>
+            <Input
+              id="suppliers-filter-balance-min"
+              type="number"
+              disabled={isLoading}
+              placeholder="0.00"
+              className="h-10"
+              value={value.balanceMin}
+              onChange={(e) => onChange({ ...value, balanceMin: e.target.value })}
+              dir="ltr"
+            />
           </div>
 
-          <div className="space-y-2 opacity-50" title="يتطلب دعم الخادم">
-            <Label className="text-xs text-muted-foreground">إلى الرصيد</Label>
-            <Input type="number" disabled placeholder="—" className="h-10" />
+          <div className="space-y-2">
+            <Label htmlFor="suppliers-filter-balance-max" className="text-xs text-muted-foreground">
+              إلى الرصيد
+            </Label>
+            <Input
+              id="suppliers-filter-balance-max"
+              type="number"
+              disabled={isLoading}
+              placeholder="0.00"
+              className="h-10"
+              value={value.balanceMax}
+              onChange={(e) => onChange({ ...value, balanceMax: e.target.value })}
+              dir="ltr"
+            />
           </div>
         </div>
       </div>
@@ -174,6 +236,45 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
                 type="button"
                 className="mr-1 rounded-full p-0.5 hover:bg-emerald-200/80 dark:hover:bg-emerald-800"
                 onClick={() => onChange({ ...value, isActive: "all" })}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ) : null}
+
+          {balanceStatusLabel ? (
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+              الرصيد: {balanceStatusLabel}
+              <button
+                type="button"
+                className="mr-1 rounded-full p-0.5 hover:bg-amber-200/80 dark:hover:bg-amber-800"
+                onClick={() => onChange({ ...value, balanceStatus: "all" })}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ) : null}
+
+          {value.balanceMin.trim() ? (
+            <Badge variant="secondary" className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+              من: {value.balanceMin}
+              <button
+                type="button"
+                className="mr-1 rounded-full p-0.5 hover:bg-sky-200/80 dark:hover:bg-sky-800"
+                onClick={() => onChange({ ...value, balanceMin: "" })}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ) : null}
+
+          {value.balanceMax.trim() ? (
+            <Badge variant="secondary" className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+              إلى: {value.balanceMax}
+              <button
+                type="button"
+                className="mr-1 rounded-full p-0.5 hover:bg-sky-200/80 dark:hover:bg-sky-800"
+                onClick={() => onChange({ ...value, balanceMax: "" })}
               >
                 <X className="h-3 w-3" />
               </button>

@@ -32,6 +32,9 @@ export const SUPPLIERS_PERIOD_DROPDOWN_PRESETS = [
 ] as const satisfies readonly Exclude<SuppliersPeriodPreset, "all">[]
 
 export type SupplierTableColumnId =
+  | "row_number"
+  | "supplier_name"
+  | "contact_phone"
   | "code"
   | "name"
   | "contact"
@@ -52,13 +55,16 @@ export const SUPPLIER_TABLE_COLUMNS: {
   defaultVisible: boolean
   essential?: boolean
 }[] = [
-  { id: "code", label: "الكود", defaultVisible: true },
-  { id: "name", label: "اسم المورد", defaultVisible: true, essential: true },
-  { id: "contact", label: "الهاتف / الشخص المسؤول", defaultVisible: true },
+  { id: "row_number", label: "#", defaultVisible: true },
+  { id: "supplier_name", label: "اسم المورد", defaultVisible: true, essential: true },
+  { id: "contact_phone", label: "الهاتف", defaultVisible: true },
   { id: "current_balance", label: "الرصيد الحالي", defaultVisible: true },
   { id: "status", label: "الحالة", defaultVisible: true },
-  { id: "last_activity", label: "آخر تحديث", defaultVisible: true },
+  { id: "last_activity", label: "آخر نشاط", defaultVisible: true },
   { id: "actions", label: "الإجراءات", defaultVisible: true, essential: true },
+  { id: "code", label: "الكود", defaultVisible: false },
+  { id: "name", label: "الاسم (قديم)", defaultVisible: false },
+  { id: "contact", label: "التواصل (قديم)", defaultVisible: false },
   { id: "email", label: "البريد الإلكتروني", defaultVisible: false },
   { id: "address", label: "العنوان", defaultVisible: false },
   { id: "credit_limit", label: "الحد الائتماني", defaultVisible: false },

@@ -5,6 +5,7 @@ import { useSWRConfig } from "swr"
 import { useAction } from "@/lib/hooks/useAction"
 import { useActionToast } from "@/src/components/status"
 import { extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
+import { SUPPLIER_MESSAGES } from "../lib/suppliers.messages"
 import type { CreateSupplierInput, Supplier, UpdateSupplierInput } from "../types/supplier.types"
 
 function isSuppliersListKey(k: unknown): boolean {
@@ -33,6 +34,14 @@ export function useSupplierActions() {
     return mutateGlobal((key) => isSuppliersListKey(key), undefined, { revalidate: true })
   }, [mutateGlobal])
 
+  const invalidateSummary = useCallback(() => {
+    return mutateGlobal(
+      (key) => typeof key === "string" && key.startsWith("suppliers-summary:"),
+      undefined,
+      { revalidate: true }
+    )
+  }, [mutateGlobal])
+
   const revalidateDetail = useCallback(
     (id: number) => {
       return mutateGlobal((key) => isSupplierDetailKeyForId(key, id), undefined, {
@@ -52,17 +61,17 @@ export function useSupplierActions() {
         payload,
         notify: false,
       })
-      const { data, message } = extractMutationResult<Supplier>(res, 201)
+      const { data } = extractMutationResult<Supplier>(res, 201)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: message,
+        successMessage: SUPPLIER_MESSAGES.created,
       })
-      await invalidateList()
+      await Promise.all([invalidateList(), invalidateSummary()])
       return data
     },
-    [execute, reportAction, invalidateList]
+    [execute, reportAction, invalidateList, invalidateSummary]
   )
 
   const updateSupplier = useCallback(
@@ -75,17 +84,17 @@ export function useSupplierActions() {
         payload,
         notify: false,
       })
-      const { data, message } = extractMutationResult<Supplier>(res)
+      const { data } = extractMutationResult<Supplier>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: message,
+        successMessage: SUPPLIER_MESSAGES.updated,
       })
-      await Promise.all([invalidateList(), revalidateDetail(id)])
+      await Promise.all([invalidateList(), revalidateDetail(id), invalidateSummary()])
       return data
     },
-    [execute, reportAction, invalidateList, revalidateDetail]
+    [execute, reportAction, invalidateList, revalidateDetail, invalidateSummary]
   )
 
   const deleteSupplier = useCallback(
@@ -95,19 +104,81 @@ export function useSupplierActions() {
         id: actionId,
         endpoint: `suppliers/${id}`,
         method: "DELETE",
-        notify: true,
+        notify: false,
       })
-      await invalidateList()
+      reportAction({
+        id: actionId,
+        status: "success",
+        error: null,
+        successMessage: SUPPLIER_MESSAGES.deleted,
+      })
+      await Promise.all([invalidateList(), invalidateSummary()])
     },
-    [execute, invalidateList]
+    [execute, reportAction, invalidateList, invalidateSummary]
+  )
+
+  const activateSupplier = useCallback(
+    async (supplier: Supplier) => {
+      const actionId = crypto.randomUUID()
+      const res = await execute<ApiSuccessResponse<Supplier>>({
+        id: actionId,
+        endpoint: `suppliers/${supplier.id}`,
+        method: "PUT",
+        payload: { is_active: true },
+        notify: false,
+      })
+      const { data } = extractMutationResult<Supplier>(res)
+      reportAction({
+        id: actionId,
+        status: "success",
+        error: null,
+        successMessage: SUPPLIER_MESSAGES.activated,
+      })
+      await Promise.all([invalidateList(), revalidateDetail(supplier.id), invalidateSummary()])
+      return data
+    },
+    [execute, reportAction, invalidateList, revalidateDetail, invalidateSummary]
+  )
+
+  const deactivateSupplier = useCallback(
+    async (supplier: Supplier) => {
+      const actionId = crypto.randomUUID()
+      const res = await execute<ApiSuccessResponse<Supplier>>({
+        id: actionId,
+        endpoint: `suppliers/${supplier.id}`,
+        method: "PUT",
+        payload: { is_active: false },
+        notify: false,
+      })
+      const { data } = extractMutationResult<Supplier>(res)
+      reportAction({
+        id: actionId,
+        status: "success",
+        error: null,
+        successMessage: SUPPLIER_MESSAGES.deactivated,
+      })
+      await Promise.all([invalidateList(), revalidateDetail(supplier.id), invalidateSummary()])
+      return data
+    },
+    [execute, reportAction, invalidateList, revalidateDetail, invalidateSummary]
   )
 
   const toggleSupplierActive = useCallback(
     async (supplier: Supplier) => {
-      return updateSupplier(supplier.id, { is_active: !supplier.is_active })
+      if (supplier.is_active) {
+        return deactivateSupplier(supplier)
+      }
+      return activateSupplier(supplier)
     },
-    [updateSupplier]
+    [activateSupplier, deactivateSupplier]
   )
 
-  return { createSupplier, updateSupplier, deleteSupplier, toggleSupplierActive }
+  return {
+    createSupplier,
+    updateSupplier,
+    deleteSupplier,
+    activateSupplier,
+    deactivateSupplier,
+    toggleSupplierActive,
+  }
 }

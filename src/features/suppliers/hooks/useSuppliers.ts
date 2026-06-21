@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useApiQuery } from "@/lib/hooks/useApiQuery"
-import type { QueryParams } from "@/lib/api"
+import { useAuth } from "@/src/features/auth/hooks/useAuth"
 import { buildSuppliersQueryParams } from "../lib/suppliers.api"
 import type { Supplier, SuppliersListFilters, SuppliersListMeta } from "../types/supplier.types"
 
@@ -16,6 +16,9 @@ type UseSuppliersArgs = {
 }
 
 export function useSuppliers({ page, search, columnFilters, perPage }: UseSuppliersArgs) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const authReady = !authLoading && isAuthenticated
+
   const queryParams = useMemo(() => {
     const q = buildSuppliersQueryParams(page, {
       ...columnFilters,
@@ -25,7 +28,10 @@ export function useSuppliers({ page, search, columnFilters, perPage }: UseSuppli
     return q
   }, [page, search, columnFilters, perPage])
 
-  const swrKey = useMemo(() => `suppliers:${JSON.stringify(queryParams)}`, [queryParams])
+  const swrKey = useMemo(
+    () => (authReady ? `suppliers:${JSON.stringify(queryParams)}` : null),
+    [authReady, queryParams]
+  )
 
   const { data, meta, isLoading, error, mutate } = useApiQuery<Supplier[]>(swrKey, ENDPOINT, {
     queryParams,
@@ -41,28 +47,11 @@ export function useSuppliers({ page, search, columnFilters, perPage }: UseSuppli
   }
 }
 
-/** Lightweight count query for active suppliers KPI. */
-export function useActiveSuppliersCount() {
-  const queryParams = useMemo<QueryParams>(
-    () => ({ is_active: 1, page: 1, per_page: 1 }),
-    []
-  )
-  const swrKey = "suppliers:active-count"
-
-  const { meta, isLoading, error } = useApiQuery<Supplier[]>(swrKey, ENDPOINT, {
-    queryParams,
-    paginated: true,
-  })
-
-  return {
-    count: meta?.total ?? 0,
-    isLoading,
-    error: error as Error | undefined,
-  }
-}
-
 export function useSupplier(id: number | null) {
-  const swrKey = id != null ? `supplier:${id}` : null
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const authReady = !authLoading && isAuthenticated
+
+  const swrKey = id != null && authReady ? `supplier:${id}` : null
   const endpoint = id != null ? `suppliers/${id}` : ""
 
   const { data, isLoading, error, mutate } = useApiQuery<Supplier>(swrKey, endpoint)

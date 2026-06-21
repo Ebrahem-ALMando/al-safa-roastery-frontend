@@ -14,6 +14,15 @@ export function buildSuppliersQueryParams(
   if (typeof filters.is_active === "boolean") {
     q.is_active = filters.is_active ? 1 : 0
   }
+  if (filters.balance_status) {
+    q.balance_status = filters.balance_status
+  }
+  if (typeof filters.balance_min === "number" && Number.isFinite(filters.balance_min)) {
+    q.balance_min = filters.balance_min
+  }
+  if (typeof filters.balance_max === "number" && Number.isFinite(filters.balance_max)) {
+    q.balance_max = filters.balance_max
+  }
   if (filters.sort_by) {
     q.sort_by = filters.sort_by
   }

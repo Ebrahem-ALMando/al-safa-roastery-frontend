@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { LayoutGrid, Plus, RefreshCw, Settings2, Table } from "lucide-react"
 import { DashboardPageHeader } from "@/components/dashboard"
 import { DateRangeDialog } from "@/components/shared/DateRangeDialog"
@@ -25,12 +26,12 @@ import { SuppliersFilters } from "./SuppliersFilters"
 import { SuppliersPeriodControls } from "./SuppliersPeriodControls"
 import { SuppliersSummary } from "./SuppliersSummary"
 import { SupplierColumnCustomizer } from "./SupplierColumnCustomizer"
-import { SupplierDetailsDialog } from "./SupplierDetailsDialog"
 import { SupplierFormDialog } from "./SupplierFormDialog"
 import { SupplierDeleteDialog } from "./SupplierDeleteDialog"
 import { SupplierDeactivateDialog } from "./SupplierDeactivateDialog"
 
 export function SuppliersView() {
+  const router = useRouter()
   const {
     periodPreset,
     setPeriodPreset,
@@ -43,6 +44,12 @@ export function SuppliersView() {
     setSearch,
     isActive,
     setIsActive,
+    balanceStatus,
+    setBalanceStatus,
+    balanceMin,
+    setBalanceMin,
+    balanceMax,
+    setBalanceMax,
     page,
     setPage,
     config,
@@ -70,8 +77,6 @@ export function SuppliersView() {
   const [formOpen, setFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
-  const [detailsSupplier, setDetailsSupplier] = useState<Supplier | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Supplier | null>(null)
   const [deactivateOpen, setDeactivateOpen] = useState(false)
@@ -90,8 +95,7 @@ export function SuppliersView() {
   }
 
   function openDetails(supplier: Supplier) {
-    setDetailsSupplier(supplier)
-    setDetailsOpen(true)
+    router.push(`/dashboard/suppliers/${supplier.id}`)
   }
 
   function openDelete(supplier: Supplier) {
@@ -186,10 +190,13 @@ export function SuppliersView() {
 
       {config.showFilters ? (
         <SuppliersFilters
-          value={{ search, isActive }}
+          value={{ search, isActive, balanceStatus, balanceMin, balanceMax }}
           onChange={(next) => {
             setSearch(next.search)
             setIsActive(next.isActive)
+            setBalanceStatus(next.balanceStatus)
+            setBalanceMin(next.balanceMin)
+            setBalanceMax(next.balanceMax)
           }}
           isLoading={isLoading}
         />
@@ -254,17 +261,6 @@ export function SuppliersView() {
         onCreate={createSupplier}
         onUpdate={updateSupplier}
         onSaved={() => void mutate()}
-      />
-
-      <SupplierDetailsDialog
-        open={detailsOpen}
-        onOpenChange={(open) => {
-          setDetailsOpen(open)
-          if (!open) setDetailsSupplier(null)
-        }}
-        supplierId={detailsSupplier?.id ?? null}
-        fallbackSupplier={detailsSupplier}
-        onEdit={openEdit}
       />
 
       <SupplierDeactivateDialog

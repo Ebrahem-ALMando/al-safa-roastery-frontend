@@ -1,8 +1,9 @@
 "use client"
 
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   CheckCircle2,
-  Eye,
   MoreHorizontal,
   Pencil,
   Phone,
@@ -11,7 +12,6 @@ import {
   Search,
   Trash2,
   Truck,
-  User,
   XCircle,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -38,6 +38,7 @@ import {
   SUPPLIER_TABLE_COLUMNS,
   formatArDateTime,
   formatUsdAmount,
+  formatSupplierLastActivity,
   getBalanceStatusLabel,
   supplierInitials,
   type Supplier,
@@ -64,6 +65,12 @@ interface SuppliersTableProps {
   onToggleActive: (supplier: Supplier) => void
 }
 
+type ContextMenuState = {
+  x: number
+  y: number
+  supplier: Supplier
+}
+
 function TableRowSkeleton({ colCount }: { colCount: number }) {
   return (
     <TableRow>
@@ -74,6 +81,14 @@ function TableRowSkeleton({ colCount }: { colCount: number }) {
       ))}
     </TableRow>
   )
+}
+
+function formatLastActivity(supplier: Supplier): string {
+  return formatSupplierLastActivity(supplier).primary
+}
+
+function formatLastActivityDate(supplier: Supplier): string | null {
+  return formatSupplierLastActivity(supplier).secondary
 }
 
 export function SuppliersTable({
@@ -89,17 +104,93 @@ export function SuppliersTable({
   canNext,
   onPageChange,
   onAddSupplier,
-  onViewDetails,
   onEdit,
   onDelete,
   onToggleActive,
 }: SuppliersTableProps) {
+  const router = useRouter()
   const visibleSet = new Set(visibleColumns)
   const orderedCols = SUPPLIER_TABLE_COLUMNS.filter((c) => visibleSet.has(c.id))
+  const perPage = meta?.per_page ?? 15
 
-  function renderCell(colId: SupplierTableColumnId, supplier: Supplier) {
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
+
+  const goToSupplier = useCallback(
+    (id: number) => {
+      router.push(`/dashboard/suppliers/${id}`)
+    },
+    [router]
+  )
+
+  useEffect(() => {
+    if (!contextMenu) return
+    function handleClick() {
+      setContextMenu(null)
+    }
+    document.addEventListener("click", handleClick)
+    document.addEventListener("scroll", handleClick, true)
+    return () => {
+      document.removeEventListener("click", handleClick)
+      document.removeEventListener("scroll", handleClick, true)
+    }
+  }, [contextMenu])
+
+  function renderCell(colId: SupplierTableColumnId, supplier: Supplier, rowIndex: number) {
     const key = `${supplier.id}-${colId}`
+    const rowNumber = (currentPage - 1) * perPage + rowIndex + 1
+
     switch (colId) {
+      case "row_number":
+        return (
+          <TableCell key={key} className="w-12 text-center font-mono text-xs text-muted-foreground">
+            {rowNumber}
+          </TableCell>
+        )
+      case "supplier_name":
+        return (
+          <TableCell key={key} className="text-right">
+            <div className="flex items-center justify-start gap-2.5">
+              <Avatar className="size-9 shrink-0">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                  {supplierInitials(supplier.name) || "—"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{supplier.name}</p>
+                {supplier.code ? (
+                  <p className="mt-0.5 font-mono text-[11px] text-muted-foreground" dir="ltr">
+                    {supplier.code}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </TableCell>
+        )
+      case "contact_phone":
+        return (
+          <TableCell key={key} className="text-right">
+            <div className="flex flex-col items-start gap-0.5">
+              {supplier.contact_person ? (
+                <p className="text-sm">{supplier.contact_person}</p>
+              ) : null}
+              {supplier.phone ? (
+                <p
+                  className={
+                    supplier.contact_person
+                      ? "text-xs text-muted-foreground"
+                      : "text-sm"
+                  }
+                  dir="ltr"
+                >
+                  {supplier.phone}
+                </p>
+              ) : !supplier.contact_person ? (
+                <span className="text-xs text-muted-foreground">—</span>
+              ) : null}
+            </div>
+          </TableCell>
+        )
       case "code":
         return (
           <TableCell key={key} className="text-center font-mono text-xs" dir="ltr">
@@ -132,14 +223,10 @@ export function SuppliersTable({
             <div className="flex flex-col items-start gap-1">
               <Badge variant="secondary" className="max-w-[170px]">
                 <Phone className="size-3.5" />
-                <span className="truncate" dir="ltr">{supplier.phone || "—"}</span>
+                <span className="truncate" dir="ltr">
+                  {supplier.phone || "—"}
+                </span>
               </Badge>
-              {supplier.contact_person ? (
-                <Badge variant="outline" className="max-w-[170px]">
-                  <User className="size-3.5" />
-                  <span className="truncate">{supplier.contact_person}</span>
-                </Badge>
-              ) : null}
             </div>
           </TableCell>
         )
@@ -172,12 +259,17 @@ export function SuppliersTable({
             )}
           </TableCell>
         )
-      case "last_activity":
+      case "last_activity": {
+        const activityDate = formatLastActivityDate(supplier)
         return (
           <TableCell key={key} className="text-center text-xs">
-            {formatArDateTime(supplier.updated_at)}
+            <p className="text-xs">{formatLastActivity(supplier)}</p>
+            {activityDate ? (
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{activityDate}</p>
+            ) : null}
           </TableCell>
         )
+      }
       case "email":
         return (
           <TableCell key={key} className="text-right text-sm">
@@ -230,22 +322,39 @@ export function SuppliersTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-44">
-                <DropdownMenuItem onClick={() => onViewDetails(supplier)}>
-                  <Eye className="size-4" />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    goToSupplier(supplier.id)
+                  }}
+                >
                   عرض التفاصيل
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(supplier)}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit(supplier)
+                  }}
+                >
                   <Pencil className="size-4" />
                   تعديل
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onToggleActive(supplier)}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleActive(supplier)
+                  }}
+                >
                   <Power className="size-4" />
-                  {supplier.is_active ? "إلغاء التنشيط" : "تفعيل"}
+                  {supplier.is_active ? "إيقاف" : "تفعيل"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => onDelete(supplier)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(supplier)
+                  }}
                 >
                   <Trash2 className="size-4" />
                   حذف
@@ -258,6 +367,24 @@ export function SuppliersTable({
         return <TableCell key={key}>—</TableCell>
     }
   }
+
+  const tableBody = (
+    <>
+      {suppliers.map((supplier, index) => (
+        <TableRow
+          key={supplier.id}
+          className="cursor-pointer hover:bg-muted/40 transition-colors"
+          onClick={() => goToSupplier(supplier.id)}
+          onContextMenu={(e) => {
+            e.preventDefault()
+            setContextMenu({ x: e.clientX, y: e.clientY, supplier })
+          }}
+        >
+          {orderedCols.map((col) => renderCell(col.id, supplier, index))}
+        </TableRow>
+      ))}
+    </>
+  )
 
   return (
     <div className="p-0">
@@ -299,26 +426,16 @@ export function SuppliersTable({
         </div>
       ) : (
         <Table className="w-full" dir="rtl">
-            <TableHeader>
-              <TableRow>
-                {orderedCols.map((col) => (
-                  <TableHead key={col.id} className="text-center font-semibold">
-                    {col.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {suppliers.map((supplier) => (
-                <TableRow
-                  key={supplier.id}
-                  className="cursor-pointer hover:bg-muted/40 transition-colors"
-                  onClick={() => onViewDetails(supplier)}
-                >
-                  {orderedCols.map((col) => renderCell(col.id, supplier))}
-                </TableRow>
+          <TableHeader>
+            <TableRow>
+              {orderedCols.map((col) => (
+                <TableHead key={col.id} className="text-center font-semibold">
+                  {col.label}
+                </TableHead>
               ))}
-            </TableBody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>{tableBody}</TableBody>
         </Table>
       )}
 
@@ -351,6 +468,63 @@ export function SuppliersTable({
               <ChevronLeft className="size-4" />
             </Button>
           </div>
+        </div>
+      ) : null}
+
+      {contextMenu ? (
+        <div ref={contextMenuRef}>
+          <DropdownMenu
+            open
+            onOpenChange={(open) => {
+              if (!open) setContextMenu(null)
+            }}
+          >
+            <DropdownMenuTrigger asChild>
+              <span
+                className="fixed"
+                style={{ top: contextMenu.y, left: contextMenu.x, width: 1, height: 1, pointerEvents: "none" }}
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-44">
+              <DropdownMenuItem
+                onClick={() => {
+                  goToSupplier(contextMenu.supplier.id)
+                  setContextMenu(null)
+                }}
+              >
+                عرض التفاصيل
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  onEdit(contextMenu.supplier)
+                  setContextMenu(null)
+                }}
+              >
+                <Pencil className="size-4" />
+                تعديل
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  onToggleActive(contextMenu.supplier)
+                  setContextMenu(null)
+                }}
+              >
+                <Power className="size-4" />
+                {contextMenu.supplier.is_active ? "إيقاف" : "تفعيل"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => {
+                  onDelete(contextMenu.supplier)
+                  setContextMenu(null)
+                }}
+              >
+                <Trash2 className="size-4" />
+                حذف
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ) : null}
     </div>

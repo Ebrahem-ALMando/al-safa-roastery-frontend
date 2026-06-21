@@ -18,6 +18,7 @@ import {
   readStoredSuppliersPeriod,
   resolveSuppliersPeriodRange,
 } from "../lib/suppliers.helpers"
+import type { BalanceStatusFilter } from "../types/supplier.types"
 import { useSuppliers } from "./useSuppliers"
 
 export interface SuppliersPageConfig {
@@ -57,7 +58,7 @@ function readColumnVisibility(): SupplierTableColumnId[] {
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_VISIBLE_SUPPLIER_COLUMNS
     const validIds = new Set(SUPPLIER_TABLE_COLUMNS.map((c) => c.id))
     const filtered = parsed.filter((id) => validIds.has(id))
-    if (!filtered.includes("name")) filtered.unshift("name")
+    if (!filtered.includes("supplier_name")) filtered.unshift("supplier_name")
     if (!filtered.includes("actions")) filtered.push("actions")
     return filtered
   } catch {
@@ -68,15 +69,16 @@ function readColumnVisibility(): SupplierTableColumnId[] {
 export type SuppliersActiveStatus = "all" | "active" | "inactive"
 
 export function useSuppliersPage() {
-  const storedPeriod = readStoredSuppliersPeriod()
-  const [periodPreset, setPeriodPreset] = useState<SuppliersPeriodPreset>(storedPeriod.preset)
-  const [customPeriod, setCustomPeriod] = useState<SuppliersCustomPeriod | null>(
-    storedPeriod.custom
-  )
+  // B9: Use static SSR-safe defaults. localStorage is read in useEffect below.
+  const [periodPreset, setPeriodPreset] = useState<SuppliersPeriodPreset>("current_month")
+  const [customPeriod, setCustomPeriod] = useState<SuppliersCustomPeriod | null>(null)
   const [customDialogOpen, setCustomDialogOpen] = useState(false)
 
   const [search, setSearch] = useState("")
   const [isActive, setIsActive] = useState<SuppliersActiveStatus>("all")
+  const [balanceStatus, setBalanceStatus] = useState<BalanceStatusFilter | "all">("all")
+  const [balanceMin, setBalanceMin] = useState("")
+  const [balanceMax, setBalanceMax] = useState("")
   const [page, setPage] = useState(1)
   const [config, setConfig] = useState<SuppliersPageConfig>(defaultConfig)
   const [visibleColumns, setVisibleColumns] = useState<SupplierTableColumnId[]>(
@@ -127,13 +129,16 @@ export function useSuppliersPage() {
   const columnFilters = useMemo(
     () => ({
       is_active: isActive === "all" ? undefined : isActive === "active",
+      balance_status: balanceStatus !== "all" ? (balanceStatus as BalanceStatusFilter) : undefined,
+      balance_min: balanceMin.trim() ? Number.parseFloat(balanceMin) : undefined,
+      balance_max: balanceMax.trim() ? Number.parseFloat(balanceMax) : undefined,
     }),
-    [isActive]
+    [isActive, balanceStatus, balanceMin, balanceMax]
   )
 
   useEffect(() => {
     setPage(1)
-  }, [search, isActive])
+  }, [search, isActive, balanceStatus, balanceMin, balanceMax])
 
   const { suppliers, meta, isLoading, error, mutate } = useSuppliers({
     search,
@@ -143,7 +148,9 @@ export function useSuppliersPage() {
 
   const hasSearch = search.trim().length > 0
   const hasIsActive = isActive !== "all"
-  const hasAnyFilter = hasSearch || hasIsActive
+  const hasBalanceFilter =
+    balanceStatus !== "all" || balanceMin.trim() !== "" || balanceMax.trim() !== ""
+  const hasAnyFilter = hasSearch || hasIsActive || hasBalanceFilter
 
   const isEmpty = !isLoading && suppliers.length === 0
   const isTrueEmpty = isEmpty && !hasAnyFilter
@@ -184,7 +191,7 @@ export function useSuppliersPage() {
 
   const setColumnVisibility = useCallback((columns: SupplierTableColumnId[]) => {
     const next = [...columns]
-    if (!next.includes("name")) next.unshift("name")
+    if (!next.includes("supplier_name")) next.unshift("supplier_name")
     if (!next.includes("actions")) next.push("actions")
     setVisibleColumns(next)
   }, [])
@@ -201,6 +208,12 @@ export function useSuppliersPage() {
     setSearch,
     isActive,
     setIsActive,
+    balanceStatus,
+    setBalanceStatus,
+    balanceMin,
+    setBalanceMin,
+    balanceMax,
+    setBalanceMax,
     page,
     setPage,
     config,

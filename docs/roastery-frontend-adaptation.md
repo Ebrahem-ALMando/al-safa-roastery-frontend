@@ -66,6 +66,54 @@ All administrative create/edit dialogs must follow the Add Patient dialog visual
 7. **Errors** map through `mapApiError` — validation (422), auth (401/403), not found (404), and server (5xx) remain unchanged.
 8. **New modules** must consume `useApiQuery`, `useAction`, and shared types from `lib/api` — no per-feature success-status checks.
 
+## Feature Completion Gate
+
+A frontend feature must not be marked complete until all of these are verified against the real running Laravel API:
+
+1. List rendering
+2. Pagination
+3. Search
+4. Every visible filter
+5. Create
+6. Edit
+7. Activate/deactivate
+8. Delete if supported
+9. Details page
+10. Success/error toasts
+11. Table view
+12. Cards view
+13. Actual response data inspection in Network
+14. No fake client-side filtering over paginated data
+15. Build/type/lint quality checks where tooling is available
+
+## Feature Completion Gate — Suppliers Module
+
+Status: **COMPLETE** (Sprint: Supplier Completion)
+
+### What was shipped
+
+| Task | Description |
+|------|-------------|
+| B1 | New `useSupplierSummary` hook — single `GET bff/suppliers/summary`, replaces multi-call `useSuppliersSummary` |
+| B2 | `suppliers.constants.ts` — new column IDs (`row_number`, `supplier_name`, `contact_phone`), updated defaults, `last_activity = "آخر نشاط"` |
+| B3 | `SuppliersFilters` balance_status / balance_min / balance_max enabled; wired through `useSuppliersPage` + `buildSuppliersQueryParams` |
+| B4 | `SuppliersTable` rewritten: page-aware # col, supplier name+code subline, contact_phone col, last_activity from backend, row navigate to detail, context menu on right-click |
+| B5 | `app/(protected)/dashboard/suppliers/[supplierId]/page.tsx` — supplier detail hero page; `SupplierDetailsDialog` replaced with navigation |
+| B6 | `lib/suppliers.messages.ts` — Arabic toast messages; `useSupplierActions` uses them; activate/deactivate/delete have distinct messages |
+| B7 | `supplier-form-fields.tsx` — phone→whatsapp auto-sync, renamed contact label, code field removed |
+| B8 | `components/suppliers/supplier-card.tsx` — PatientCard-style supplier card; `SuppliersCards` rebuilt |
+| B9 | `useSuppliersPage` — SSR hydration fix: static defaults for period/custom, localStorage only in useEffect |
+| B10 | `supplier.types.ts` — `SupplierLastActivity`, `SupplierSummaryResponse`, `BalanceStatusFilter`; code removed from `CreateSupplierInput` |
+| AUTH | `useSuppliers`, `useSupplier`, `useSupplierSummary` — null SWR key until `isAuthenticated` |
+
+### API contracts consumed
+
+- `GET /api/bff/suppliers/summary?date_from=&date_to=` → `{ active_suppliers_count, purchases_total_in_period, suppliers_payable_total, supplier_credit_total }`
+- `GET /api/v1/suppliers` — index filters: `balance_status`, `balance_min`, `balance_max`, `is_active`, `search`, `page`, `per_page`
+- `GET /api/v1/suppliers/{id}` — supplier detail; response now includes `last_activity: { type, number, date } | null`
+
+---
+
 ## Laravel Collection Envelope and Rendering Rule
 
 1. **Paginated list items** live in top-level `response.data` (an array).
