@@ -8,6 +8,7 @@ import {
   ScanLine,
   Settings,
   TestTubes,
+  Truck,
   Users,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -31,6 +32,14 @@ export const menuItems: readonly MenuItem[] = [
     href: "/dashboard",
     icon: LayoutDashboard,
     section: "main",
+  },
+  {
+    id: "suppliers",
+    label: "الموردون",
+    href: "/dashboard/suppliers",
+    icon: Truck,
+    section: "management",
+    matchPrefix: true,
   },
   {
     id: "patients",
