@@ -1,0 +1,513 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Medical Laboratory Color System */
+:root {
+  /* Core backgrounds */
+  --background: oklch(0.99 0.002 220);
+  --foreground: oklch(0.20 0.02 230);
+  
+  /* Cards & surfaces */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.20 0.02 230);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.20 0.02 230);
+  
+  /* Primary - Medical Blue */
+  --primary: oklch(0.55 0.15 230);
+  --primary-foreground: oklch(0.99 0 0);
+  
+  /* Secondary - Soft Teal */
+  --secondary: oklch(0.92 0.03 185);
+  --secondary-foreground: oklch(0.35 0.08 185);
+  
+  /* Muted surfaces */
+  --muted: oklch(0.96 0.01 220);
+  --muted-foreground: oklch(0.50 0.02 230);
+  
+  /* Accent - Light Teal */
+  --accent: oklch(0.88 0.06 185);
+  --accent-foreground: oklch(0.30 0.08 185);
+  
+  /* Success - Medical Green */
+  --success: oklch(0.70 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  
+  /* Warning - Soft Amber */
+  --warning: oklch(0.80 0.12 75);
+  --warning-foreground: oklch(0.30 0.08 75);
+  
+  /* Destructive - Soft Red for alerts */
+  --destructive: oklch(0.60 0.18 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  
+  /* Borders & inputs */
+  --border: oklch(0.91 0.01 220);
+  --input: oklch(0.91 0.01 220);
+  --ring: oklch(0.55 0.15 230);
+  
+  /* Charts - Medical themed */
+  --chart-1: oklch(0.55 0.15 230);
+  --chart-2: oklch(0.65 0.12 185);
+  --chart-3: oklch(0.70 0.15 155);
+  --chart-4: oklch(0.75 0.10 75);
+  --chart-5: oklch(0.60 0.18 25);
+  
+  --radius: 1rem;
+  
+  /* Sidebar */
+  --sidebar: oklch(0.98 0.005 220);
+  --sidebar-foreground: oklch(0.20 0.02 230);
+  --sidebar-primary: oklch(0.55 0.15 230);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.03 220);
+  --sidebar-accent-foreground: oklch(0.35 0.05 230);
+  --sidebar-border: oklch(0.91 0.01 220);
+  --sidebar-ring: oklch(0.55 0.15 230);
+}
+
+/* Dark Mode - Deep blue-gray tones */
+.dark {
+  --background: oklch(0.18 0.02 240);
+  --foreground: oklch(0.95 0.01 220);
+  
+  --card: oklch(0.22 0.02 240);
+  --card-foreground: oklch(0.95 0.01 220);
+  --popover: oklch(0.22 0.02 240);
+  --popover-foreground: oklch(0.95 0.01 220);
+  
+  /* Primary - Brighter blue for dark mode */
+  --primary: oklch(0.65 0.15 230);
+  --primary-foreground: oklch(0.15 0.02 230);
+  
+  /* Secondary - Soft Teal */
+  --secondary: oklch(0.30 0.05 185);
+  --secondary-foreground: oklch(0.85 0.06 185);
+  
+  --muted: oklch(0.26 0.02 240);
+  --muted-foreground: oklch(0.70 0.02 220);
+  
+  --accent: oklch(0.32 0.05 185);
+  --accent-foreground: oklch(0.85 0.06 185);
+  
+  /* Success - Medical Green */
+  --success: oklch(0.65 0.15 155);
+  --success-foreground: oklch(0.15 0.05 155);
+  
+  /* Warning */
+  --warning: oklch(0.75 0.12 75);
+  --warning-foreground: oklch(0.20 0.05 75);
+  
+  --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.95 0.02 25);
+  
+  --border: oklch(0.30 0.02 240);
+  --input: oklch(0.30 0.02 240);
+  --ring: oklch(0.65 0.15 230);
+  
+  /* Charts */
+  --chart-1: oklch(0.65 0.15 230);
+  --chart-2: oklch(0.70 0.12 185);
+  --chart-3: oklch(0.65 0.15 155);
+  --chart-4: oklch(0.75 0.10 75);
+  --chart-5: oklch(0.55 0.18 25);
+  
+  /* Sidebar */
+  --sidebar: oklch(0.15 0.02 240);
+  --sidebar-foreground: oklch(0.95 0.01 220);
+  --sidebar-primary: oklch(0.65 0.15 230);
+  --sidebar-primary-foreground: oklch(0.15 0.02 230);
+  --sidebar-accent: oklch(0.26 0.03 240);
+  --sidebar-accent-foreground: oklch(0.90 0.01 220);
+  --sidebar-border: oklch(0.30 0.02 240);
+  --sidebar-ring: oklch(0.65 0.15 230);
+}
+
+@theme inline {
+  --font-sans: 'Tajawal', 'Geist', sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+    /* يمنع توسّع/انكماش عرض الصفحة عند قفل التمرير (مثلاً عند فتح Dialog من Radix) */
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+/* Prevent Radix from hiding the scrollbar */
+body[data-scroll-locked] {
+  overflow: auto !important;
+  margin-right: 0 !important;
+}
+
+  /* أزرار وعناصر تفاعل تشبه الزر — مؤشر واضح */
+  button:not(:disabled),
+  input[type='button']:not(:disabled),
+  input[type='submit']:not(:disabled),
+  input[type='reset']:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+  button:disabled,
+  input[type='button']:disabled,
+  input[type='submit']:disabled,
+  input[type='reset']:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+  
+  /* RTL Support */
+  [dir="rtl"] {
+    font-family: 'Tajawal', sans-serif;
+  }
+  
+  /* Smooth focus states */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-muted rounded-full;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50;
+  }
+}
+
+/* تقليل الحركات عند تعطيلها من الإعدادات (dataset على html) */
+html[data-lab-motion="reduce"] :where(*) {
+  scroll-behavior: auto !important;
+}
+html[data-lab-motion="reduce"] :where(*):not(.lab-preserve-motion) {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 60ms !important;
+}
+
+/* طباعة التقارير: إخفاء واجهة النظام وترك محتوى التقرير فقط */
+@page {
+  margin: 12mm;
+  size: A4;
+}
+
+/* لصاقة أنبوب 30×10 مم — Xprinter XP-T361U (مخزون 30*10 في برنامج التشغيل) */
+@page patientBarcodeTube30x10 {
+  size: 30mm 10mm;
+  margin: 0;
+}
+
+@page patientBarcodeTube10x30 {
+  size: 10mm 30mm;
+  margin: 0;
+}
+
+/* معاينة وطباعة تجربة الباركود — تدوير المحتوى داخل صفحة المعايرة */
+.patient-barcode-print-surface--rotated-host {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.patient-barcode-label.rotate-content-90 {
+  width: 30mm;
+  height: 10mm;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  position: absolute;
+  top: 0;
+  left: 10mm;
+}
+
+.patient-barcode-label.rotate-content-minus-90 {
+  width: 30mm;
+  height: 10mm;
+  transform: rotate(-90deg);
+  transform-origin: top left;
+  position: absolute;
+  top: 10mm;
+  left: 0;
+}
+
+.patient-barcode-label-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2mm;
+  box-sizing: border-box;
+}
+
+.patient-barcode-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.patient-barcode-bars svg,
+.patient-barcode-bars canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: block !important;
+}
+
+.patient-barcode-visible-text {
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: Arial, sans-serif;
+}
+
+@media print {
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    background: white !important;
+  }
+
+  html:has(#report-print-surface) {
+    background: white !important;
+  }
+
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  /*
+   * صفحة معاينة التقرير: إخفاء كل واجهة الـ dashboard (الهيدر، الشريط، الأزرار…)
+   * وإظهار #report-print-surface فقط (نمط visibility الشائع في الطباعة).
+   */
+  body:has(#report-print-surface) * {
+    visibility: hidden;
+  }
+  body:has(#report-print-surface) #report-print-surface,
+  body:has(#report-print-surface) #report-print-surface * {
+    visibility: visible;
+  }
+  /*
+   * إزاحة مساحة الطباعة فوق واجهة الـ dashboard عند الطباعة من الصفحة المحمية.
+   * لا تُطبَّق على /print/report حيث الغلاف بسيط — وإلا يُفسد الارتفاع ويُفرغ صفحة كاملة.
+   */
+  body:has([data-lab-app-shell]):has(#report-print-surface) #report-print-surface {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  /* طباعة لصاقات باركود — مريض أو طلب نتائج (30×10 / 10×30 مم) */
+  html:has(#patient-barcode-print-surface),
+  html:has(#barcode-label-print-surface),
+  body.printing-patient-barcode,
+  body.printing-barcode-label {
+    background: white !important;
+  }
+
+  body:has(#patient-barcode-print-surface) *,
+  body:has(#barcode-label-print-surface) *,
+  body.printing-patient-barcode *,
+  body.printing-barcode-label * {
+    visibility: hidden !important;
+  }
+
+  body:has(#patient-barcode-print-surface) #patient-barcode-print-surface,
+  body:has(#patient-barcode-print-surface) #patient-barcode-print-surface *,
+  body:has(#barcode-label-print-surface) #barcode-label-print-surface,
+  body:has(#barcode-label-print-surface) #barcode-label-print-surface *,
+  body.printing-patient-barcode #patient-barcode-print-surface,
+  body.printing-patient-barcode #patient-barcode-print-surface *,
+  body.printing-barcode-label #barcode-label-print-surface,
+  body.printing-barcode-label #barcode-label-print-surface * {
+    visibility: visible !important;
+  }
+
+  body.printing-patient-barcode,
+  body.printing-barcode-label,
+  body:has(#patient-barcode-print-surface),
+  body:has(#barcode-label-print-surface) {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+    position: relative !important;
+  }
+
+  /*
+   * Do NOT use position:fixed — Chrome prints only one sheet for fixed containers.
+   * Absolute at top-left keeps the visibility-hide trick and allows page breaks.
+   */
+  body.printing-patient-barcode #patient-barcode-print-surface,
+  body.printing-barcode-label #barcode-label-print-surface,
+  body:has(#patient-barcode-print-surface) #patient-barcode-print-surface,
+  body:has(#barcode-label-print-surface) #barcode-label-print-surface {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    z-index: 2147483647 !important;
+  }
+
+  body.printing-patient-barcode .patient-barcode-print-page,
+  body.printing-barcode-label .patient-barcode-print-page,
+  body:has(#patient-barcode-print-surface) .patient-barcode-print-page,
+  body:has(#barcode-label-print-surface) .patient-barcode-print-page {
+    display: block !important;
+    width: var(--barcode-print-page-width, 30mm) !important;
+    height: var(--barcode-print-page-height, 10mm) !important;
+    min-height: var(--barcode-print-page-height, 10mm) !important;
+    max-height: var(--barcode-print-page-height, 10mm) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  body.printing-patient-barcode .patient-barcode-print-page:last-child,
+  body.printing-barcode-label .patient-barcode-print-page:last-child,
+  body:has(#patient-barcode-print-surface) .patient-barcode-print-page:last-child,
+  body:has(#barcode-label-print-surface) .patient-barcode-print-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  body.printing-patient-barcode .patient-barcode-print-page + .patient-barcode-print-page,
+  body.printing-barcode-label .patient-barcode-print-page + .patient-barcode-print-page,
+  body:has(#patient-barcode-print-surface) .patient-barcode-print-page + .patient-barcode-print-page,
+  body:has(#barcode-label-print-surface) .patient-barcode-print-page + .patient-barcode-print-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  body.printing-patient-barcode .patient-barcode-print-page--30x10,
+  body.printing-barcode-label .patient-barcode-print-page--30x10,
+  body:has(#patient-barcode-print-surface) .patient-barcode-print-page--30x10,
+  body:has(#barcode-label-print-surface) .patient-barcode-print-page--30x10 {
+    page: patientBarcodeTube30x10;
+  }
+
+  body.printing-patient-barcode .patient-barcode-print-page--10x30,
+  body.printing-barcode-label .patient-barcode-print-page--10x30,
+  body:has(#patient-barcode-print-surface) .patient-barcode-print-page--10x30,
+  body:has(#barcode-label-print-surface) .patient-barcode-print-page--10x30 {
+    page: patientBarcodeTube10x30;
+  }
+
+  body.printing-patient-barcode .patient-barcode-label,
+  body.printing-barcode-label .patient-barcode-label {
+    width: 30mm !important;
+    height: 10mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    break-after: auto !important;
+    page-break-after: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  body.printing-patient-barcode .patient-barcode-label-content,
+  body.printing-barcode-label .patient-barcode-label-content {
+    transform: translate(var(--barcode-offset-x, 0mm), var(--barcode-offset-y, 0mm)) !important;
+  }
+
+  body.printing-patient-barcode .patient-barcode-label.rotate-content-90,
+  body.printing-barcode-label .patient-barcode-label.rotate-content-90 {
+    width: 30mm !important;
+    height: 10mm !important;
+    transform: rotate(90deg);
+    transform-origin: top left;
+    position: absolute;
+    top: 0;
+    left: 10mm;
+  }
+
+  body.printing-patient-barcode .patient-barcode-label.rotate-content-minus-90,
+  body.printing-barcode-label .patient-barcode-label.rotate-content-minus-90 {
+    width: 30mm !important;
+    height: 10mm !important;
+    transform: rotate(-90deg);
+    transform-origin: top left;
+    position: absolute;
+    top: 10mm;
+    left: 0;
+  }
+
+  #patient-barcode-print-surface,
+  #barcode-label-print-surface {
+    display: block !important;
+  }
+}
