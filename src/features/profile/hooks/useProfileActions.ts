@@ -2,8 +2,7 @@
 
 import { useCallback } from "react"
 import { useSWRConfig } from "swr"
-import type { LaravelSuccessResponse } from "@/lib/api"
-import { ApiRequestError } from "@/lib/api"
+import { extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
 import { useAction } from "@/lib/hooks/useAction"
 import { useActionToast } from "@/src/components/status"
 import { AUTH_ME_SWR_KEY } from "@/src/features/auth/auth.constants"
@@ -39,7 +38,7 @@ export function useProfileActions() {
   const updateProfile = useCallback(
     async (payload: UpdateProfileInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Profile>>({
+      const res = await execute<ApiSuccessResponse<Profile>>({
         id: actionId,
         endpoint: "/auth/profile",
         method: "PUT",
@@ -47,15 +46,15 @@ export function useProfileActions() {
         config: { baseUrl: "/api" },
         notify: false,
       })
-      if (!res?.data) throw new ApiRequestError("استجابة غير صالحة", 500)
+      const { data, message } = extractMutationResult<Profile>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await revalidateProfile()
-      return res.data
+      return data
     },
     [execute, reportAction, revalidateProfile]
   )
@@ -63,7 +62,7 @@ export function useProfileActions() {
   const changePassword = useCallback(
     async (payload: ChangePasswordInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Profile>>({
+      const res = await execute<ApiSuccessResponse<Profile>>({
         id: actionId,
         endpoint: "/auth/change-password",
         method: "POST",
@@ -71,14 +70,15 @@ export function useProfileActions() {
         config: { baseUrl: "/api" },
         notify: false,
       })
+      const { data, message } = extractMutationResult<Profile>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await revalidateProfile()
-      return res.data
+      return data
     },
     [execute, reportAction, revalidateProfile]
   )
@@ -89,7 +89,7 @@ export function useProfileActions() {
       const formData = new FormData()
       formData.append("file", file)
 
-      const res = await execute<LaravelSuccessResponse<unknown>>({
+      const res = await execute<ApiSuccessResponse<unknown>>({
         id: actionId,
         endpoint: "/auth/upload-avatar",
         method: "POST",
@@ -98,11 +98,12 @@ export function useProfileActions() {
         notify: false,
       })
 
+      const { message } = extractMutationResult<unknown>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await revalidateProfile()
     },
@@ -111,7 +112,7 @@ export function useProfileActions() {
 
   const deleteAvatar = useCallback(async () => {
     const actionId = crypto.randomUUID()
-    const res = await execute<LaravelSuccessResponse<Profile>>({
+    const res = await execute<ApiSuccessResponse<Profile>>({
       id: actionId,
       endpoint: "/auth/profile",
       method: "PUT",
@@ -119,11 +120,12 @@ export function useProfileActions() {
       config: { baseUrl: "/api" },
       notify: false,
     })
+    const { message } = extractMutationResult<Profile>(res)
     reportAction({
       id: actionId,
       status: "success",
       error: null,
-      successMessage: res.message,
+      successMessage: message,
     })
     await revalidateProfile()
   }, [execute, reportAction, revalidateProfile])

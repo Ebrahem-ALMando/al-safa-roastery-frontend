@@ -29,6 +29,7 @@ export function useSuppliers({ page, search, columnFilters, perPage }: UseSuppli
 
   const { data, meta, isLoading, error, mutate } = useApiQuery<Supplier[]>(swrKey, ENDPOINT, {
     queryParams,
+    paginated: true,
   })
 
   return {
@@ -48,10 +49,13 @@ export function useActiveSuppliersCount() {
   )
   const swrKey = "suppliers:active-count"
 
-  const { meta, isLoading, error } = useApiQuery<Supplier[]>(swrKey, ENDPOINT, { queryParams })
+  const { meta, isLoading, error } = useApiQuery<Supplier[]>(swrKey, ENDPOINT, {
+    queryParams,
+    paginated: true,
+  })
 
   return {
-    count: (meta as SuppliersListMeta | undefined)?.total ?? null,
+    count: meta?.total ?? 0,
     isLoading,
     error: error as Error | undefined,
   }

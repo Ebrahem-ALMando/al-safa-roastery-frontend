@@ -13,25 +13,56 @@ export interface RequestConfig {
 }
 
 /**
- * Standard Laravel `ApiResponse::success` payload.
+ * Standard Laravel `ApiResponse` success envelope.
+ * HTTP status 200–299 is authoritative; body.status mirrors it when present.
  */
-export type LaravelSuccessResponse<T> = {
+export type ApiSuccessResponse<T> = {
   status: number
-  code: string
   message: string
+  code?: string
   data: T
-  meta?: unknown
+  meta?: Record<string, unknown>
+}
+
+/** @deprecated Use ApiSuccessResponse — kept for existing imports. */
+export type LaravelSuccessResponse<T> = ApiSuccessResponse<T>
+
+export type PaginatedMeta = {
+  total: number
+  current_page: number
+  per_page: number
+  last_page: number
+  from?: number | null
+  to?: number | null
+}
+
+export type PaginatedApiResponse<T> = ApiSuccessResponse<T[]> & {
+  meta: PaginatedMeta
+}
+
+export type PaginatedResult<T> = {
+  items: T[]
+  meta: PaginatedMeta | undefined
+  total: number
+  currentPage: number
+  perPage: number
+  lastPage: number
+  message: string
+  status: number
 }
 
 /**
  * Error body from `ApiResponse::error` / exception handlers.
  */
-export type ApiError = {
+export type ApiErrorResponse = {
   status: number
   message: string
   code?: string
   errors?: Record<string, string[]>
 }
+
+/** @deprecated Use ApiErrorResponse */
+export type ApiError = ApiErrorResponse
 
 export class ApiRequestError extends Error {
   constructor(

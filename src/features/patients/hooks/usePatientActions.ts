@@ -4,8 +4,7 @@ import { useCallback } from "react"
 import { useSWRConfig } from "swr"
 import { useAction } from "@/lib/hooks/useAction"
 import { useActionToast } from "@/src/components/status"
-import { ApiRequestError } from "@/lib/api"
-import type { LaravelSuccessResponse } from "@/lib/api"
+import { extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
 import type { CreatePatientInput, Patient, UpdatePatientInput } from "../types/patient.types"
 
 function isPatientsListKey(k: unknown): boolean {
@@ -55,24 +54,22 @@ export function usePatientActions() {
     async (payload: CreatePatientInput) => {
       const actionId = crypto.randomUUID()
       console.log("FINAL PAYLOAD", payload)
-      const res = await execute<LaravelSuccessResponse<Patient>>({
+      const res = await execute<ApiSuccessResponse<Patient>>({
         id: actionId,
         endpoint: "patients",
         method: "POST",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Patient>(res, 201)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await invalidateList()
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList]
   )
@@ -80,24 +77,22 @@ export function usePatientActions() {
   const updatePatient = useCallback(
     async (id: number, payload: UpdatePatientInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Patient>>({
+      const res = await execute<ApiSuccessResponse<Patient>>({
         id: actionId,
         endpoint: `patients/${id}`,
         method: "PUT",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Patient>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await Promise.all([invalidateList(), revalidateDetail(id)])
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList, revalidateDetail]
   )
@@ -105,7 +100,7 @@ export function usePatientActions() {
   const deletePatient = useCallback(
     async (id: number) => {
       const actionId = crypto.randomUUID()
-      await execute<LaravelSuccessResponse<unknown>>({
+      await execute<ApiSuccessResponse<unknown>>({
         id: actionId,
         endpoint: `patients/${id}`,
         method: "DELETE",

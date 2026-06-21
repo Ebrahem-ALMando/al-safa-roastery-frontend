@@ -63,10 +63,24 @@ async function forward(
 
 type RouteContext = { params: Promise<{ path: string[] }> }
 
+/** Strip UTF-8 BOM from JSON upstream bodies before forwarding to the browser. */
+function stripBomFromJsonBuffer(buf: ArrayBuffer, contentType: string | null): ArrayBuffer {
+  if (!contentType?.includes("application/json") || buf.byteLength === 0) {
+    return buf
+  }
+  const text = new TextDecoder().decode(buf)
+  const stripped = text.replace(/^\uFEFF+/, "")
+  if (stripped === text) {
+    return buf
+  }
+  return new Uint8Array(new TextEncoder().encode(stripped)).buffer
+}
+
 function toNextResponse(upstream: Response): Promise<NextResponse> {
   return upstream.arrayBuffer().then((buf) => {
-    const outHeaders: Record<string, string> = {}
     const ct = upstream.headers.get("content-type")
+    const bodyBuf = stripBomFromJsonBuffer(buf, ct)
+    const outHeaders: Record<string, string> = {}
     if (ct) {
       outHeaders["Content-Type"] = ct
     }
@@ -74,7 +88,7 @@ function toNextResponse(upstream: Response): Promise<NextResponse> {
     if (cd) {
       outHeaders["Content-Disposition"] = cd
     }
-    return new NextResponse(buf.byteLength > 0 ? buf : null, {
+    return new NextResponse(bodyBuf.byteLength > 0 ? bodyBuf : null, {
       status: upstream.status,
       headers: outHeaders,
     })

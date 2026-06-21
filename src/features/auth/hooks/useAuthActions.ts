@@ -3,8 +3,7 @@
 import { useCallback } from "react"
 import { useSWRConfig } from "swr"
 import { useAction } from "@/lib/hooks/useAction"
-import type { LaravelSuccessResponse } from "@/lib/api"
-import { ApiRequestError } from "@/lib/api"
+import { ApiRequestError, extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
 import { AUTH_ME_SWR_KEY } from "../auth.constants"
 import type { AuthUser, LoginRequest } from "../types/auth.types"
 
@@ -20,7 +19,7 @@ export type UseAuthActionsReturn = {
   logout: () => Promise<void>
 }
 
-type LoginEnvelope = LaravelSuccessResponse<{ user: AuthUser }>
+type LoginEnvelope = ApiSuccessResponse<{ user: AuthUser }>
 
 /**
  * Write operations for session — all traffic goes through `apiExecutor` (never raw fetch in components).
@@ -40,10 +39,11 @@ export function useAuthActions(): UseAuthActionsReturn {
         },
         config: { baseUrl: "/api" },
       })
-      if (!body?.data?.user) {
+      const { data } = extractMutationResult<{ user: AuthUser }>(body)
+      if (!data.user) {
         throw new ApiRequestError("استجابة غير صالحة من الخادم", 500)
       }
-      const user = body.data.user
+      const user = data.user
       await globalMutate(
         AUTH_ME_SWR_KEY,
         { state: "ok", user } as { state: "ok"; user: AuthUser },

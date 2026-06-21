@@ -4,8 +4,7 @@ import { useCallback } from "react"
 import { useSWRConfig } from "swr"
 import { useAction } from "@/lib/hooks/useAction"
 import { useActionToast } from "@/src/components/status"
-import { ApiRequestError } from "@/lib/api"
-import type { LaravelSuccessResponse } from "@/lib/api"
+import { extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
 import type { CreateTestInput, Test, UpdateTestInput } from "../types/test.types"
 
 function isTestsListKey(k: unknown): boolean {
@@ -54,7 +53,7 @@ export function useTestActions() {
   const createTest = useCallback(
     async (payload: CreateTestInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Test>>({
+      const res = await execute<ApiSuccessResponse<Test>>({
         id: actionId,
         endpoint: "tests",
         method: "POST",
@@ -65,17 +64,15 @@ export function useTestActions() {
         },
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Test>(res, 201)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await invalidateList()
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList]
   )
@@ -83,24 +80,22 @@ export function useTestActions() {
   const updateTest = useCallback(
     async (id: number, payload: UpdateTestInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Test>>({
+      const res = await execute<ApiSuccessResponse<Test>>({
         id: actionId,
         endpoint: `tests/${id}`,
         method: "PUT",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Test>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await Promise.all([invalidateList(), revalidateDetail(id)])
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList, revalidateDetail]
   )
@@ -108,7 +103,7 @@ export function useTestActions() {
   const deleteTest = useCallback(
     async (id: number) => {
       const actionId = crypto.randomUUID()
-      await execute<LaravelSuccessResponse<unknown>>({
+      await execute<ApiSuccessResponse<unknown>>({
         id: actionId,
         endpoint: `tests/${id}`,
         method: "DELETE",

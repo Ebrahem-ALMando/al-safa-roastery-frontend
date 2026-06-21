@@ -1,45 +1,20 @@
 import { getApiBaseUrl } from "@/lib/config/apiConfig"
 import type { HttpMethod, RequestConfig } from "./api.types"
 import { ApiRequestError } from "./api.types"
+import {
+  assertApiSuccessEnvelope,
+  isHttpSuccessStatus,
+  parseErrorBody,
+  parseResponseJson,
+} from "./parseApiResponse"
 
 function normalizeEndpoint(endpoint: string): string {
   return endpoint.startsWith("/") ? endpoint : `/${endpoint}`
 }
 
-async function parseJsonBody(response: Response): Promise<unknown> {
-  const text = await response.text()
-  if (!text) {
-    return null
-  }
-  try {
-    return JSON.parse(text) as unknown
-  } catch {
-    return null
-  }
-}
-
-function parseErrorBody(body: unknown, fallback: string): {
-  message: string
-  code?: string
-  errors?: Record<string, string[]>
-} {
-  if (!body || typeof body !== "object") {
-    return { message: fallback }
-  }
-  const o = body as Record<string, unknown>
-  const message =
-    typeof o.message === "string" && o.message.length > 0 ? o.message : fallback
-  const code = typeof o.code === "string" && o.code.length > 0 ? o.code : undefined
-  const rawErrors = o.errors
-  let errors: Record<string, string[]> | undefined
-  if (rawErrors && typeof rawErrors === "object" && !Array.isArray(rawErrors)) {
-    errors = rawErrors as Record<string, string[]>
-  }
-  return { message, code, errors }
-}
-
 /**
  * Low-level JSON HTTP client. No auth — BFF adds the session cookie.
+ * Success: any HTTP 2xx. Parses Laravel ApiResponse envelope centrally.
  */
 export async function apiClient<T = unknown>(
   endpoint: string,
@@ -102,9 +77,10 @@ export async function apiClient<T = unknown>(
     return null as T
   }
 
-  const parsed = await parseJsonBody(response)
+  const text = await response.text()
+  const parsed = text ? parseResponseJson(text) : null
 
-  if (!response.ok) {
+  if (!isHttpSuccessStatus(response.status)) {
     const { message, code, errors } = parseErrorBody(
       parsed,
       response.statusText || "Request failed"
@@ -112,5 +88,10 @@ export async function apiClient<T = unknown>(
     throw new ApiRequestError(message, response.status, code, errors)
   }
 
-  return (parsed ?? ({} as T)) as T
+  if (parsed === null) {
+    throw new ApiRequestError("استجابة نجاح غير متوقعة من الخادم.", response.status)
+  }
+
+  const envelope = assertApiSuccessEnvelope(parsed)
+  return envelope as T
 }

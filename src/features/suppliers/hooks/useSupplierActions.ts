@@ -4,7 +4,7 @@ import { useCallback } from "react"
 import { useSWRConfig } from "swr"
 import { useAction } from "@/lib/hooks/useAction"
 import { useActionToast } from "@/src/components/status"
-import { ApiRequestError, type LaravelSuccessResponse } from "@/lib/api"
+import { extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
 import type { CreateSupplierInput, Supplier, UpdateSupplierInput } from "../types/supplier.types"
 
 function isSuppliersListKey(k: unknown): boolean {
@@ -45,24 +45,22 @@ export function useSupplierActions() {
   const createSupplier = useCallback(
     async (payload: CreateSupplierInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Supplier>>({
+      const res = await execute<ApiSuccessResponse<Supplier>>({
         id: actionId,
         endpoint: "suppliers",
         method: "POST",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Supplier>(res, 201)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await invalidateList()
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList]
   )
@@ -70,24 +68,22 @@ export function useSupplierActions() {
   const updateSupplier = useCallback(
     async (id: number, payload: UpdateSupplierInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Supplier>>({
+      const res = await execute<ApiSuccessResponse<Supplier>>({
         id: actionId,
         endpoint: `suppliers/${id}`,
         method: "PUT",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Supplier>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await Promise.all([invalidateList(), revalidateDetail(id)])
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList, revalidateDetail]
   )
@@ -95,7 +91,7 @@ export function useSupplierActions() {
   const deleteSupplier = useCallback(
     async (id: number) => {
       const actionId = crypto.randomUUID()
-      await execute<LaravelSuccessResponse<unknown>>({
+      await execute<ApiSuccessResponse<unknown>>({
         id: actionId,
         endpoint: `suppliers/${id}`,
         method: "DELETE",

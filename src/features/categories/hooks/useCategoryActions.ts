@@ -4,8 +4,7 @@ import { useCallback } from "react"
 import { useSWRConfig } from "swr"
 import { useAction } from "@/lib/hooks/useAction"
 import { useActionToast } from "@/src/components/status"
-import { ApiRequestError } from "@/lib/api/api.types"
-import type { LaravelSuccessResponse } from "@/lib/api/api.types"
+import { extractMutationResult, type ApiSuccessResponse } from "@/lib/api"
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from "../types/category.types"
 
 function isCategoriesListKey(k: unknown): boolean {
@@ -32,24 +31,22 @@ export function useCategoryActions() {
   const createCategory = useCallback(
     async (payload: CreateCategoryInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Category>>({
+      const res = await execute<ApiSuccessResponse<Category>>({
         id: actionId,
         endpoint: "categories",
         method: "POST",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Category>(res, 201)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await invalidateList()
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList]
   )
@@ -57,24 +54,22 @@ export function useCategoryActions() {
   const updateCategory = useCallback(
     async (id: number, payload: UpdateCategoryInput) => {
       const actionId = crypto.randomUUID()
-      const res = await execute<LaravelSuccessResponse<Category>>({
+      const res = await execute<ApiSuccessResponse<Category>>({
         id: actionId,
         endpoint: `categories/${id}`,
         method: "PUT",
         payload,
         notify: false,
       })
-      if (!res?.data) {
-        throw new ApiRequestError("استجابة غير صالحة", 500)
-      }
+      const { data, message } = extractMutationResult<Category>(res)
       reportAction({
         id: actionId,
         status: "success",
         error: null,
-        successMessage: res.message,
+        successMessage: message,
       })
       await invalidateList()
-      return res.data
+      return data
     },
     [execute, reportAction, invalidateList]
   )
@@ -82,7 +77,7 @@ export function useCategoryActions() {
   const deleteCategory = useCallback(
     async (id: number) => {
       const actionId = crypto.randomUUID()
-      await execute<LaravelSuccessResponse<unknown>>({
+      await execute<ApiSuccessResponse<unknown>>({
         id: actionId,
         endpoint: `categories/${id}`,
         method: "DELETE",
