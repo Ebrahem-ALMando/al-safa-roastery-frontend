@@ -39,8 +39,8 @@ export function getBalanceStatusLabel(balance: string | number | null | undefine
   label: string
 } {
   const n = parseNumericBalance(balance)
-  if (n > 0) return { key: "payable", label: " رصيد دائن للمورد" }
-  if (n < 0) return { key: "credit", label: "رصيد دائن لنا" }
+  if (n > 0) return { key: "payable", label: " رصيد مدين للمورد" }
+  if (n < 0) return { key: "credit", label: "رصيد دائن لنا" } 
   return { key: "settled", label: "متوازن" }
 }
 
