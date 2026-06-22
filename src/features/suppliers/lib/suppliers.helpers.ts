@@ -39,7 +39,7 @@ export function getBalanceStatusLabel(balance: string | number | null | undefine
   label: string
 } {
   const n = parseNumericBalance(balance)
-  if (n > 0) return { key: "payable", label: "علينا للمورد" }
+  if (n > 0) return { key: "payable", label: " رصيد دائن للمورد" }
   if (n < 0) return { key: "credit", label: "رصيد دائن لنا" }
   return { key: "settled", label: "متوازن" }
 }
@@ -47,11 +47,11 @@ export function getBalanceStatusLabel(balance: string | number | null | undefine
 export function getBalanceBadgeClass(key: BalanceStatusLabel): string {
   switch (key) {
     case "payable":
-      return "border-amber-500/50 bg-amber-500/10 text-amber-800 dark:text-amber-300"
-    case "credit":
       return "border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-300"
-    case "settled":
+    case "credit":
       return "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+    case "settled":
+      return "border-amber-500/50 bg-amber-500/10 text-amber-800 dark:text-amber-300"
   }
 }
 

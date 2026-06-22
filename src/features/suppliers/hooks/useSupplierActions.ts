@@ -25,6 +25,14 @@ function isSupplierDetailKeyForId(k: unknown, id: number): boolean {
   return false
 }
 
+function isSuppliersSummaryKey(k: unknown): boolean {
+  if (typeof k === "string") return k.startsWith("suppliers-summary:")
+  if (Array.isArray(k) && k.length > 0 && typeof k[0] === "string") {
+    return (k[0] as string).startsWith("suppliers-summary:")
+  }
+  return false
+}
+
 export function useSupplierActions() {
   const { execute } = useAction()
   const { reportAction } = useActionToast()
@@ -35,11 +43,7 @@ export function useSupplierActions() {
   }, [mutateGlobal])
 
   const invalidateSummary = useCallback(() => {
-    return mutateGlobal(
-      (key) => typeof key === "string" && key.startsWith("suppliers-summary:"),
-      undefined,
-      { revalidate: true }
-    )
+    return mutateGlobal((key) => isSuppliersSummaryKey(key), undefined, { revalidate: true })
   }, [mutateGlobal])
 
   const revalidateDetail = useCallback(
