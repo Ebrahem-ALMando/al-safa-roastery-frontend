@@ -31,22 +31,56 @@ interface SuppliersFiltersProps {
   isLoading?: boolean
 }
 
+const DEBOUNCE_MS = 450
+
 export function SuppliersFilters({ value, onChange, isLoading = false }: SuppliersFiltersProps) {
   const [localSearch, setLocalSearch] = useState(value.search)
+  const [localBalanceMin, setLocalBalanceMin] = useState(value.balanceMin)
+  const [localBalanceMax, setLocalBalanceMax] = useState(value.balanceMax)
   const [showAdvanced, setShowAdvanced] = useState(false)
+
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+
+  const valueRef = useRef(value)
+  valueRef.current = value
 
   useEffect(() => {
     setLocalSearch(value.search)
   }, [value.search])
 
   useEffect(() => {
+    setLocalBalanceMin(value.balanceMin)
+  }, [value.balanceMin])
+
+  useEffect(() => {
+    setLocalBalanceMax(value.balanceMax)
+  }, [value.balanceMax])
+
+  useEffect(() => {
     const timer = setTimeout(() => {
-      onChangeRef.current({ ...value, search: localSearch })
-    }, 450)
+      if (localSearch === valueRef.current.search) return
+      onChangeRef.current({ ...valueRef.current, search: localSearch })
+    }, DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [localSearch, value.isActive])
+  }, [localSearch])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (
+        localBalanceMin === valueRef.current.balanceMin &&
+        localBalanceMax === valueRef.current.balanceMax
+      ) {
+        return
+      }
+      onChangeRef.current({
+        ...valueRef.current,
+        balanceMin: localBalanceMin,
+        balanceMax: localBalanceMax,
+      })
+    }, DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [localBalanceMin, localBalanceMax])
 
   const hasActiveFilters =
     Boolean(value.search.trim()) ||
@@ -89,7 +123,6 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
             placeholder="ابحث بالاسم، الكود، الهاتف، الشخص المسؤول..."
             className="w-full pr-10"
             value={localSearch}
-            disabled={isLoading}
             onChange={(event) => setLocalSearch(event.target.value)}
           />
         </div>
@@ -123,7 +156,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
       <div
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          showAdvanced ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+          showAdvanced ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4">
@@ -179,33 +212,45 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="suppliers-filter-balance-min" className="text-xs text-muted-foreground">
-              من الرصيد
+            <Label
+              htmlFor="suppliers-filter-balance-min"
+              className="text-xs text-muted-foreground"
+              title="القيمة الفعلية للرصيد الحالي: موجب = مديونية علينا، سالب = دائن لنا"
+            >
+              أقل رصيد (قيمة فعلية)
             </Label>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              موجب = علينا، سالب = لنا
+            </p>
             <Input
               id="suppliers-filter-balance-min"
               type="number"
-              disabled={isLoading}
               placeholder="0.00"
               className="h-10"
-              value={value.balanceMin}
-              onChange={(e) => onChange({ ...value, balanceMin: e.target.value })}
+              value={localBalanceMin}
+              onChange={(e) => setLocalBalanceMin(e.target.value)}
               dir="ltr"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="suppliers-filter-balance-max" className="text-xs text-muted-foreground">
-              إلى الرصيد
+            <Label
+              htmlFor="suppliers-filter-balance-max"
+              className="text-xs text-muted-foreground"
+              title="القيمة الفعلية للرصيد الحالي: موجب = مديونية علينا، سالب = دائن لنا"
+            >
+              أعلى رصيد (قيمة فعلية)
             </Label>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              موجب = علينا، سالب = لنا
+            </p>
             <Input
               id="suppliers-filter-balance-max"
               type="number"
-              disabled={isLoading}
               placeholder="0.00"
               className="h-10"
-              value={value.balanceMax}
-              onChange={(e) => onChange({ ...value, balanceMax: e.target.value })}
+              value={localBalanceMax}
+              onChange={(e) => setLocalBalanceMax(e.target.value)}
               dir="ltr"
             />
           </div>
@@ -222,7 +267,10 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
               <button
                 type="button"
                 className="mr-1 rounded-full p-0.5 hover:bg-violet-200/80 dark:hover:bg-violet-800"
-                onClick={() => onChange({ ...value, search: "" })}
+                onClick={() => {
+                  setLocalSearch("")
+                  onChange({ ...value, search: "" })
+                }}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -257,11 +305,14 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
 
           {value.balanceMin.trim() ? (
             <Badge variant="secondary" className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
-              من: {value.balanceMin}
+              أقل: {value.balanceMin}
               <button
                 type="button"
                 className="mr-1 rounded-full p-0.5 hover:bg-sky-200/80 dark:hover:bg-sky-800"
-                onClick={() => onChange({ ...value, balanceMin: "" })}
+                onClick={() => {
+                  setLocalBalanceMin("")
+                  onChange({ ...value, balanceMin: "" })
+                }}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -270,11 +321,14 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
 
           {value.balanceMax.trim() ? (
             <Badge variant="secondary" className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
-              إلى: {value.balanceMax}
+              أعلى: {value.balanceMax}
               <button
                 type="button"
                 className="mr-1 rounded-full p-0.5 hover:bg-sky-200/80 dark:hover:bg-sky-800"
-                onClick={() => onChange({ ...value, balanceMax: "" })}
+                onClick={() => {
+                  setLocalBalanceMax("")
+                  onChange({ ...value, balanceMax: "" })
+                }}
               >
                 <X className="h-3 w-3" />
               </button>

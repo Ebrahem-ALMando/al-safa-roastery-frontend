@@ -79,8 +79,10 @@ export function SupplierColumnCustomizer({
           تخصيص الأعمدة
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>الأعمدة الظاهرة — اسحب لإعادة الترتيب</DropdownMenuLabel>
+      <DropdownMenuContent align="end" dir="rtl" className="w-72 text-right">
+        <DropdownMenuLabel className="text-right font-medium">
+          الأعمدة الظاهرة — اسحب لإعادة الترتيب
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="max-h-72 space-y-1 overflow-y-auto px-2 py-1">
           {visibleColumns.map((id, index) => {
@@ -107,24 +109,23 @@ export function SupplierColumnCustomizer({
                   setDragOverIndex(null)
                 }}
                 className={cn(
-                  "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm",
+                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm",
                   dragOverIndex === index && dragIndex !== index && "bg-primary/10 ring-1 ring-primary/30",
                   canDrag ? "cursor-grab active:cursor-grabbing hover:bg-muted/60" : "hover:bg-muted/40"
                 )}
               >
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  {canDrag ? (
-                    <GripVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  ) : (
-                    <span className="size-4 shrink-0" />
-                  )}
-                  <span className="truncate">{getSupplierColumnLabel(id)}</span>
-                </div>
                 <Checkbox
                   checked
                   disabled={col?.essential}
                   onCheckedChange={() => toggleColumn(id)}
+                  className="shrink-0"
                 />
+                <span className="min-w-0 flex-1 truncate text-right">{getSupplierColumnLabel(id)}</span>
+                {canDrag ? (
+                  <GripVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                ) : (
+                  <span className="size-4 shrink-0" />
+                )}
               </div>
             )
           })}
@@ -132,14 +133,14 @@ export function SupplierColumnCustomizer({
           {hiddenColumns.length > 0 ? (
             <>
               <DropdownMenuSeparator className="my-2" />
-              <p className="px-2 py-1 text-xs text-muted-foreground">أعمدة مخفية</p>
+              <p className="px-2 py-1 text-right text-xs text-muted-foreground">أعمدة مخفية</p>
               {hiddenColumns.map((col) => (
                 <label
                   key={col.id}
-                  className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60"
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60"
                 >
-                  <span>{col.label}</span>
-                  <Checkbox checked={false} onCheckedChange={() => toggleColumn(col.id)} />
+                  <Checkbox checked={false} onCheckedChange={() => toggleColumn(col.id)} className="shrink-0" />
+                  <span className="min-w-0 flex-1 text-right">{col.label}</span>
                 </label>
               ))}
             </>
@@ -147,13 +148,13 @@ export function SupplierColumnCustomizer({
         </div>
         <DropdownMenuSeparator />
         <div className="flex flex-col gap-1 p-2">
-          <Button variant="ghost" size="sm" className="justify-end" onClick={showAll}>
+          <Button variant="ghost" size="sm" className="justify-start" onClick={showAll}>
             إظهار الكل
           </Button>
-          <Button variant="ghost" size="sm" className="justify-end" onClick={hideAll}>
+          <Button variant="ghost" size="sm" className="justify-start" onClick={hideAll}>
             إخفاء الكل
           </Button>
-          <Button variant="ghost" size="sm" className="justify-end" onClick={restoreDefault}>
+          <Button variant="ghost" size="sm" className="justify-start" onClick={restoreDefault}>
             استعادة الافتراضي
           </Button>
         </div>

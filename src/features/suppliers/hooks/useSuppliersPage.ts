@@ -134,19 +134,21 @@ export function useSuppliersPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [search, isActive, balanceStatus, balanceMin, balanceMax])
+  }, [search, isActive, balanceStatus, balanceMin, balanceMax, periodPreset, customPeriod])
 
   const { suppliers, meta, isLoading, error, mutate } = useSuppliers({
     search,
     page,
     columnFilters,
+    dateRange,
   })
 
   const hasSearch = search.trim().length > 0
   const hasIsActive = isActive !== "all"
   const hasBalanceFilter =
     balanceStatus !== "all" || balanceMin.trim() !== "" || balanceMax.trim() !== ""
-  const hasAnyFilter = hasSearch || hasIsActive || hasBalanceFilter
+  const hasPeriodFilter = periodPreset !== "all"
+  const hasAnyFilter = hasSearch || hasIsActive || hasBalanceFilter || hasPeriodFilter
 
   const isEmpty = !isLoading && suppliers.length === 0
   const isTrueEmpty = isEmpty && !hasAnyFilter

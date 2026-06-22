@@ -32,6 +32,12 @@ export function buildSuppliersQueryParams(
   if (typeof filters.per_page === "number") {
     q.per_page = Math.min(100, Math.max(1, filters.per_page))
   }
+  if (filters.date_from) {
+    q.date_from = filters.date_from
+  }
+  if (filters.date_to) {
+    q.date_to = filters.date_to
+  }
 
   return q
 }

@@ -5,11 +5,8 @@ import { useRouter } from "next/navigation"
 import {
   CheckCircle2,
   MoreHorizontal,
-  Pencil,
   Plus,
-  Power,
   Search,
-  Trash2,
   Truck,
   XCircle,
 } from "lucide-react"
@@ -19,9 +16,6 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -46,6 +40,7 @@ import {
 } from "@/features/suppliers"
 import { SupplierBalanceBadge } from "./supplier-balance-badge"
 import { SupplierContactBadges } from "./supplier-contact-badges"
+import { SupplierRowActionsMenuContent } from "./supplier-row-actions-menu"
 
 interface SuppliersTableProps {
   suppliers: Supplier[]
@@ -283,45 +278,14 @@ export function SuppliersTable({
                   <span className="sr-only">الإجراءات</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-44">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    goToSupplier(supplier.id)
-                  }}
-                >
-                  عرض التفاصيل
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onEdit(supplier)
-                  }}
-                >
-                  <Pencil className="size-4" />
-                  تعديل
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleActive(supplier)
-                  }}
-                >
-                  <Power className="size-4" />
-                  {supplier.is_active ? "إيقاف" : "تفعيل"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDelete(supplier)
-                  }}
-                >
-                  <Trash2 className="size-4" />
-                  حذف
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              <SupplierRowActionsMenuContent
+                supplier={supplier}
+                stopPropagation
+                onViewDetails={() => goToSupplier(supplier.id)}
+                onEdit={() => onEdit(supplier)}
+                onToggleActive={() => onToggleActive(supplier)}
+                onDelete={() => onDelete(supplier)}
+              />
             </DropdownMenu>
           </TableCell>
         )
@@ -447,45 +411,25 @@ export function SuppliersTable({
                 style={{ top: contextMenu.y, left: contextMenu.x, width: 1, height: 1, pointerEvents: "none" }}
               />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-44">
-              <DropdownMenuItem
-                onClick={() => {
-                  goToSupplier(contextMenu.supplier.id)
-                  setContextMenu(null)
-                }}
-              >
-                عرض التفاصيل
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  onEdit(contextMenu.supplier)
-                  setContextMenu(null)
-                }}
-              >
-                <Pencil className="size-4" />
-                تعديل
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  onToggleActive(contextMenu.supplier)
-                  setContextMenu(null)
-                }}
-              >
-                <Power className="size-4" />
-                {contextMenu.supplier.is_active ? "إيقاف" : "تفعيل"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => {
-                  onDelete(contextMenu.supplier)
-                  setContextMenu(null)
-                }}
-              >
-                <Trash2 className="size-4" />
-                حذف
-              </DropdownMenuItem>
-            </DropdownMenuContent>
+            <SupplierRowActionsMenuContent
+              supplier={contextMenu.supplier}
+              onViewDetails={() => {
+                goToSupplier(contextMenu.supplier.id)
+                setContextMenu(null)
+              }}
+              onEdit={() => {
+                onEdit(contextMenu.supplier)
+                setContextMenu(null)
+              }}
+              onToggleActive={() => {
+                onToggleActive(contextMenu.supplier)
+                setContextMenu(null)
+              }}
+              onDelete={() => {
+                onDelete(contextMenu.supplier)
+                setContextMenu(null)
+              }}
+            />
           </DropdownMenu>
         </div>
       ) : null}
