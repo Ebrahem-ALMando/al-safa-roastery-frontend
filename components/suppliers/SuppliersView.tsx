@@ -46,6 +46,12 @@ export function SuppliersView() {
     setIsActive,
     balanceStatus,
     setBalanceStatus,
+    balanceMin,
+    setBalanceMin,
+    balanceMax,
+    setBalanceMax,
+    balanceRangeDirection,
+    setBalanceRangeDirection,
     page,
     setPage,
     config,
@@ -182,11 +188,21 @@ export function SuppliersView() {
 
       {config.showFilters ? (
         <SuppliersFilters
-          value={{ search, isActive, balanceStatus }}
+          value={{
+            search,
+            isActive,
+            balanceStatus,
+            balanceMin,
+            balanceMax,
+            balanceRangeDirection,
+          }}
           onChange={(next) => {
             setSearch(next.search)
             setIsActive(next.isActive)
             setBalanceStatus(next.balanceStatus)
+            setBalanceMin(next.balanceMin)
+            setBalanceMax(next.balanceMax)
+            setBalanceRangeDirection(next.balanceRangeDirection)
           }}
           isLoading={isLoading}
         />

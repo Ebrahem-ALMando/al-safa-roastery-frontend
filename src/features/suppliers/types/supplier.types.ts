@@ -45,6 +45,9 @@ export type SuppliersListMeta = {
 
 export type BalanceStatusFilter = "payable" | "credit" | "settled"
 
+/** Direction for min/max balance range filter (عليه / له). */
+export type BalanceRangeDirection = "payable" | "credit"
+
 /** `IndexSupplierRequest` + Laravel paginator `page`. */
 export type SuppliersListFilters = {
   search?: string

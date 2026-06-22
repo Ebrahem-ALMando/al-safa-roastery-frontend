@@ -16,9 +16,10 @@ import {
 import {
   defaultCustomPeriod,
   readStoredSuppliersPeriod,
+  resolveBalanceRangeQuery,
   resolveSuppliersPeriodRange,
 } from "../lib/suppliers.helpers"
-import type { BalanceStatusFilter } from "../types/supplier.types"
+import type { BalanceRangeDirection, BalanceStatusFilter } from "../types/supplier.types"
 import { useSuppliers } from "./useSuppliers"
 
 export interface SuppliersPageConfig {
@@ -73,6 +74,9 @@ export function useSuppliersPage() {
   const [search, setSearch] = useState("")
   const [isActive, setIsActive] = useState<SuppliersActiveStatus>("all")
   const [balanceStatus, setBalanceStatus] = useState<BalanceStatusFilter | "all">("all")
+  const [balanceMin, setBalanceMin] = useState("")
+  const [balanceMax, setBalanceMax] = useState("")
+  const [balanceRangeDirection, setBalanceRangeDirection] = useState<BalanceRangeDirection | null>(null)
   const [page, setPage] = useState(1)
   const [config, setConfig] = useState<SuppliersPageConfig>(defaultConfig)
   const [visibleColumns, setVisibleColumns] = useState<SupplierTableColumnId[]>(
@@ -120,17 +124,19 @@ export function useSuppliersPage() {
     [periodPreset, customPeriod]
   )
 
-  const columnFilters = useMemo(
-    () => ({
+  const columnFilters = useMemo(() => {
+    const range = resolveBalanceRangeQuery(balanceMin, balanceMax, balanceRangeDirection)
+    return {
       is_active: isActive === "all" ? undefined : isActive === "active",
       balance_status: balanceStatus !== "all" ? (balanceStatus as BalanceStatusFilter) : undefined,
-    }),
-    [isActive, balanceStatus]
-  )
+      balance_min: range.balance_min,
+      balance_max: range.balance_max,
+    }
+  }, [isActive, balanceStatus, balanceMin, balanceMax, balanceRangeDirection])
 
   useEffect(() => {
     setPage(1)
-  }, [search, isActive, balanceStatus, periodPreset, customPeriod])
+  }, [search, isActive, balanceStatus, balanceMin, balanceMax, balanceRangeDirection, periodPreset, customPeriod])
 
   const { suppliers, meta, isLoading, error, mutate } = useSuppliers({
     search,
@@ -141,7 +147,10 @@ export function useSuppliersPage() {
 
   const hasSearch = search.trim().length > 0
   const hasIsActive = isActive !== "all"
-  const hasBalanceFilter = balanceStatus !== "all"
+  const hasBalanceFilter =
+    balanceStatus !== "all" ||
+    balanceMin.trim() !== "" ||
+    balanceMax.trim() !== ""
   const hasPeriodFilter = periodPreset !== "all"
   const hasAnyFilter = hasSearch || hasIsActive || hasBalanceFilter || hasPeriodFilter
 
@@ -200,6 +209,12 @@ export function useSuppliersPage() {
     setIsActive,
     balanceStatus,
     setBalanceStatus,
+    balanceMin,
+    setBalanceMin,
+    balanceMax,
+    setBalanceMax,
+    balanceRangeDirection,
+    setBalanceRangeDirection,
     page,
     setPage,
     config,

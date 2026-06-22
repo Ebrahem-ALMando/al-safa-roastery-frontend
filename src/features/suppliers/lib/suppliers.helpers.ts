@@ -3,7 +3,7 @@ import {
   resolveOperationalDateRange,
 } from "@/lib/date-scope/resolve-operational-date-range"
 import type { ResolvedOperationalDateRange } from "@/lib/date-scope/operational-date-scope.types"
-import type { ReportCard, Supplier } from "../types/supplier.types"
+import type { ReportCard, Supplier, BalanceRangeDirection } from "../types/supplier.types"
 import type { SuppliersCustomPeriod, SuppliersPeriodPreset } from "./suppliers.constants"
 
 export function parseNumericBalance(value: string | number | null | undefined): number {
@@ -53,6 +53,40 @@ export function getBalanceBadgeClass(key: BalanceStatusLabel): string {
     case "settled":
       return "border-amber-500/50 bg-amber-500/10 text-amber-800 dark:text-amber-300"
   }
+}
+
+/** Maps user-facing amount range + direction to signed balance_min/max for the API. */
+export function resolveBalanceRangeQuery(
+  min: string,
+  max: string,
+  direction: BalanceRangeDirection | null
+): { balance_min?: number; balance_max?: number } {
+  const hasMin = min.trim() !== ""
+  const hasMax = max.trim() !== ""
+  if (!hasMin && !hasMax) return {}
+  if (!direction) return {}
+
+  const minVal = hasMin ? Number.parseFloat(min) : 0
+  const maxVal = hasMax ? Number.parseFloat(max) : minVal
+  if (!Number.isFinite(minVal) || !Number.isFinite(maxVal)) return {}
+
+  const low = Math.min(minVal, maxVal)
+  const high = Math.max(minVal, maxVal)
+
+  if (direction === "payable") {
+    const result: { balance_min?: number; balance_max?: number } = {}
+    if (hasMin) result.balance_min = low
+    if (hasMax) result.balance_max = high
+    if (hasMin && !hasMax) result.balance_max = high
+    if (!hasMin && hasMax) result.balance_min = low
+    return result
+  }
+
+  const result: { balance_min?: number; balance_max?: number } = {}
+  if (hasMax || hasMin) result.balance_min = -high
+  if (hasMin) result.balance_max = -low
+  else if (hasMax) result.balance_max = 0
+  return result
 }
 
 export function formatArDateTime(value: string | null | undefined): string {

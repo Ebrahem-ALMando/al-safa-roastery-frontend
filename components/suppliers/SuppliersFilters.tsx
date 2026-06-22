@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, Filter, Minus, Search, X } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, Filter, Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,12 +15,15 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import type { SuppliersActiveStatus } from "@/features/suppliers"
-import type { BalanceStatusFilter } from "@/features/suppliers"
+import type { BalanceRangeDirection, BalanceStatusFilter } from "@/features/suppliers"
 
 export interface SuppliersFiltersValue {
   search: string
   isActive: SuppliersActiveStatus
   balanceStatus: BalanceStatusFilter | "all"
+  balanceMin: string
+  balanceMax: string
+  balanceRangeDirection: BalanceRangeDirection | null
 }
 
 interface SuppliersFiltersProps {
@@ -31,7 +34,7 @@ interface SuppliersFiltersProps {
 
 const DEBOUNCE_MS = 450
 
-const BALANCE_DIRECTION_OPTIONS = [
+const RANGE_DIRECTION_OPTIONS = [
   {
     value: "payable" as const,
     label: "عليه",
@@ -47,18 +50,12 @@ const BALANCE_DIRECTION_OPTIONS = [
     activeClass:
       "border-emerald-500/60 bg-emerald-500/15 text-emerald-800 ring-1 ring-emerald-500/30 dark:bg-emerald-950/40",
   },
-  {
-    value: "settled" as const,
-    label: "متوازن",
-    icon: Minus,
-    baseClass: "border-amber-500/40 text-amber-800 hover:bg-amber-500/10 dark:text-amber-300",
-    activeClass:
-      "border-amber-500/60 bg-amber-500/15 text-amber-900 ring-1 ring-amber-500/30 dark:bg-amber-950/40",
-  },
 ] as const
 
 export function SuppliersFilters({ value, onChange, isLoading = false }: SuppliersFiltersProps) {
   const [localSearch, setLocalSearch] = useState(value.search)
+  const [localBalanceMin, setLocalBalanceMin] = useState(value.balanceMin)
+  const [localBalanceMax, setLocalBalanceMax] = useState(value.balanceMax)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   const onChangeRef = useRef(onChange)
@@ -72,6 +69,14 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
   }, [value.search])
 
   useEffect(() => {
+    setLocalBalanceMin(value.balanceMin)
+  }, [value.balanceMin])
+
+  useEffect(() => {
+    setLocalBalanceMax(value.balanceMax)
+  }, [value.balanceMax])
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       if (localSearch === valueRef.current.search) return
       onChangeRef.current({ ...valueRef.current, search: localSearch })
@@ -79,8 +84,30 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
     return () => clearTimeout(timer)
   }, [localSearch])
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (
+        localBalanceMin === valueRef.current.balanceMin &&
+        localBalanceMax === valueRef.current.balanceMax
+      ) {
+        return
+      }
+      onChangeRef.current({
+        ...valueRef.current,
+        balanceMin: localBalanceMin,
+        balanceMax: localBalanceMax,
+      })
+    }, DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [localBalanceMin, localBalanceMax])
+
+  const hasBalanceRange = value.balanceMin.trim() !== "" || value.balanceMax.trim() !== ""
+
   const hasActiveFilters =
-    Boolean(value.search.trim()) || value.isActive !== "all" || value.balanceStatus !== "all"
+    Boolean(value.search.trim()) ||
+    value.isActive !== "all" ||
+    value.balanceStatus !== "all" ||
+    hasBalanceRange
 
   const statusLabel =
     value.isActive === "active"
@@ -91,31 +118,30 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
 
   const balanceStatusLabel =
     value.balanceStatus === "payable"
-      ? "عليه"
+      ? "مديونية (علينا)"
       : value.balanceStatus === "credit"
-        ? "له"
+        ? "دائن (لنا)"
         : value.balanceStatus === "settled"
           ? "متوازن"
           : undefined
 
-  const balanceBadgeClass =
-    value.balanceStatus === "payable"
-      ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
-      : value.balanceStatus === "credit"
-        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
-
-  const clearAll = () =>
+  const clearAll = () => {
+    setLocalBalanceMin("")
+    setLocalBalanceMax("")
     onChange({
       search: "",
       isActive: "all",
       balanceStatus: "all",
+      balanceMin: "",
+      balanceMax: "",
+      balanceRangeDirection: null,
     })
+  }
 
-  function toggleBalanceDirection(next: BalanceStatusFilter) {
+  function selectRangeDirection(next: BalanceRangeDirection) {
     onChange({
       ...value,
-      balanceStatus: value.balanceStatus === next ? "all" : next,
+      balanceRangeDirection: value.balanceRangeDirection === next ? null : next,
     })
   }
 
@@ -161,12 +187,12 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
       <div
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          showAdvanced ? "max-h-24 opacity-100" : "max-h-0 opacity-0"
+          showAdvanced ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="flex flex-col gap-3 border-t border-border/60 pb-2 pt-4 md:flex-row md:items-center md:gap-4">
-          <div className="flex min-w-0 items-center gap-2 md:w-44 md:shrink-0">
-            <Label htmlFor="suppliers-filter-status" className="shrink-0 text-xs text-muted-foreground">
+        <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4">
+          <div className="space-y-2">
+            <Label htmlFor="suppliers-filter-status" className="text-xs text-muted-foreground">
               الحالة
             </Label>
             <Select
@@ -190,11 +216,58 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
             </Select>
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 md:gap-3">
-            <span className="shrink-0 text-xs text-muted-foreground">اتجاه الرصيد</span>
-            {BALANCE_DIRECTION_OPTIONS.map((option) => {
+          <div className="space-y-2">
+            <Label htmlFor="suppliers-filter-balance-status" className="text-xs text-muted-foreground">
+              حالة الرصيد
+            </Label>
+            <Select
+              value={value.balanceStatus}
+              onValueChange={(selected) =>
+                onChange({
+                  ...value,
+                  balanceStatus: selected as BalanceStatusFilter | "all",
+                })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger id="suppliers-filter-balance-status" className="h-10 w-full">
+                <SelectValue placeholder="الكل" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="payable">مديونية (علينا)</SelectItem>
+                <SelectItem value="credit">دائن (لنا)</SelectItem>
+                <SelectItem value="settled">متوازن</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label className="text-xs text-muted-foreground">نطاق الرصيد</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                id="suppliers-filter-balance-min"
+                type="number"
+                min={0}
+                placeholder="من"
+                className="h-10 w-24 shrink-0"
+                value={localBalanceMin}
+                onChange={(e) => setLocalBalanceMin(e.target.value)}
+                dir="ltr"
+              />
+              <Input
+                id="suppliers-filter-balance-max"
+                type="number"
+                min={0}
+                placeholder="إلى"
+                className="h-10 w-24 shrink-0"
+                value={localBalanceMax}
+                onChange={(e) => setLocalBalanceMax(e.target.value)}
+                dir="ltr"
+              />
+              {RANGE_DIRECTION_OPTIONS.map((option) => {
                 const Icon = option.icon
-                const selected = value.balanceStatus === option.value
+                const selected = value.balanceRangeDirection === option.value
                 return (
                   <Button
                     key={option.value}
@@ -202,7 +275,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
                     variant="outline"
                     size="sm"
                     disabled={isLoading}
-                    onClick={() => toggleBalanceDirection(option.value)}
+                    onClick={() => selectRangeDirection(option.value)}
                     className={cn(
                       "h-10 gap-1.5 rounded-xl border px-3 text-sm font-medium transition-colors",
                       selected ? option.activeClass : option.baseClass
@@ -213,6 +286,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
                   </Button>
                 )
               })}
+            </div>
           </div>
         </div>
       </div>
@@ -251,12 +325,39 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
           ) : null}
 
           {balanceStatusLabel ? (
-            <Badge variant="secondary" className={balanceBadgeClass}>
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
               الرصيد: {balanceStatusLabel}
               <button
                 type="button"
-                className="mr-1 rounded-full p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
+                className="mr-1 rounded-full p-0.5 hover:bg-amber-200/80 dark:hover:bg-amber-800"
                 onClick={() => onChange({ ...value, balanceStatus: "all" })}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ) : null}
+
+          {hasBalanceRange ? (
+            <Badge variant="secondary" className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+              نطاق: {value.balanceMin || "…"} — {value.balanceMax || "…"}
+              {value.balanceRangeDirection === "payable"
+                ? " (عليه)"
+                : value.balanceRangeDirection === "credit"
+                  ? " (له)"
+                  : ""}
+              <button
+                type="button"
+                className="mr-1 rounded-full p-0.5 hover:bg-sky-200/80 dark:hover:bg-sky-800"
+                onClick={() => {
+                  setLocalBalanceMin("")
+                  setLocalBalanceMax("")
+                  onChange({
+                    ...value,
+                    balanceMin: "",
+                    balanceMax: "",
+                    balanceRangeDirection: null,
+                  })
+                }}
               >
                 <X className="h-3 w-3" />
               </button>
