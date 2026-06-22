@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { Check, Loader2, Package, Pencil, X } from "lucide-react"
+import { Check, Info, Loader2, Package, Pencil, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ApiRequestError } from "@/lib/api"
+import { adminFormLabelClass } from "@/components/shared/forms/administrative-form-styles"
 import { toast } from "@/components/ui/custom-toast-with-icons"
 import type { CreateItemInput, Item, UpdateItemInput } from "@/features/items"
 import {
@@ -22,6 +25,35 @@ import {
   itemToForm,
   type ItemFormState,
 } from "./item-form-fields"
+
+const MINIMUM_QUANTITY_TOOLTIP =
+  "الكمية التي يبدأ عندها النظام بتنبيهك لإعادة طلب الصنف."
+const MINIMUM_QUANTITY_HINT =
+  "عند الوصول لهذا الحد يظهر الصنف ضمن أصناف تحتاج إعادة طلب."
+
+function ItemMinimumQuantityLabel({ htmlFor }: { htmlFor: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Label htmlFor={htmlFor} className={adminFormLabelClass}>
+        الحد الأدنى للكمية (كغ)
+      </Label>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            aria-label={MINIMUM_QUANTITY_TOOLTIP}
+          >
+            <Info className="size-3.5" aria-hidden />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" dir="rtl" className="max-w-xs text-right text-xs leading-relaxed">
+          {MINIMUM_QUANTITY_TOOLTIP}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  )
+}
 
 function mapSubmitError(error: unknown): string | null {
   if (error instanceof ApiRequestError) {
@@ -119,6 +151,7 @@ export function ItemFormDialog({
 
   const isCreate = mode === "create"
   const HeaderIcon = isCreate ? Package : Pencil
+  const minimumQuantityFieldId = isCreate ? "add-item-minimumQuantity" : "edit-item-minimumQuantity"
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -212,6 +245,14 @@ export function ItemFormDialog({
                   fieldErrors={fieldErrors}
                   nameFieldAutoFocus={isCreate}
                   formKey={`${mode}-${item?.id ?? "new"}-${open}`}
+                  minimumQuantityLabel={
+                    <ItemMinimumQuantityLabel htmlFor={minimumQuantityFieldId} />
+                  }
+                  minimumQuantityHint={
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                      {MINIMUM_QUANTITY_HINT}
+                    </p>
+                  }
                 />
               </motion.fieldset>
             </motion.div>

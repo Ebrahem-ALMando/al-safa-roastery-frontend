@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { Package, Scale, Wheat } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -131,6 +132,8 @@ type ItemFormFieldsProps = {
   fieldErrors?: Record<string, string[]>
   nameFieldAutoFocus?: boolean
   formKey?: string
+  minimumQuantityLabel?: ReactNode
+  minimumQuantityHint?: ReactNode
 }
 
 function fieldError(errors: Record<string, string[]> | undefined, key: string): string | undefined {
@@ -145,6 +148,8 @@ export function ItemFormFields({
   item,
   fieldErrors,
   nameFieldAutoFocus,
+  minimumQuantityLabel,
+  minimumQuantityHint,
 }: ItemFormFieldsProps) {
   const set = (patch: Partial<ItemFormState>) => onChange({ ...form, ...patch })
 
@@ -219,9 +224,11 @@ export function ItemFormFields({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-minimumQuantity`} className={adminFormLabelClass}>
-              الحد الأدنى للكمية (كغ)
-            </Label>
+            {minimumQuantityLabel ?? (
+              <Label htmlFor={`${idPrefix}-minimumQuantity`} className={adminFormLabelClass}>
+                الحد الأدنى للكمية (كغ)
+              </Label>
+            )}
             <div className="relative w-full min-w-0">
               <FormFieldIcon>
                 <Scale className="size-4" />
@@ -237,6 +244,7 @@ export function ItemFormFields({
                 dir="ltr"
               />
             </div>
+            {minimumQuantityHint}
             {fieldError(fieldErrors, "minimum_quantity_kg") ? (
               <p className={adminFormFieldErrorClass} role="alert">
                 {fieldError(fieldErrors, "minimum_quantity_kg")}
