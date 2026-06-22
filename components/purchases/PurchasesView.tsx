@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { LayoutGrid, Plus, RefreshCw, Settings2, Table } from "lucide-react"
+import { LayoutGrid, RefreshCw, Settings2, Table } from "lucide-react"
 import { DashboardPageHeader } from "@/components/dashboard"
 import { DateRangeDialog } from "@/components/shared/DateRangeDialog"
 import { Button } from "@/components/ui/button"
@@ -15,23 +15,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { defaultCustomPeriod } from "@/features/items/lib/items.helpers"
 import {
-  useItemActions,
-  useItemSummary,
-  useItemsPage,
-  type Item,
-} from "@/features/items"
-import { ItemsDataView } from "./ItemsDataView"
-import { ItemsFilters } from "./ItemsFilters"
-import { ItemsPeriodControls } from "./ItemsPeriodControls"
-import { ItemsSummary } from "./ItemsSummary"
-import { ItemColumnCustomizer } from "./ItemColumnCustomizer"
-import { ItemFormDialog } from "./ItemFormDialog"
-import { ItemDeleteDialog } from "./ItemDeleteDialog"
-import { ItemToggleActiveDialog } from "./ItemToggleActiveDialog"
+  defaultCustomPeriod,
+  usePurchaseActions,
+  usePurchaseSummary,
+  usePurchasesPage,
+  type PurchaseInvoice,
+} from "@/features/purchases"
+import { PurchasesDataView } from "./PurchasesDataView"
+import { PurchasesFilters } from "./PurchasesFilters"
+import { PurchasesPeriodControls } from "./PurchasesPeriodControls"
+import { PurchasesSummary } from "./PurchasesSummary"
+import { PurchaseColumnCustomizer } from "./PurchaseColumnCustomizer"
+import { PurchaseDeleteDraftDialog } from "./PurchaseDeleteDraftDialog"
+import { PurchaseCancelDialog } from "./PurchaseCancelDialog"
 
-export function ItemsView() {
+export function PurchasesView() {
   const router = useRouter()
   const {
     periodPreset,
@@ -43,16 +42,14 @@ export function ItemsView() {
     dateRange,
     search,
     setSearch,
-    isActive,
-    setIsActive,
-    itemType,
-    setItemType,
-    stockStatus,
-    setStockStatus,
-    quantityMin,
-    setQuantityMin,
-    quantityMax,
-    setQuantityMax,
+    status,
+    setStatus,
+    supplierId,
+    setSupplierId,
+    paymentStatus,
+    setPaymentStatus,
+    paymentMethod,
+    setPaymentMethod,
     page,
     setPage,
     config,
@@ -61,7 +58,8 @@ export function ItemsView() {
     toggleShowFilters,
     visibleColumns,
     setColumnVisibility,
-    items,
+    columnFilters,
+    purchases,
     meta,
     isLoading,
     error,
@@ -72,44 +70,37 @@ export function ItemsView() {
     lastPage,
     canPrev,
     canNext,
-  } = useItemsPage()
+  } = usePurchasesPage()
 
-  const { summary, isLoading: summaryLoading, error: summaryError } = useItemSummary(dateRange)
+  const { summary, isLoading: summaryLoading, error: summaryError } = usePurchaseSummary({
+    dateRange,
+    ...columnFilters,
+  })
+  const { deleteDraftPurchase, cancelPurchase } = usePurchaseActions()
 
-  const { createItem, updateItem, deleteItem, toggleItemActive } = useItemActions()
-
-  const [formOpen, setFormOpen] = useState(false)
-  const [formMode, setFormMode] = useState<"create" | "edit">("create")
-  const [editItem, setEditItem] = useState<Item | null>(null)
+  const [supplierName, setSupplierName] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null)
-  const [toggleActiveOpen, setToggleActiveOpen] = useState(false)
-  const [toggleActiveTarget, setToggleActiveTarget] = useState<Item | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseInvoice | null>(null)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelTarget, setCancelTarget] = useState<PurchaseInvoice | null>(null)
 
-  function openCreate() {
-    setFormMode("create")
-    setEditItem(null)
-    setFormOpen(true)
+  function openDetails(purchase: PurchaseInvoice) {
+    router.push(`/dashboard/purchases/${purchase.id}`)
   }
 
-  function openEdit(item: Item) {
-    setFormMode("edit")
-    setEditItem(item)
-    setFormOpen(true)
+  function openPrint(purchase: PurchaseInvoice) {
+    if (purchase.status === "draft") return
+    router.push(`/dashboard/purchases/${purchase.id}/print`)
   }
 
-  function openDetails(item: Item) {
-    router.push(`/dashboard/items/${item.id}`)
-  }
-
-  function openDelete(item: Item) {
-    setDeleteTarget(item)
+  function openDelete(purchase: PurchaseInvoice) {
+    setDeleteTarget(purchase)
     setDeleteOpen(true)
   }
 
-  function openToggleActive(item: Item) {
-    setToggleActiveTarget(item)
-    setToggleActiveOpen(true)
+  function openCancel(purchase: PurchaseInvoice) {
+    setCancelTarget(purchase)
+    setCancelOpen(true)
   }
 
   const customFrom = customPeriod?.from ?? defaultCustomPeriod().from
@@ -120,18 +111,14 @@ export function ItemsView() {
       <DashboardPageHeader>
         <DashboardPageHeader.Lead>
           <h1 className="flex items-center gap-2 text-md font-bold tracking-tight">
-            الأصناف
+            المشتريات
             /
-            <p className="text-md text-muted-foreground">إدارة أصناف المخزون</p>
+            <p className="text-md text-muted-foreground">إدارة فواتير المشتريات</p>
           </h1>
         </DashboardPageHeader.Lead>
         <DashboardPageHeader.Actions>
-          <ItemsPeriodControls preset={periodPreset} onPresetChange={setPeriodPreset} />
-          <Button onClick={openCreate} className="gap-2 rounded-xl">
-            <Plus className="h-4 w-4" />
-            إضافة صنف
-          </Button>
-          <ItemColumnCustomizer visibleColumns={visibleColumns} onChange={setColumnVisibility} />
+          <PurchasesPeriodControls preset={periodPreset} onPresetChange={setPeriodPreset} />
+          <PurchaseColumnCustomizer visibleColumns={visibleColumns} onChange={setColumnVisibility} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 rounded-xl">
@@ -180,31 +167,26 @@ export function ItemsView() {
       </DashboardPageHeader>
 
       {config.showKPI ? (
-        <ItemsSummary
-          summary={summary}
-          isLoading={summaryLoading}
-          error={summaryError}
-          onReorderCardClick={() => setStockStatus("reorder_required")}
-        />
+        <PurchasesSummary summary={summary} isLoading={summaryLoading} error={summaryError} />
       ) : null}
 
       {config.showFilters ? (
-        <ItemsFilters
+        <PurchasesFilters
           value={{
             search,
-            isActive,
-            itemType,
-            stockStatus,
-            quantityMin,
-            quantityMax,
+            status,
+            supplierId,
+            supplierName,
+            paymentStatus,
+            paymentMethod,
           }}
           onChange={(next) => {
             setSearch(next.search)
-            setIsActive(next.isActive)
-            setItemType(next.itemType)
-            setStockStatus(next.stockStatus)
-            setQuantityMin(next.quantityMin)
-            setQuantityMax(next.quantityMax)
+            setStatus(next.status)
+            setSupplierId(next.supplierId)
+            setSupplierName(next.supplierName)
+            setPaymentStatus(next.paymentStatus)
+            setPaymentMethod(next.paymentMethod)
           }}
           isLoading={isLoading}
         />
@@ -229,9 +211,9 @@ export function ItemsView() {
             : "overflow-hidden rounded-xl border border-border/60 shadow-sm"
         }
       >
-        <ItemsDataView
+        <PurchasesDataView
           viewMode={config.viewMode}
-          items={items}
+          purchases={purchases}
           meta={meta}
           visibleColumns={visibleColumns}
           isLoading={isLoading}
@@ -242,11 +224,10 @@ export function ItemsView() {
           canPrev={canPrev}
           canNext={canNext}
           onPageChange={setPage}
-          onAddItem={openCreate}
           onViewDetails={openDetails}
-          onEdit={openEdit}
+          onPrint={openPrint}
+          onCancel={openCancel}
           onDelete={openDelete}
-          onToggleActive={openToggleActive}
         />
       </div>
 
@@ -258,41 +239,28 @@ export function ItemsView() {
         onApply={applyCustomPeriod}
       />
 
-      <ItemFormDialog
-        open={formOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open)
-          if (!open) setEditItem(null)
-        }}
-        mode={formMode}
-        item={editItem}
-        onCreate={createItem}
-        onUpdate={updateItem}
-        onSaved={() => void mutate()}
-      />
-
-      <ItemToggleActiveDialog
-        open={toggleActiveOpen}
-        onOpenChange={(open) => {
-          setToggleActiveOpen(open)
-          if (!open) setToggleActiveTarget(null)
-        }}
-        item={toggleActiveTarget}
-        onConfirm={async (item) => {
-          await toggleItemActive(item)
-          void mutate()
-        }}
-      />
-
-      <ItemDeleteDialog
+      <PurchaseDeleteDraftDialog
         open={deleteOpen}
         onOpenChange={(open) => {
           setDeleteOpen(open)
           if (!open) setDeleteTarget(null)
         }}
-        item={deleteTarget}
+        purchase={deleteTarget}
         onDelete={async (id) => {
-          await deleteItem(id)
+          await deleteDraftPurchase(id)
+          void mutate()
+        }}
+      />
+
+      <PurchaseCancelDialog
+        open={cancelOpen}
+        onOpenChange={(open) => {
+          setCancelOpen(open)
+          if (!open) setCancelTarget(null)
+        }}
+        purchase={cancelTarget}
+        onCancel={async (id, reason) => {
+          await cancelPurchase(id, { cancel_reason: reason })
           void mutate()
         }}
       />

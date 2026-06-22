@@ -1,80 +1,82 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AlertTriangle, Boxes, Package, Palette, Wheat } from "lucide-react"
+import { Check, CreditCard, FileText, ShoppingCart } from "lucide-react"
 import { SummaryCards, type SummaryCard } from "@/components/ui/summary-cards"
 import { getThemeById, summaryCardsThemes } from "@/components/ui/summary-cards-themes"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check as CheckIcon } from "lucide-react"
+import { Check as CheckIcon, Palette } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { ItemSummaryResponse } from "@/features/items"
+import { formatUsd, type PurchaseSummaryResponse } from "@/features/purchases"
 
-export interface ItemsSummaryProps {
-  summary: ItemSummaryResponse | null
+export interface PurchasesSummaryProps {
+  summary: PurchaseSummaryResponse | null
   isLoading?: boolean
   error?: Error
-  onReorderCardClick?: () => void
 }
 
-export function ItemsSummary({
-  summary,
-  isLoading = false,
-  error,
-  onReorderCardClick,
-}: ItemsSummaryProps) {
+const ZERO_USD = formatUsd(0)
+
+function formatKpiMoney(value: string | number | null | undefined): string {
+  if (value == null) return ZERO_USD
+  if (typeof value === "string" && value.trim() !== "") return formatUsd(value)
+  const n = typeof value === "number" ? value : Number.parseFloat(String(value))
+  if (Number.isFinite(n)) return formatUsd(n)
+  return ZERO_USD
+}
+
+export function PurchasesSummary({ summary, isLoading = false, error }: PurchasesSummaryProps) {
   const [selectedThemeId, setSelectedThemeId] = useState("default")
   const [themeOpen, setThemeOpen] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem("items-summary-theme")
+    const saved = localStorage.getItem("purchases-summary-theme")
     if (saved) setSelectedThemeId(saved)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("items-summary-theme", selectedThemeId)
+    localStorage.setItem("purchases-summary-theme", selectedThemeId)
   }, [selectedThemeId])
 
   const currentTheme = getThemeById(selectedThemeId)
-
-  const activeCount = summary?.active_items_count ?? 0
-  const rawCount = summary?.raw_items_count ?? 0
-  const readyCount = summary?.ready_items_count ?? 0
-  const reorderCount = summary?.reorder_required_count ?? 0
+  const completedCount = summary?.completed_invoices_count ?? 0
+  const totalPurchases = formatKpiMoney(summary?.total_purchases)
+  const totalPaid = formatKpiMoney(summary?.total_paid)
+  const totalRemaining = formatKpiMoney(summary?.total_remaining)
 
   const cards: SummaryCard[] = [
     {
-      title: "الأصناف النشطة",
-      value: activeCount,
-      icon: Boxes,
+      title: "إجمالي المشتريات",
+      value: totalPurchases,
+      icon: ShoppingCart,
       colorKey: "primary",
       showPercentage: false,
       showProgress: false,
     },
     {
-      title: "أصناف خام",
-      value: rawCount,
-      icon: Wheat,
-      colorKey: "warning",
-      showPercentage: false,
-      showProgress: false,
-    },
-    {
-      title: "أصناف جاهزة",
-      value: readyCount,
-      icon: Package,
+      title: "فواتير مكتملة",
+      value: completedCount,
+      icon: FileText,
       colorKey: "info",
       showPercentage: false,
       showProgress: false,
     },
     {
-      title: "يحتاج إعادة طلب",
-      value: reorderCount,
-      icon: AlertTriangle,
+      title: "إجمالي المدفوع",
+      value: totalPaid,
+      icon: CreditCard,
       colorKey: "success",
       showPercentage: false,
       showProgress: false,
-      onClick: onReorderCardClick,
+    },
+    {
+      title: "إجمالي المتبقي",
+      value: totalRemaining,
+      icon: Check,
+      colorKey: "warning",
+      showPercentage: false,
+      showProgress: false,
     },
   ]
 
@@ -82,7 +84,7 @@ export function ItemsSummary({
     <div className="space-y-4">
       {error ? (
         <p className="text-center text-xs text-muted-foreground" role="status">
-          تعذر تحميل بعض إحصائيات الأصناف.
+          تعذر تحميل بعض إحصائيات المشتريات.
         </p>
       ) : null}
       <div className="flex items-center justify-end">

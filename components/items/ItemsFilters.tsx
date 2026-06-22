@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import type { ItemsActiveStatus, ItemsStockStatusFilter, ItemsTypeFilter } from "@/features/items"
-import { ITEM_TYPE_LABELS_AR, STOCK_STATUS_LABELS_AR } from "@/features/items"
+import { ITEM_TYPE_LABELS_AR, STOCK_STATUS_FILTER_LABELS_AR } from "@/features/items"
 
 export interface ItemsFiltersValue {
   search: string
@@ -103,7 +103,7 @@ export function ItemsFilters({ value, onChange, isLoading = false }: ItemsFilter
     value.itemType !== "all" ? ITEM_TYPE_LABELS_AR[value.itemType] : undefined
 
   const stockStatusLabel =
-    value.stockStatus !== "all" ? STOCK_STATUS_LABELS_AR[value.stockStatus] : undefined
+    value.stockStatus !== "all" ? STOCK_STATUS_FILTER_LABELS_AR[value.stockStatus] : undefined
 
   const clearAll = () => {
     setLocalQuantityMin("")
@@ -233,9 +233,12 @@ export function ItemsFilters({ value, onChange, isLoading = false }: ItemsFilter
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="available">{STOCK_STATUS_LABELS_AR.available}</SelectItem>
-                <SelectItem value="low">{STOCK_STATUS_LABELS_AR.low}</SelectItem>
-                <SelectItem value="out_of_stock">{STOCK_STATUS_LABELS_AR.out_of_stock}</SelectItem>
+                <SelectItem value="reorder_required">
+                  {STOCK_STATUS_FILTER_LABELS_AR.reorder_required}
+                </SelectItem>
+                <SelectItem value="available">{STOCK_STATUS_FILTER_LABELS_AR.available}</SelectItem>
+                <SelectItem value="low">{STOCK_STATUS_FILTER_LABELS_AR.low}</SelectItem>
+                <SelectItem value="out_of_stock">{STOCK_STATUS_FILTER_LABELS_AR.out_of_stock}</SelectItem>
               </SelectContent>
             </Select>
           </div>

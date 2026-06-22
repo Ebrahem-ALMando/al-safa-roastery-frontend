@@ -19,7 +19,7 @@ import {
   resolveItemsPeriodRange,
   resolveQuantityRangeQuery,
 } from "../lib/items.helpers"
-import type { ItemType, StockStatus } from "../types/item.types"
+import type { ItemType, StockStatusFilter } from "../types/item.types"
 import { useItems } from "./useItems"
 
 export interface ItemsPageConfig {
@@ -65,7 +65,7 @@ function readColumnVisibility(): ItemTableColumnId[] {
 
 export type ItemsActiveStatus = "all" | "active" | "inactive"
 export type ItemsTypeFilter = ItemType | "all"
-export type ItemsStockStatusFilter = StockStatus | "all"
+export type ItemsStockStatusFilter = StockStatusFilter | "all"
 
 export function useItemsPage() {
   const [periodPreset, setPeriodPreset] = useState<ItemsPeriodPreset>(() =>
@@ -134,7 +134,7 @@ export function useItemsPage() {
     return {
       is_active: isActive === "all" ? undefined : isActive === "active",
       item_type: itemType !== "all" ? itemType : undefined,
-      stock_status: stockStatus !== "all" ? (stockStatus as StockStatus) : undefined,
+      stock_status: stockStatus !== "all" ? stockStatus : undefined,
       quantity_min: range.quantity_min,
       quantity_max: range.quantity_max,
     }

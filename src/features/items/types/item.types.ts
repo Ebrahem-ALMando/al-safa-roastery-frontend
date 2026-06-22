@@ -19,6 +19,9 @@ export type ItemType = "raw" | "ready"
 
 export type StockStatus = "available" | "low" | "out_of_stock"
 
+/** API list filter — includes composite reorder_required (low OR out_of_stock with min > 0). */
+export type StockStatusFilter = StockStatus | "reorder_required"
+
 export type Item = {
   id: number
   code: string | null
@@ -51,7 +54,7 @@ export type ItemsListFilters = {
   search?: string
   is_active?: boolean
   item_type?: ItemType
-  stock_status?: StockStatus
+  stock_status?: StockStatusFilter
   quantity_min?: number
   quantity_max?: number
   date_from?: string

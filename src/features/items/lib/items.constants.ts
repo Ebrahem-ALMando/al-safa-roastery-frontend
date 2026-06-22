@@ -44,6 +44,11 @@ export const STOCK_STATUS_LABELS_AR = {
   out_of_stock: "نافد",
 } as const
 
+export const STOCK_STATUS_FILTER_LABELS_AR = {
+  ...STOCK_STATUS_LABELS_AR,
+  reorder_required: "يحتاج إعادة طلب",
+} as const
+
 export type ItemTableColumnId =
   | "row_number"
   | "item_name"
