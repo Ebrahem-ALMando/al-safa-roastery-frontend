@@ -72,6 +72,7 @@ export const CUSTOMER_TABLE_COLUMNS: {
   { id: "current_balance", label: "الرصيد الحالي", defaultVisible: true },
   { id: "status", label: "الحالة", defaultVisible: true },
   { id: "last_activity", label: "آخر نشاط", defaultVisible: true },
+  { id: "created_at", label: "تاريخ الإنشاء", defaultVisible: true },
   { id: "actions", label: "الإجراءات", defaultVisible: true, essential: true },
   { id: "code", label: "الكود", defaultVisible: false },
   { id: "car_number", label: "رقم السيارة", defaultVisible: false },
@@ -81,7 +82,6 @@ export const CUSTOMER_TABLE_COLUMNS: {
   { id: "address", label: "العنوان", defaultVisible: false },
   { id: "credit_limit", label: "الحد الائتماني", defaultVisible: false },
   { id: "notes", label: "ملاحظات", defaultVisible: false },
-  { id: "created_at", label: "تاريخ الإنشاء", defaultVisible: false },
   { id: "updated_at", label: "تاريخ التحديث", defaultVisible: false },
 ]
 
@@ -119,6 +119,14 @@ export function normalizeCustomerVisibleColumns(
   }
 
   if (!result.includes("customer_name")) result.unshift("customer_name")
+  if (!result.includes("created_at")) {
+    const actionsIndex = result.indexOf("actions")
+    if (actionsIndex === -1) {
+      result.push("created_at")
+    } else {
+      result.splice(actionsIndex, 0, "created_at")
+    }
+  }
   if (!result.includes("actions")) {
     result.push("actions")
   } else {

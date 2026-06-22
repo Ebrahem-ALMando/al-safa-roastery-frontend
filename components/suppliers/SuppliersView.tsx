@@ -184,7 +184,7 @@ export function SuppliersView() {
         </DashboardPageHeader.Actions>
       </DashboardPageHeader>
 
-      {config.showKPI ? <SuppliersSummary dateRange={dateRange} isLoading={isLoading} /> : null}
+      {config.showKPI ? <SuppliersSummary dateRange={dateRange} /> : null}
 
       {config.showFilters ? (
         <SuppliersFilters

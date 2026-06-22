@@ -182,7 +182,7 @@ export function CustomersView() {
         </DashboardPageHeader.Actions>
       </DashboardPageHeader>
 
-      {config.showKPI ? <CustomersSummary dateRange={dateRange} isLoading={isLoading} /> : null}
+      {config.showKPI ? <CustomersSummary dateRange={dateRange} /> : null}
 
       {config.showFilters ? (
         <CustomersFilters

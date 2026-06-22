@@ -66,9 +66,12 @@ function readColumnVisibility(): SupplierTableColumnId[] {
 export type SuppliersActiveStatus = "all" | "active" | "inactive"
 
 export function useSuppliersPage() {
-  // B9: Use static SSR-safe defaults. localStorage is read in useEffect below.
-  const [periodPreset, setPeriodPreset] = useState<SuppliersPeriodPreset>("current_month")
-  const [customPeriod, setCustomPeriod] = useState<SuppliersCustomPeriod | null>(null)
+  const [periodPreset, setPeriodPreset] = useState<SuppliersPeriodPreset>(() =>
+    typeof window !== "undefined" ? readStoredSuppliersPeriod().preset : "current_month"
+  )
+  const [customPeriod, setCustomPeriod] = useState<SuppliersCustomPeriod | null>(() =>
+    typeof window !== "undefined" ? readStoredSuppliersPeriod().custom : null
+  )
   const [customDialogOpen, setCustomDialogOpen] = useState(false)
 
   const [search, setSearch] = useState("")

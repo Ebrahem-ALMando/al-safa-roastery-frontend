@@ -26,5 +26,10 @@ export function useCustomerSummary(dateRange: ResolvedOperationalDateRange | nul
     { queryParams }
   )
 
-  return { summary: data ?? null, isLoading, error: error as Error | undefined, mutate }
+  return {
+    summary: data ?? null,
+    isLoading: authLoading || !authReady || Boolean(isLoading),
+    error: error as Error | undefined,
+    mutate,
+  }
 }

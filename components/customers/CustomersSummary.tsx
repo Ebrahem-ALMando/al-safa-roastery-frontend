@@ -13,7 +13,6 @@ import { useCustomerSummary, formatUsdAmount } from "@/features/customers"
 
 export interface CustomersSummaryProps {
   dateRange: ResolvedOperationalDateRange | null
-  isLoading?: boolean
 }
 
 const ZERO_USD = formatUsdAmount(0)
@@ -25,8 +24,8 @@ function formatKpiMoney(value: number | string | null | undefined): string {
   return ZERO_USD
 }
 
-export function CustomersSummary({ dateRange, isLoading: listLoading = false }: CustomersSummaryProps) {
-  const { summary, isLoading: summaryLoading, error } = useCustomerSummary(dateRange)
+export function CustomersSummary({ dateRange }: CustomersSummaryProps) {
+  const { summary, isLoading, error } = useCustomerSummary(dateRange)
   const [selectedThemeId, setSelectedThemeId] = useState("default")
   const [themeOpen, setThemeOpen] = useState(false)
 
@@ -40,8 +39,6 @@ export function CustomersSummary({ dateRange, isLoading: listLoading = false }: 
   }, [selectedThemeId])
 
   const currentTheme = getThemeById(selectedThemeId)
-  const isLoading = listLoading || summaryLoading
-
   const activeCount = summary?.active_customers_count ?? 0
   const salesTotal = dateRange ? formatKpiMoney(summary?.sales_total_in_period) : ZERO_USD
   const receivablesTotal = formatKpiMoney(summary?.customer_receivables_total)

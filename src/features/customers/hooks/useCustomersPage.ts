@@ -71,8 +71,12 @@ export type CustomersActiveStatus = "all" | "active" | "inactive"
 export type CustomersTypeFilter = CustomerType | "all"
 
 export function useCustomersPage() {
-  const [periodPreset, setPeriodPreset] = useState<CustomersPeriodPreset>("current_month")
-  const [customPeriod, setCustomPeriod] = useState<CustomersCustomPeriod | null>(null)
+  const [periodPreset, setPeriodPreset] = useState<CustomersPeriodPreset>(() =>
+    typeof window !== "undefined" ? readStoredCustomersPeriod().preset : "current_month"
+  )
+  const [customPeriod, setCustomPeriod] = useState<CustomersCustomPeriod | null>(() =>
+    typeof window !== "undefined" ? readStoredCustomersPeriod().custom : null
+  )
   const [customDialogOpen, setCustomDialogOpen] = useState(false)
 
   const [search, setSearch] = useState("")
@@ -152,12 +156,15 @@ export function useCustomersPage() {
     balanceMin,
     balanceMax,
     balanceRangeDirection,
+    periodPreset,
+    customPeriod,
   ])
 
   const { customers, meta, isLoading, error, mutate } = useCustomers({
     search,
     page,
     columnFilters,
+    dateRange,
   })
 
   const hasSearch = search.trim().length > 0
@@ -165,7 +172,9 @@ export function useCustomersPage() {
   const hasCustomerType = customerType !== "all"
   const hasBalanceFilter =
     balanceStatus !== "all" || balanceMin.trim() !== "" || balanceMax.trim() !== ""
-  const hasAnyFilter = hasSearch || hasIsActive || hasCustomerType || hasBalanceFilter
+  const hasPeriodFilter = periodPreset !== "all"
+  const hasAnyFilter =
+    hasSearch || hasIsActive || hasCustomerType || hasBalanceFilter || hasPeriodFilter
 
   const isEmpty = !isLoading && customers.length === 0
   const isTrueEmpty = isEmpty && !hasAnyFilter

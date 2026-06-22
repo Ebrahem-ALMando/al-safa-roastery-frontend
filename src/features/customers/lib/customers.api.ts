@@ -1,5 +1,16 @@
 import type { QueryParams } from "@/lib/api"
+import type { ResolvedOperationalDateRange } from "@/lib/date-scope/operational-date-scope.types"
 import type { CustomersListFilters } from "../types/customer.types"
+
+export function buildReportDateQueryParams(
+  dateRange: ResolvedOperationalDateRange | null
+): QueryParams {
+  if (!dateRange) return {}
+  return {
+    date_from: dateRange.from,
+    date_to: dateRange.to,
+  }
+}
 
 export function buildCustomersQueryParams(
   page: number,
@@ -33,6 +44,12 @@ export function buildCustomersQueryParams(
   }
   if (typeof filters.per_page === "number") {
     q.per_page = Math.min(100, Math.max(1, filters.per_page))
+  }
+  if (filters.date_from) {
+    q.date_from = filters.date_from
+  }
+  if (filters.date_to) {
+    q.date_to = filters.date_to
   }
 
   return q

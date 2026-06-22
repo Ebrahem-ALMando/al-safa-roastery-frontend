@@ -41,10 +41,12 @@ export function useSuppliers({ page, search, columnFilters, dateRange, perPage }
     paginated: true,
   })
 
+  const isListLoading = authLoading || !authReady || Boolean(isLoading)
+
   return {
     suppliers: data ?? [],
     meta: meta as SuppliersListMeta | undefined,
-    isLoading: Boolean(isLoading),
+    isLoading: isListLoading,
     error: error as Error | undefined,
     mutate,
   }
@@ -61,7 +63,7 @@ export function useSupplier(id: number | null) {
 
   return {
     supplier: data,
-    isLoading: Boolean(isLoading),
+    isLoading: authLoading || !authReady || Boolean(isLoading),
     error: error as Error | undefined,
     mutate,
   }

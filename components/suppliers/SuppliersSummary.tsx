@@ -13,7 +13,6 @@ import { useSupplierSummary, formatUsdAmount } from "@/features/suppliers"
 
 export interface SuppliersSummaryProps {
   dateRange: ResolvedOperationalDateRange | null
-  isLoading?: boolean
 }
 
 const ZERO_USD = formatUsdAmount(0)
@@ -25,8 +24,8 @@ function formatKpiMoney(value: number | string | null | undefined): string {
   return ZERO_USD
 }
 
-export function SuppliersSummary({ dateRange, isLoading: listLoading = false }: SuppliersSummaryProps) {
-  const { summary, isLoading: summaryLoading, error } = useSupplierSummary(dateRange)
+export function SuppliersSummary({ dateRange }: SuppliersSummaryProps) {
+  const { summary, isLoading, error } = useSupplierSummary(dateRange)
   const [selectedThemeId, setSelectedThemeId] = useState("default")
   const [themeOpen, setThemeOpen] = useState(false)
 
@@ -40,7 +39,6 @@ export function SuppliersSummary({ dateRange, isLoading: listLoading = false }: 
   }, [selectedThemeId])
 
   const currentTheme = getThemeById(selectedThemeId)
-  const isLoading = listLoading || summaryLoading
 
   const activeCount = summary?.active_suppliers_count ?? 0
   const purchasesTotal = dateRange ? formatKpiMoney(summary?.purchases_total_in_period) : ZERO_USD

@@ -39,18 +39,18 @@ const DEBOUNCE_MS = 450
 const RANGE_DIRECTION_OPTIONS = [
   {
     value: "receivable" as const,
-    label: "عليه لنا",
-    icon: ArrowDownLeft,
-    baseClass: "border-red-500/40 text-red-700 hover:bg-red-500/10 dark:text-red-300",
-    activeClass: "border-red-500/60 bg-red-500/15 text-red-800 ring-1 ring-red-500/30 dark:bg-red-950/40",
-  },
-  {
-    value: "credit" as const,
-    label: "له عندنا",
+    label: "عليه",
     icon: ArrowUpRight,
     baseClass: "border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300",
     activeClass:
       "border-emerald-500/60 bg-emerald-500/15 text-emerald-800 ring-1 ring-emerald-500/30 dark:bg-emerald-950/40",
+  },
+  {
+    value: "credit" as const,
+    label: "له",
+    icon: ArrowDownLeft,
+    baseClass: "border-red-500/40 text-red-700 hover:bg-red-500/10 dark:text-red-300",
+    activeClass: "border-red-500/60 bg-red-500/15 text-red-800 ring-1 ring-red-500/30 dark:bg-red-950/40",
   },
 ] as const
 
@@ -191,13 +191,13 @@ export function CustomersFilters({ value, onChange, isLoading = false }: Custome
         </div>
       </div>
 
-      <div
+        <div
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          showAdvanced ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
+          showAdvanced ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4 md:items-end">
+        <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-5 md:items-end">
           <div className="space-y-2">
             <Label htmlFor="customers-filter-status" className="text-xs text-muted-foreground">
               الحالة
@@ -275,54 +275,50 @@ export function CustomersFilters({ value, onChange, isLoading = false }: Custome
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <Label className="text-xs text-muted-foreground">نطاق الرصيد</Label>
-            <div className="flex flex-col gap-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  id="customers-filter-balance-min"
-                  type="number"
-                  min={0}
-                  placeholder="من"
-                  className="h-10 min-w-0"
-                  value={localBalanceMin}
-                  onChange={(e) => setLocalBalanceMin(e.target.value)}
-                  dir="ltr"
-                />
-                <Input
-                  id="customers-filter-balance-max"
-                  type="number"
-                  min={0}
-                  placeholder="إلى"
-                  className="h-10 min-w-0"
-                  value={localBalanceMax}
-                  onChange={(e) => setLocalBalanceMax(e.target.value)}
-                  dir="ltr"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {RANGE_DIRECTION_OPTIONS.map((option) => {
-                  const Icon = option.icon
-                  const selected = value.balanceRangeDirection === option.value
-                  return (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={isLoading}
-                      onClick={() => selectRangeDirection(option.value)}
-                      className={cn(
-                        "h-9 w-full gap-1.5 rounded-xl border px-2 text-xs font-medium transition-colors sm:text-sm",
-                        selected ? option.activeClass : option.baseClass
-                      )}
-                    >
-                      <Icon className="size-3.5 shrink-0" />
-                      {option.label}
-                    </Button>
-                  )
-                })}
-              </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Input
+                id="customers-filter-balance-min"
+                type="number"
+                min={0}
+                placeholder="من"
+                className="h-10 min-w-0"
+                value={localBalanceMin}
+                onChange={(e) => setLocalBalanceMin(e.target.value)}
+                dir="ltr"
+              />
+              <Input
+                id="customers-filter-balance-max"
+                type="number"
+                min={0}
+                placeholder="إلى"
+                className="h-10 min-w-0"
+                value={localBalanceMax}
+                onChange={(e) => setLocalBalanceMax(e.target.value)}
+                dir="ltr"
+              />
+              {RANGE_DIRECTION_OPTIONS.map((option) => {
+                const Icon = option.icon
+                const selected = value.balanceRangeDirection === option.value
+                return (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoading}
+                    onClick={() => selectRangeDirection(option.value)}
+                    className={cn(
+                      "h-10 w-full gap-1.5 rounded-xl border px-2 text-sm font-medium transition-colors",
+                      selected ? option.activeClass : option.baseClass
+                    )}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    {option.label}
+                  </Button>
+                )
+              })}
             </div>
           </div>
         </div>

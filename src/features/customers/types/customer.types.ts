@@ -60,6 +60,8 @@ export type CustomersListFilters = {
   balance_status?: BalanceStatusFilter
   balance_min?: number
   balance_max?: number
+  date_from?: string
+  date_to?: string
   sort_by?: string
   sort_direction?: "asc" | "desc"
   page?: number
