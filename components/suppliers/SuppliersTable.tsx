@@ -35,6 +35,7 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
   formatArDateTime,
+  formatBalanceAmount,
   formatUsdAmount,
   formatSupplierLastActivity,
   getSupplierColumnLabel,
@@ -195,7 +196,7 @@ export function SuppliersTable({
       case "opening_balance":
         return (
           <TableCell key={key} className="text-center text-sm" dir="ltr">
-            {formatUsdAmount(supplier.opening_balance)}
+            {formatBalanceAmount(supplier.opening_balance)}
           </TableCell>
         )
       case "status":

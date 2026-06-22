@@ -25,6 +25,8 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   formatArDateTime,
+  formatBalanceAmount,
+  formatOpeningBalanceSummary,
   formatUsdAmount,
   getBalanceStatusLabel,
   supplierInitials,
@@ -216,7 +218,7 @@ export default function SupplierDetailPage() {
             <StatBlock
               icon={DollarSign}
               label="الرصيد الحالي"
-              value={formatUsdAmount(supplier.current_balance)}
+              value={formatBalanceAmount(supplier.current_balance)}
               ltr
             />
             <StatBlock
@@ -264,7 +266,7 @@ export default function SupplierDetailPage() {
             label="الرصيد الحالي"
             value={
               <span dir="ltr">
-                {formatUsdAmount(supplier.current_balance)} — {balanceInfo.label}
+                {formatBalanceAmount(supplier.current_balance)} — {balanceInfo.label}
               </span>
             }
           />
@@ -272,7 +274,7 @@ export default function SupplierDetailPage() {
             label="الرصيد الافتتاحي"
             value={
               supplier.opening_balance != null ? (
-                <span dir="ltr">{formatUsdAmount(supplier.opening_balance)}</span>
+                <span dir="ltr">{formatOpeningBalanceSummary(supplier.opening_balance)}</span>
               ) : (
                 "—"
               )

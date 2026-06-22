@@ -73,7 +73,7 @@ export type CreateSupplierInput = {
   notes?: string | null
 }
 
-/** `UpdateSupplierRequest` — partial updates only. */
+/** `UpdateSupplierRequest` — partial updates only; balances are not editable. */
 export type UpdateSupplierInput = {
   name?: string
   phone?: string | null
@@ -82,7 +82,6 @@ export type UpdateSupplierInput = {
   email?: string | null
   address?: string | null
   contact_person?: string | null
-  opening_balance?: number | null
   credit_limit?: number | null
   is_active?: boolean
   notes?: string | null

@@ -25,6 +25,8 @@ export {
 } from "./lib/suppliers.constants"
 export {
   formatUsdAmount,
+  formatBalanceAmount,
+  formatOpeningBalanceSummary,
   getBalanceStatusLabel,
   getBalanceBadgeClass,
   formatArDateTime,

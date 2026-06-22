@@ -22,6 +22,16 @@ export function formatUsdAmount(value: string | number | null | undefined): stri
   }).format(n)
 }
 
+/** User-facing balance amount without negative sign. */
+export function formatBalanceAmount(value: string | number | null | undefined): string {
+  return formatUsdAmount(Math.abs(parseNumericBalance(value)))
+}
+
+export function formatOpeningBalanceSummary(value: string | number | null | undefined): string {
+  const info = getBalanceStatusLabel(value)
+  return `${formatBalanceAmount(value)} — ${info.label}`
+}
+
 export type BalanceStatusLabel = "payable" | "credit" | "settled"
 
 export function getBalanceStatusLabel(balance: string | number | null | undefined): {

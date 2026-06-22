@@ -215,6 +215,7 @@ export function SupplierFormDialog({
                   onChange={setForm}
                   idPrefix={isCreate ? "add-supplier" : "edit-supplier"}
                   mode={mode}
+                  supplier={supplier}
                   fieldErrors={fieldErrors}
                   nameFieldAutoFocus={isCreate}
                   formKey={`${mode}-${supplier?.id ?? "new"}-${open}`}

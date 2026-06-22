@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   formatSupplierLastActivity,
+  formatBalanceAmount,
   formatUsdAmount,
   getBalanceBadgeClass,
   getBalanceStatusLabel,
@@ -170,7 +171,7 @@ export function SupplierCard({
 
           <div>
             <p className="text-base font-semibold" dir="ltr">
-              {formatUsdAmount(supplier.current_balance)}
+              {formatBalanceAmount(supplier.current_balance)}
             </p>
             <p className="text-xs text-muted-foreground">{balanceInfo.label}</p>
           </div>

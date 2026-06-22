@@ -3,7 +3,7 @@
 import { ArrowDownLeft, ArrowUpRight, Minus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
-  formatUsdAmount,
+  formatBalanceAmount,
   getBalanceBadgeClass,
   getBalanceStatusLabel,
 } from "@/features/suppliers"
@@ -23,7 +23,7 @@ export function SupplierBalanceBadge({
     <div className="flex flex-col items-center gap-1">
       {showAmount ? (
         <p className="text-sm font-semibold" dir="ltr">
-          {formatUsdAmount(balance)}
+          {formatBalanceAmount(balance)}
         </p>
       ) : null}
       <Badge variant="outline" className={`gap-1 text-xs font-medium ${getBalanceBadgeClass(info.key)}`}>
