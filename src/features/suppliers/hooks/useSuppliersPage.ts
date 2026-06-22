@@ -73,8 +73,6 @@ export function useSuppliersPage() {
   const [search, setSearch] = useState("")
   const [isActive, setIsActive] = useState<SuppliersActiveStatus>("all")
   const [balanceStatus, setBalanceStatus] = useState<BalanceStatusFilter | "all">("all")
-  const [balanceMin, setBalanceMin] = useState("")
-  const [balanceMax, setBalanceMax] = useState("")
   const [page, setPage] = useState(1)
   const [config, setConfig] = useState<SuppliersPageConfig>(defaultConfig)
   const [visibleColumns, setVisibleColumns] = useState<SupplierTableColumnId[]>(
@@ -126,15 +124,13 @@ export function useSuppliersPage() {
     () => ({
       is_active: isActive === "all" ? undefined : isActive === "active",
       balance_status: balanceStatus !== "all" ? (balanceStatus as BalanceStatusFilter) : undefined,
-      balance_min: balanceMin.trim() ? Number.parseFloat(balanceMin) : undefined,
-      balance_max: balanceMax.trim() ? Number.parseFloat(balanceMax) : undefined,
     }),
-    [isActive, balanceStatus, balanceMin, balanceMax]
+    [isActive, balanceStatus]
   )
 
   useEffect(() => {
     setPage(1)
-  }, [search, isActive, balanceStatus, balanceMin, balanceMax, periodPreset, customPeriod])
+  }, [search, isActive, balanceStatus, periodPreset, customPeriod])
 
   const { suppliers, meta, isLoading, error, mutate } = useSuppliers({
     search,
@@ -145,8 +141,7 @@ export function useSuppliersPage() {
 
   const hasSearch = search.trim().length > 0
   const hasIsActive = isActive !== "all"
-  const hasBalanceFilter =
-    balanceStatus !== "all" || balanceMin.trim() !== "" || balanceMax.trim() !== ""
+  const hasBalanceFilter = balanceStatus !== "all"
   const hasPeriodFilter = periodPreset !== "all"
   const hasAnyFilter = hasSearch || hasIsActive || hasBalanceFilter || hasPeriodFilter
 
@@ -205,10 +200,6 @@ export function useSuppliersPage() {
     setIsActive,
     balanceStatus,
     setBalanceStatus,
-    balanceMin,
-    setBalanceMin,
-    balanceMax,
-    setBalanceMax,
     page,
     setPage,
     config,
