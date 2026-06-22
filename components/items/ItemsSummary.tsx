@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AlertTriangle, Check, Package, Palette } from "lucide-react"
+import { AlertTriangle, Boxes, Package, Palette, Wheat } from "lucide-react"
 import { SummaryCards, type SummaryCard } from "@/components/ui/summary-cards"
 import { getThemeById, summaryCardsThemes } from "@/components/ui/summary-cards-themes"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -40,7 +40,7 @@ export function ItemsSummary({ summary, isLoading = false, error }: ItemsSummary
     {
       title: "الأصناف النشطة",
       value: activeCount,
-      icon: Package,
+      icon: Boxes,
       colorKey: "primary",
       showPercentage: false,
       showProgress: false,
@@ -48,7 +48,7 @@ export function ItemsSummary({ summary, isLoading = false, error }: ItemsSummary
     {
       title: "أصناف خام",
       value: rawCount,
-      icon: Package,
+      icon: Wheat,
       colorKey: "warning",
       showPercentage: false,
       showProgress: false,
@@ -56,7 +56,7 @@ export function ItemsSummary({ summary, isLoading = false, error }: ItemsSummary
     {
       title: "أصناف جاهزة",
       value: readyCount,
-      icon: Check,
+      icon: Package,
       colorKey: "info",
       showPercentage: false,
       showProgress: false,
