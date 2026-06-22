@@ -42,6 +42,14 @@ export const menuItems: readonly MenuItem[] = [
     matchPrefix: true,
   },
   {
+    id: "customers",
+    label: "الزبائن",
+    href: "/dashboard/customers",
+    icon: Users,
+    section: "management",
+    matchPrefix: true,
+  },
+  {
     id: "patients",
     label: "المرضى",
     href: "/dashboard/patients",

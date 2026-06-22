@@ -1,14 +1,14 @@
 "use client"
 
-import type { Supplier, SupplierTableColumnId, SuppliersListMeta, SuppliersViewMode } from "@/features/suppliers"
-import { SuppliersTable } from "./SuppliersTable"
-import { SuppliersCards } from "./SuppliersCards"
+import type { Customer, CustomerTableColumnId, CustomersListMeta, CustomersViewMode } from "@/features/customers"
+import { CustomersTable } from "./CustomersTable"
+import { CustomersCards } from "./CustomersCards"
 
-interface SuppliersDataViewProps {
-  viewMode: SuppliersViewMode
-  suppliers: Supplier[]
-  meta?: SuppliersListMeta
-  visibleColumns: SupplierTableColumnId[]
+interface CustomersDataViewProps {
+  viewMode: CustomersViewMode
+  customers: Customer[]
+  meta?: CustomersListMeta
+  visibleColumns: CustomerTableColumnId[]
   isLoading?: boolean
   isFilteredNoHits: boolean
   isTrueEmpty: boolean
@@ -17,23 +17,23 @@ interface SuppliersDataViewProps {
   canPrev: boolean
   canNext: boolean
   onPageChange: (page: number) => void
-  onAddSupplier: () => void
-  onViewDetails: (supplier: Supplier) => void
-  onEdit: (supplier: Supplier) => void
-  onDelete: (supplier: Supplier) => void
-  onToggleActive: (supplier: Supplier) => void
+  onAddCustomer: () => void
+  onViewDetails: (customer: Customer) => void
+  onEdit: (customer: Customer) => void
+  onDelete: (customer: Customer) => void
+  onToggleActive: (customer: Customer) => void
 }
 
-export function SuppliersDataView(props: SuppliersDataViewProps) {
+export function CustomersDataView(props: CustomersDataViewProps) {
   if (props.viewMode === "cards") {
     return (
-      <SuppliersCards
-        suppliers={props.suppliers}
+      <CustomersCards
+        customers={props.customers}
         meta={props.meta}
         isLoading={props.isLoading}
         isFilteredNoHits={props.isFilteredNoHits}
         isTrueEmpty={props.isTrueEmpty}
-        onAddSupplier={props.onAddSupplier}
+        onAddCustomer={props.onAddCustomer}
         onViewDetails={props.onViewDetails}
         onEdit={props.onEdit}
         onDelete={props.onDelete}
@@ -47,8 +47,8 @@ export function SuppliersDataView(props: SuppliersDataViewProps) {
   }
 
   return (
-    <SuppliersTable
-      suppliers={props.suppliers}
+    <CustomersTable
+      customers={props.customers}
       meta={props.meta}
       visibleColumns={props.visibleColumns}
       isLoading={props.isLoading}
@@ -59,7 +59,7 @@ export function SuppliersDataView(props: SuppliersDataViewProps) {
       canPrev={props.canPrev}
       canNext={props.canNext}
       onPageChange={props.onPageChange}
-      onAddSupplier={props.onAddSupplier}
+      onAddCustomer={props.onAddCustomer}
       onViewDetails={props.onViewDetails}
       onEdit={props.onEdit}
       onDelete={props.onDelete}
