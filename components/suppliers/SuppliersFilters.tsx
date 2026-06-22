@@ -190,7 +190,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
           showAdvanced ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4 md:items-end">
           <div className="space-y-2">
             <Label htmlFor="suppliers-filter-status" className="text-xs text-muted-foreground">
               الحالة
@@ -244,13 +244,13 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
 
           <div className="space-y-2 md:col-span-2">
             <Label className="text-xs text-muted-foreground">نطاق الرصيد</Label>
-            <div className="flex w-full items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Input
                 id="suppliers-filter-balance-min"
                 type="number"
                 min={0}
                 placeholder="من"
-                className="h-10 min-w-0 flex-1"
+                className="h-10 min-w-0"
                 value={localBalanceMin}
                 onChange={(e) => setLocalBalanceMin(e.target.value)}
                 dir="ltr"
@@ -260,7 +260,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
                 type="number"
                 min={0}
                 placeholder="إلى"
-                className="h-10 min-w-0 flex-1"
+                className="h-10 min-w-0"
                 value={localBalanceMax}
                 onChange={(e) => setLocalBalanceMax(e.target.value)}
                 dir="ltr"
@@ -277,7 +277,7 @@ export function SuppliersFilters({ value, onChange, isLoading = false }: Supplie
                     disabled={isLoading}
                     onClick={() => selectRangeDirection(option.value)}
                     className={cn(
-                      "h-10 shrink-0 gap-1.5 rounded-xl border px-3 text-sm font-medium transition-colors",
+                      "h-10 w-full gap-1.5 rounded-xl border px-2 text-sm font-medium transition-colors",
                       selected ? option.activeClass : option.baseClass
                     )}
                   >
