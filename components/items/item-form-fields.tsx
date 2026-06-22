@@ -223,7 +223,7 @@ export function ItemFormFields({
             ) : null}
           </div>
 
-          <div className="space-y-1.5">
+          <div className="w-full min-w-0 space-y-1.5 sm:col-span-2">
             {minimumQuantityLabel ?? (
               <Label htmlFor={`${idPrefix}-minimumQuantity`} className={adminFormLabelClass}>
                 الحد الأدنى للكمية (كغ)
@@ -242,6 +242,7 @@ export function ItemFormFields({
                 placeholder="مثال: 10.000"
                 className={adminFormInputCompactClass}
                 dir="ltr"
+              
               />
             </div>
             {minimumQuantityHint}

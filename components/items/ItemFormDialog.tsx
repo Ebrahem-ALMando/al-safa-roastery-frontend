@@ -33,7 +33,7 @@ const MINIMUM_QUANTITY_HINT =
 
 function ItemMinimumQuantityLabel({ htmlFor }: { htmlFor: string }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex w-full items-center gap-1.5">
       <Label htmlFor={htmlFor} className={adminFormLabelClass}>
         الحد الأدنى للكمية (كغ)
       </Label>
@@ -249,7 +249,7 @@ export function ItemFormDialog({
                     <ItemMinimumQuantityLabel htmlFor={minimumQuantityFieldId} />
                   }
                   minimumQuantityHint={
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    <p className="w-full text-[11px] leading-relaxed text-muted-foreground">
                       {MINIMUM_QUANTITY_HINT}
                     </p>
                   }
