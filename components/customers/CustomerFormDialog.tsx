@@ -23,10 +23,10 @@ import {
   type CustomerFormState,
 } from "./customer-form-fields"
 
-function mapSubmitError(error: unknown): string {
+function mapSubmitError(error: unknown): string | null {
   if (error instanceof ApiRequestError) {
+    if (error.status === 401) return null
     if (error.status === 422) return "البيانات غير صحيحة"
-    if (error.status === 401) return "غير مصرح"
     if (error.status === 403) return "الحساب غير مفعل"
     if (error.status >= 500) return "حدث خطأ في النظام"
     if (error.status === 0) return "تحقق من الاتصال"
@@ -123,7 +123,10 @@ export function CustomerFormDialog({
       if (err instanceof ApiRequestError && err.errors) {
         setFieldErrors(err.errors)
       }
-      toast.error(mapSubmitError(err))
+      const message = mapSubmitError(err)
+      if (message) {
+        toast.error(message)
+      }
     } finally {
       setSubmitting(false)
     }

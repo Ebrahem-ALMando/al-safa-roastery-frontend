@@ -65,12 +65,17 @@ export async function POST(request: NextRequest) {
   const parsed = parseLaravelJson<LaravelLoginJSON>(text)
 
   if (!upstream.ok || !parsed) {
-    return new NextResponse(text || null, {
-      status: upstream.status,
-      headers: {
-        "Content-Type": upstream.headers.get("content-type") || "application/json",
+    if (parsed) {
+      return NextResponse.json(parsed, { status: upstream.status })
+    }
+    return NextResponse.json(
+      {
+        status: upstream.status,
+        code: "AUTH_LOGIN_FAILED",
+        message: "تعذر تسجيل الدخول.",
       },
-    })
+      { status: upstream.status }
+    )
   }
 
   const token = parsed.data?.token

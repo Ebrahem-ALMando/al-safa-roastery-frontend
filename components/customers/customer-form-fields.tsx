@@ -8,18 +8,13 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Package,
   Phone,
+  ShoppingBag,
   User,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -43,6 +38,55 @@ import type {
   CustomerType,
   UpdateCustomerInput,
 } from "@/features/customers"
+import type { LucideIcon } from "lucide-react"
+
+const CUSTOMER_TYPE_OPTIONS: {
+  value: CustomerType
+  label: string
+  icon: LucideIcon
+  selectedClass: string
+  idleClass: string
+  iconSelectedClass: string
+  iconIdleClass: string
+  focusRingClass: string
+}[] = [
+  {
+    value: "retail",
+    label: CUSTOMER_TYPE_LABELS_AR.retail,
+    icon: ShoppingBag,
+    selectedClass:
+      "border-sky-500 bg-sky-500/12 text-sky-900 dark:border-sky-400 dark:bg-sky-500/15 dark:text-sky-50",
+    idleClass:
+      "border-border/50 bg-muted/20 text-foreground/80 hover:border-sky-400/45 hover:bg-sky-500/5",
+    iconSelectedClass: "text-sky-600 dark:text-sky-300",
+    iconIdleClass: "text-sky-600/80",
+    focusRingClass: "focus-visible:ring-sky-500/40",
+  },
+  {
+    value: "wholesale",
+    label: CUSTOMER_TYPE_LABELS_AR.wholesale,
+    icon: Package,
+    selectedClass:
+      "border-violet-500 bg-violet-500/12 text-violet-950 dark:border-violet-400 dark:bg-violet-500/15 dark:text-violet-50",
+    idleClass:
+      "border-border/50 bg-muted/20 text-foreground/80 hover:border-violet-400/45 hover:bg-violet-500/5",
+    iconSelectedClass: "text-violet-600 dark:text-violet-300",
+    iconIdleClass: "text-violet-600/80",
+    focusRingClass: "focus-visible:ring-violet-500/40",
+  },
+  {
+    value: "car",
+    label: CUSTOMER_TYPE_LABELS_AR.car,
+    icon: Car,
+    selectedClass:
+      "border-amber-500 bg-amber-500/12 text-amber-950 dark:border-amber-400 dark:bg-amber-500/15 dark:text-amber-50",
+    idleClass:
+      "border-border/50 bg-muted/20 text-foreground/80 hover:border-amber-400/45 hover:bg-amber-500/5",
+    iconSelectedClass: "text-amber-600 dark:text-amber-300",
+    iconIdleClass: "text-amber-600/80",
+    focusRingClass: "focus-visible:ring-amber-500/40",
+  },
+]
 
 export type OpeningBalanceDirection = "customer_owes_us" | "customer_credit"
 
@@ -107,6 +151,10 @@ export function normalizeOpeningBalanceForApi(form: CustomerFormState): number {
   return amount * sign
 }
 
+function showsContactPersonField(customerType: CustomerType): boolean {
+  return customerType === "wholesale" || customerType === "car"
+}
+
 export function formToCreatePayload(form: CustomerFormState): CreateCustomerInput {
   const payload: CreateCustomerInput = {
     name: form.name.trim(),
@@ -114,7 +162,9 @@ export function formToCreatePayload(form: CustomerFormState): CreateCustomerInpu
     is_active: form.isActive,
     opening_balance: normalizeOpeningBalanceForApi(form),
   }
-  if (form.contactPerson.trim()) payload.contact_person = form.contactPerson.trim()
+  if (showsContactPersonField(form.customerType) && form.contactPerson.trim()) {
+    payload.contact_person = form.contactPerson.trim()
+  }
   if (form.customerType === "car") {
     payload.car_number = form.carNumber.trim()
   }
@@ -135,7 +185,9 @@ export function formToUpdatePayload(form: CustomerFormState): UpdateCustomerInpu
   const payload: UpdateCustomerInput = {
     name: form.name.trim(),
     customer_type: form.customerType,
-    contact_person: form.contactPerson.trim() || null,
+    contact_person: showsContactPersonField(form.customerType)
+      ? form.contactPerson.trim() || null
+      : null,
     car_number: form.customerType === "car" ? form.carNumber.trim() || null : null,
     phone: form.phone.trim() || null,
     secondary_phone: form.secondaryPhone.trim() || null,
@@ -234,48 +286,43 @@ export function CustomerFormFields({
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor={`${idPrefix}-contact`} className={adminFormLabelClass}>
-              اسم جهة الاتصال (اختياري)
-            </Label>
-            <div className="relative w-full min-w-0">
-              <FormFieldIcon>
-                <User className="size-4" />
-              </FormFieldIcon>
-              <Input
-                id={`${idPrefix}-contact`}
-                name="contactPerson"
-                value={form.contactPerson}
-                onChange={(ev) => set({ contactPerson: ev.target.value })}
-                placeholder="مثال: أحمد محمد"
-                className={adminFormInputClass}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-customerType`} className={adminFormLabelClass}>
+            <Label className={adminFormLabelClass}>
               نوع الزبون <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={form.customerType}
-              onValueChange={(value) =>
-                set({
-                  customerType: value as CustomerType,
-                  carNumber: value === "car" ? form.carNumber : "",
-                })
-              }
+            <div
+              className="grid grid-cols-3 gap-2"
+              role="radiogroup"
+              aria-label="نوع الزبون"
             >
-              <SelectTrigger id={`${idPrefix}-customerType`} className={adminFormInputCompactClass}>
-                <SelectValue placeholder="اختر النوع" />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(CUSTOMER_TYPE_LABELS_AR) as CustomerType[]).map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {CUSTOMER_TYPE_LABELS_AR[type]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {CUSTOMER_TYPE_OPTIONS.map((option) => {
+                const selected = form.customerType === option.value
+                const Icon = option.icon
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    id={`${idPrefix}-customerType-${option.value}`}
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => set({ customerType: option.value })}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 text-sm font-semibold shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                      option.focusRingClass,
+                      selected ? option.selectedClass : option.idleClass
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-5 shrink-0",
+                        selected ? option.iconSelectedClass : option.iconIdleClass
+                      )}
+                      aria-hidden
+                    />
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
             {fieldError(fieldErrors, "customer_type") ? (
               <p className={adminFormFieldErrorClass} role="alert">
                 {fieldError(fieldErrors, "customer_type")}
@@ -284,7 +331,7 @@ export function CustomerFormFields({
           </div>
 
           {form.customerType === "car" ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor={`${idPrefix}-carNumber`} className={adminFormLabelClass}>
                 رقم السيارة <span className="text-destructive">*</span>
               </Label>
@@ -298,7 +345,7 @@ export function CustomerFormFields({
                   value={form.carNumber}
                   onChange={(ev) => set({ carNumber: ev.target.value })}
                   placeholder="مثال: 12345"
-                  className={adminFormInputCompactClass}
+                  className={adminFormInputClass}
                   dir="ltr"
                 />
               </div>
@@ -310,7 +357,28 @@ export function CustomerFormFields({
             </div>
           ) : null}
 
-          <div className={adminFormSwitchRowClass}>
+          {showsContactPersonField(form.customerType) ? (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor={`${idPrefix}-contact`} className={adminFormLabelClass}>
+                اسم جهة الاتصال داخل المنشأة (اختياري)
+              </Label>
+              <div className="relative w-full min-w-0">
+                <FormFieldIcon>
+                  <User className="size-4" />
+                </FormFieldIcon>
+                <Input
+                  id={`${idPrefix}-contact`}
+                  name="contactPerson"
+                  value={form.contactPerson}
+                  onChange={(ev) => set({ contactPerson: ev.target.value })}
+                  placeholder="مثال: أحمد محمد"
+                  className={adminFormInputClass}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          <div className={cn(adminFormSwitchRowClass, "sm:col-span-2")}>
             <Label htmlFor={`${idPrefix}-isActive`} className={adminFormLabelClass}>
               الحالة (فعال)
             </Label>

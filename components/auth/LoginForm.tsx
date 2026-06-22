@@ -12,13 +12,16 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { ApiRequestError } from "@/lib/api"
 import { FORM_MSG } from "@/lib/messages/form"
+import { SESSION_EXPIRED_MESSAGE_AR } from "@/lib/auth/messages"
 
 type LoginFormProps = {
   /** Internal path after success (e.g. /dashboard/orders) */
   redirectTo?: string
+  /** Show session-expired banner when redirected from an expired session */
+  sessionExpired?: boolean
 }
 
-export function LoginForm({ redirectTo }: LoginFormProps) {
+export function LoginForm({ redirectTo, sessionExpired }: LoginFormProps) {
   const router = useRouter()
   const { login } = useAuthActions()
   const [username, setUsername] = useState("")
@@ -125,6 +128,16 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           </button>
         </div>
       </div>
+
+      {sessionExpired ? (
+        <div
+          className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5 text-sm text-amber-900 dark:text-amber-100"
+          role="status"
+          aria-live="polite"
+        >
+          {SESSION_EXPIRED_MESSAGE_AR}
+        </div>
+      ) : null}
 
       <div
         id="login-error"

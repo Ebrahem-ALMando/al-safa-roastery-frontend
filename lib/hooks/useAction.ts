@@ -81,7 +81,9 @@ export function useAction() {
 
         return data
       } catch (e) {
-        if (notify) {
+        const isSessionExpired =
+          e instanceof ApiRequestError && e.status === 401
+        if (notify && !isSessionExpired) {
           const msg = mapApiError(e)
           const apiError = toApiError(e, msg)
           reportAction({

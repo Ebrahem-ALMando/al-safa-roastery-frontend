@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { getLaravelBaseUrl } from "@/lib/config/apiConfig"
+import { upstreamToNextResponse } from "@/lib/server/upstreamResponse"
 
 export const runtime = "nodejs"
 
@@ -49,78 +50,46 @@ async function forward(
     })
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e)
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         status: 503,
         code: "BFF_UPSTREAM_UNREACHABLE",
         message: "تعذر الاتصال بالخادم",
         data: { detail },
-      }),
-      { status: 503, headers: { "Content-Type": "application/json" } }
+      },
+      { status: 503 }
     )
   }
 }
 
 type RouteContext = { params: Promise<{ path: string[] }> }
 
-/** Strip UTF-8 BOM from JSON upstream bodies before forwarding to the browser. */
-function stripBomFromJsonBuffer(buf: ArrayBuffer, contentType: string | null): ArrayBuffer {
-  if (!contentType?.includes("application/json") || buf.byteLength === 0) {
-    return buf
-  }
-  const text = new TextDecoder().decode(buf)
-  const stripped = text.replace(/^\uFEFF+/, "")
-  if (stripped === text) {
-    return buf
-  }
-  return new Uint8Array(new TextEncoder().encode(stripped)).buffer
-}
-
-function toNextResponse(upstream: Response): Promise<NextResponse> {
-  return upstream.arrayBuffer().then((buf) => {
-    const ct = upstream.headers.get("content-type")
-    const bodyBuf = stripBomFromJsonBuffer(buf, ct)
-    const outHeaders: Record<string, string> = {}
-    if (ct) {
-      outHeaders["Content-Type"] = ct
-    }
-    const cd = upstream.headers.get("content-disposition")
-    if (cd) {
-      outHeaders["Content-Disposition"] = cd
-    }
-    return new NextResponse(bodyBuf.byteLength > 0 ? bodyBuf : null, {
-      status: upstream.status,
-      headers: outHeaders,
-    })
-  })
-}
-
 export async function GET(request: NextRequest, context: RouteContext) {
   const { path: pathSegments } = await context.params
   const upstream = await forward(request, pathSegments)
-  return toNextResponse(upstream)
+  return upstreamToNextResponse(upstream)
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const { path: pathSegments } = await context.params
   const upstream = await forward(request, pathSegments)
-  return toNextResponse(upstream)
+  return upstreamToNextResponse(upstream)
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   const { path: pathSegments } = await context.params
   const upstream = await forward(request, pathSegments)
-  return toNextResponse(upstream)
+  return upstreamToNextResponse(upstream)
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { path: pathSegments } = await context.params
   const upstream = await forward(request, pathSegments)
-  return toNextResponse(upstream)
+  return upstreamToNextResponse(upstream)
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const { path: pathSegments } = await context.params
   const upstream = await forward(request, pathSegments)
-  return toNextResponse(upstream)
+  return upstreamToNextResponse(upstream)
 }

@@ -38,7 +38,7 @@ export function useAuth(): UseAuthReturn {
       })
 
       if (!res.data?.user) {
-        throw new ApiRequestError("??????? ??? ????? ?? ??????", 500)
+        throw new ApiRequestError("استجابة غير صالحة من الخادم.", 500)
       }
 
       return { state: "ok", user: res.data.user }

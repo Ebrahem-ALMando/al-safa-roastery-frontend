@@ -124,3 +124,30 @@ Status: **COMPLETE** (Sprint: Supplier Completion)
 6. **Empty states** render only after a successful fetch when the normalized array length is exactly 0.
 7. **KPI counts** from list endpoints must use `meta.total` (e.g. `?is_active=1&per_page=1`), not visible row count.
 8. **Before wiring a new list UI**, inspect the actual Network response from the BFF — do not guess the envelope shape.
+
+## Non-Destructive Development Database Rule
+
+From now on, do **not** run any destructive database command unless the user explicitly requests it.
+
+**Forbidden by default:**
+
+- `php artisan migrate:fresh`
+- `php artisan migrate:refresh`
+- `php artisan db:wipe`
+- `php artisan migrate:reset`
+- Dropping databases
+- Deleting local records
+- Resetting seed data
+
+**Allowed by default:**
+
+- `php artisan migrate`
+- `php artisan migrate:status`
+- `php artisan optimize:clear`
+- `composer dump-autoload`
+
+**For tests:**
+
+- Inspect `phpunit.xml` and the testing environment first.
+- Run `php artisan test` only when tests use a separate safe testing database or in-memory SQLite.
+- If tests could touch the local development database, do not run them. Report the exact reason instead.

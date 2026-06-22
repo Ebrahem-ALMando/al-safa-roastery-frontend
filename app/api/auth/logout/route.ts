@@ -1,20 +1,7 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { getLaravelBaseUrl } from "@/lib/config/apiConfig"
-
-function isSecure(): boolean {
-  return process.env.NODE_ENV === "production"
-}
-
-function clearTokenCookie(res: NextResponse) {
-  res.cookies.set("access_token", "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isSecure() ? true : false,
-    path: "/",
-    maxAge: 0,
-  })
-}
+import { clearAccessTokenCookie } from "@/lib/server/authCookie"
 
 export async function POST() {
   const cookieStore = await cookies()
@@ -44,6 +31,6 @@ export async function POST() {
     },
     { status: 200 }
   )
-  clearTokenCookie(res)
+  clearAccessTokenCookie(res)
   return res
 }

@@ -1,3 +1,4 @@
+import { handleSessionExpired, isSessionExpiryProtectedRequest } from "@/lib/auth/sessionExpired"
 import { getApiBaseUrl } from "@/lib/config/apiConfig"
 import type { HttpMethod, RequestConfig } from "./api.types"
 import { ApiRequestError } from "./api.types"
@@ -79,6 +80,10 @@ export async function apiClient<T = unknown>(
 
   const text = await response.text()
   const parsed = text ? parseResponseJson(text) : null
+
+  if (response.status === 401 && isSessionExpiryProtectedRequest(url)) {
+    handleSessionExpired()
+  }
 
   if (!isHttpSuccessStatus(response.status)) {
     const { message, code, errors } = parseErrorBody(

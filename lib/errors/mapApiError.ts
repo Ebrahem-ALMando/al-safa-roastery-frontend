@@ -10,6 +10,7 @@ const API_ERROR_BY_CODE: Record<string, string> = {
   AUTH_INVALID_CREDENTIALS: "بيانات تسجيل الدخول غير صحيحة.",
   AUTH_CURRENT_PASSWORD_INVALID: "كلمة المرور الحالية غير صحيحة.",
   AUTH_INACTIVE_USER: "الحساب غير مفعّل.",
+  UNAUTHENTICATED: "يرجى تسجيل الدخول.",
   // Categories
   DOMAIN_CATEGORY_CYCLE: "تصنيف رئيسي غير صالح: سيتسبب بحلقة في التسلسل.",
   DOMAIN_CATEGORY_NAME_REQUIRED: "اسم التصنيف مطلوب.",
@@ -63,7 +64,9 @@ export function mapApiError(err: unknown): string {
     }
 
     if (err.status === 401) {
-      return "غير مصرح"
+      return err.code === "UNAUTHENTICATED"
+        ? API_ERROR_BY_CODE.UNAUTHENTICATED
+        : "يرجى تسجيل الدخول."
     }
     if (err.status === 403) {
       return "الحساب غير مفعّل"

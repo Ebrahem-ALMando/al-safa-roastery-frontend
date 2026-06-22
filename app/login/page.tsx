@@ -14,9 +14,10 @@ import {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string }>
+  searchParams: Promise<{ from?: string; reason?: string }>
 }) {
-  const { from } = await searchParams
+  const { from, reason } = await searchParams
+  const sessionExpired = reason === "session_expired"
 
   return (
     <div className="relative min-h-svh overflow-hidden bg-background">
@@ -70,7 +71,7 @@ export default async function LoginPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <LoginForm redirectTo={from} />
+              <LoginForm redirectTo={from} sessionExpired={sessionExpired} />
             </CardContent>
           </Card>
 
