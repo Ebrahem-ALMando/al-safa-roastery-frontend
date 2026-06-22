@@ -27,6 +27,8 @@ export interface ConfirmDeactivateDialogProps {
   isLoading?: boolean
   loadingLabel?: string
   icon?: LucideIcon
+  /** Tailwind classes for the confirm action button */
+  confirmClassName?: string
   className?: string
 }
 
@@ -42,6 +44,7 @@ export function ConfirmDeactivateDialog({
   isLoading = false,
   loadingLabel = "جار المعالجة",
   icon: Icon = PowerOff,
+  confirmClassName,
   className,
 }: ConfirmDeactivateDialogProps) {
   const handleOpenChange = (next: boolean) => {
@@ -97,7 +100,10 @@ export function ConfirmDeactivateDialog({
         <div className="shrink-0 border-t border-border/50 bg-linear-to-t from-muted/30 to-background px-6 py-4">
           <div className="flex flex-wrap items-center gap-2">
             <AlertDialogAction
-              className="min-w-28 rounded-xl bg-amber-500 text-white shadow-sm hover:bg-amber-600"
+              className={cn(
+                "min-w-28 rounded-xl bg-amber-500 text-white shadow-sm hover:bg-amber-600",
+                confirmClassName
+              )}
               onClick={() => void onConfirm()}
               disabled={isLoading}
               aria-busy={isLoading}

@@ -21,6 +21,7 @@ interface SuppliersCardsProps {
   onViewDetails: (supplier: Supplier) => void
   onEdit: (supplier: Supplier) => void
   onDelete?: (supplier: Supplier) => void
+  onToggleActive?: (supplier: Supplier) => void
 }
 
 function SupplierCardSkeleton() {
@@ -56,6 +57,7 @@ export function SuppliersCards({
   onAddSupplier,
   onEdit,
   onDelete,
+  onToggleActive,
 }: SuppliersCardsProps) {
   if (isLoading) {
     return (
@@ -98,6 +100,7 @@ export function SuppliersCards({
             supplier={supplier}
             onEdit={onEdit}
             onRequestDelete={onDelete}
+            onToggleActive={onToggleActive}
           />
         ))}
       </div>

@@ -37,6 +37,8 @@ export function SuppliersDataView(props: SuppliersDataViewProps) {
         onViewDetails={props.onViewDetails}
         onEdit={props.onEdit}
         onDelete={props.onDelete}
+        onToggleActive={props.onToggleActive}
+        onToggleActive={props.onToggleActive}
         currentPage={props.currentPage}
         canPrev={props.canPrev}
         canNext={props.canNext}

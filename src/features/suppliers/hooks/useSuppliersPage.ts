@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { ResolvedOperationalDateRange } from "@/lib/date-scope/operational-date-scope.types"
 import {
   DEFAULT_VISIBLE_SUPPLIER_COLUMNS,
-  SUPPLIER_TABLE_COLUMNS,
   SUPPLIERS_PAGE_CONFIG_KEY,
-  SUPPLIERS_PERIOD_STORAGE_KEY,
   SUPPLIERS_TABLE_COLUMNS_STORAGE_KEY,
+  SUPPLIERS_PERIOD_STORAGE_KEY,
   type SupplierTableColumnId,
   type SuppliersCustomPeriod,
   type SuppliersPeriodPreset,
   type SuppliersViewMode,
+  normalizeSupplierVisibleColumns,
 } from "../lib/suppliers.constants"
 import {
   defaultCustomPeriod,
@@ -56,11 +56,7 @@ function readColumnVisibility(): SupplierTableColumnId[] {
     if (!raw) return DEFAULT_VISIBLE_SUPPLIER_COLUMNS
     const parsed = JSON.parse(raw) as SupplierTableColumnId[]
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_VISIBLE_SUPPLIER_COLUMNS
-    const validIds = new Set(SUPPLIER_TABLE_COLUMNS.map((c) => c.id))
-    const filtered = parsed.filter((id) => validIds.has(id))
-    if (!filtered.includes("supplier_name")) filtered.unshift("supplier_name")
-    if (!filtered.includes("actions")) filtered.push("actions")
-    return filtered
+    return normalizeSupplierVisibleColumns(parsed)
   } catch {
     return DEFAULT_VISIBLE_SUPPLIER_COLUMNS
   }
@@ -190,10 +186,7 @@ export function useSuppliersPage() {
   }, [])
 
   const setColumnVisibility = useCallback((columns: SupplierTableColumnId[]) => {
-    const next = [...columns]
-    if (!next.includes("supplier_name")) next.unshift("supplier_name")
-    if (!next.includes("actions")) next.push("actions")
-    setVisibleColumns(next)
+    setVisibleColumns(normalizeSupplierVisibleColumns(columns))
   }, [])
 
   return {

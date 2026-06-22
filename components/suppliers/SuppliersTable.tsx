@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   MoreHorizontal,
   Pencil,
-  Phone,
   Plus,
   Power,
   Search,
@@ -35,16 +34,17 @@ import {
 } from "@/components/ui/table"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
-  SUPPLIER_TABLE_COLUMNS,
   formatArDateTime,
   formatUsdAmount,
   formatSupplierLastActivity,
-  getBalanceStatusLabel,
+  getSupplierColumnLabel,
   supplierInitials,
   type Supplier,
   type SupplierTableColumnId,
   type SuppliersListMeta,
 } from "@/features/suppliers"
+import { SupplierBalanceBadge } from "./supplier-balance-badge"
+import { SupplierContactBadges } from "./supplier-contact-badges"
 
 interface SuppliersTableProps {
   suppliers: Supplier[]
@@ -109,8 +109,10 @@ export function SuppliersTable({
   onToggleActive,
 }: SuppliersTableProps) {
   const router = useRouter()
-  const visibleSet = new Set(visibleColumns)
-  const orderedCols = SUPPLIER_TABLE_COLUMNS.filter((c) => visibleSet.has(c.id))
+  const orderedCols = visibleColumns.map((id) => ({
+    id,
+    label: getSupplierColumnLabel(id),
+  }))
   const perPage = meta?.per_page ?? 15
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
@@ -158,6 +160,11 @@ export function SuppliersTable({
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{supplier.name}</p>
+                {supplier.contact_person ? (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {supplier.contact_person}
+                  </p>
+                ) : null}
                 {supplier.code ? (
                   <p className="mt-0.5 font-mono text-[11px] text-muted-foreground" dir="ltr">
                     {supplier.code}
@@ -169,26 +176,8 @@ export function SuppliersTable({
         )
       case "contact_phone":
         return (
-          <TableCell key={key} className="text-right">
-            <div className="flex flex-col items-start gap-0.5">
-              {supplier.contact_person ? (
-                <p className="text-sm">{supplier.contact_person}</p>
-              ) : null}
-              {supplier.phone ? (
-                <p
-                  className={
-                    supplier.contact_person
-                      ? "text-xs text-muted-foreground"
-                      : "text-sm"
-                  }
-                  dir="ltr"
-                >
-                  {supplier.phone}
-                </p>
-              ) : !supplier.contact_person ? (
-                <span className="text-xs text-muted-foreground">—</span>
-              ) : null}
-            </div>
+          <TableCell key={key} className="text-start">
+            <SupplierContactBadges supplier={supplier} />
           </TableCell>
         )
       case "code":
@@ -197,52 +186,18 @@ export function SuppliersTable({
             {supplier.code || "—"}
           </TableCell>
         )
-      case "name":
-        return (
-          <TableCell key={key} className="text-right">
-            <div className="flex items-center justify-start gap-2.5">
-              <Avatar className="size-9 shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                  {supplierInitials(supplier.name) || "—"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{supplier.name}</p>
-                {supplier.contact_person ? (
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {supplier.contact_person}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </TableCell>
-        )
-      case "contact":
-        return (
-          <TableCell key={key} className="text-right">
-            <div className="flex flex-col items-start gap-1">
-              <Badge variant="secondary" className="max-w-[170px]">
-                <Phone className="size-3.5" />
-                <span className="truncate" dir="ltr">
-                  {supplier.phone || "—"}
-                </span>
-              </Badge>
-            </div>
-          </TableCell>
-        )
-      case "current_balance": {
-        const balanceInfo = getBalanceStatusLabel(supplier.current_balance)
+      case "current_balance":
         return (
           <TableCell key={key} className="text-center">
-            <p className="text-sm font-semibold" dir="ltr">
-              {formatUsdAmount(supplier.current_balance)}
-            </p>
-            <Badge variant="outline" className="mt-1 text-xs">
-              {balanceInfo.label}
-            </Badge>
+            <SupplierBalanceBadge balance={supplier.current_balance} />
           </TableCell>
         )
-      }
+      case "opening_balance":
+        return (
+          <TableCell key={key} className="text-center text-sm" dir="ltr">
+            {formatUsdAmount(supplier.opening_balance)}
+          </TableCell>
+        )
       case "status":
         return (
           <TableCell key={key} className="text-center">
@@ -270,6 +225,12 @@ export function SuppliersTable({
           </TableCell>
         )
       }
+      case "whatsapp":
+        return (
+          <TableCell key={key} className="text-center text-sm" dir="ltr">
+            {supplier.whatsapp || "—"}
+          </TableCell>
+        )
       case "email":
         return (
           <TableCell key={key} className="text-right text-sm">

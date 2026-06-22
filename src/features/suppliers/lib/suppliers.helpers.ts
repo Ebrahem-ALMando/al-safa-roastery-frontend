@@ -34,6 +34,17 @@ export function getBalanceStatusLabel(balance: string | number | null | undefine
   return { key: "settled", label: "متوازن" }
 }
 
+export function getBalanceBadgeClass(key: BalanceStatusLabel): string {
+  switch (key) {
+    case "payable":
+      return "border-amber-500/50 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+    case "credit":
+      return "border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-300"
+    case "settled":
+      return "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+  }
+}
+
 export function formatArDateTime(value: string | null | undefined): string {
   if (!value) return "—"
   const d = new Date(value)

@@ -19,10 +19,14 @@ export {
   SUPPLIER_TABLE_COLUMNS,
   DEFAULT_VISIBLE_SUPPLIER_COLUMNS,
   SUPPLIERS_PERIOD_LABELS_AR,
+  normalizeSupplierVisibleColumns,
+  insertSupplierColumnBeforeActions,
+  getSupplierColumnLabel,
 } from "./lib/suppliers.constants"
 export {
   formatUsdAmount,
   getBalanceStatusLabel,
+  getBalanceBadgeClass,
   formatArDateTime,
   formatArShortDate,
   formatSupplierLastActivity,
