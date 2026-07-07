@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   DollarSign,
   Loader2,
+  Pencil,
   Printer,
   Receipt,
   Trash2,
@@ -170,6 +171,15 @@ export function PurchaseDetailsView({ purchaseId, onDelete, onCancel }: Purchase
             </div>
 
             <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:items-end">
+              {purchase.status === "draft" ? (
+                <Button
+                  className="gap-2 rounded-xl shadow-sm"
+                  onClick={() => router.push(`/dashboard/purchases/${purchase.id}/edit`)}
+                >
+                  <Pencil className="size-4" />
+                  تعديل المسودة
+                </Button>
+              ) : null}
               {canPrint ? (
                 <Button
                   className="gap-2 rounded-xl shadow-sm"

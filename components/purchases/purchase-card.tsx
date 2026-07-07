@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Eye, Printer, Receipt, Trash2, Truck } from "lucide-react"
+import { Eye, Pencil, Printer, Receipt, Trash2, Truck } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ function purchaseDetailsHref(id: number) {
 type PurchaseCardProps = {
   purchase: PurchaseInvoice
   onViewDetails?: (purchase: PurchaseInvoice) => void
+  onEdit?: (purchase: PurchaseInvoice) => void
   onPrint?: (purchase: PurchaseInvoice) => void
   onCancel?: (purchase: PurchaseInvoice) => void
   onDelete?: (purchase: PurchaseInvoice) => void
@@ -31,6 +32,7 @@ type PurchaseCardProps = {
 export function PurchaseCard({
   purchase,
   onViewDetails,
+  onEdit,
   onPrint,
   onCancel,
   onDelete,
@@ -120,6 +122,26 @@ export function PurchaseCard({
               </TooltipTrigger>
               <TooltipContent>التفاصيل</TooltipContent>
             </Tooltip>
+
+            {isDraft && onEdit ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-emerald-600"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit(purchase)
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>تعديل المسودة</TooltipContent>
+              </Tooltip>
+            ) : null}
 
             {canPrint && onPrint ? (
               <Tooltip>

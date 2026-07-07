@@ -43,6 +43,7 @@ interface PurchasesTableProps {
   canNext: boolean
   onPageChange: (page: number) => void
   onViewDetails: (purchase: PurchaseInvoice) => void
+  onEdit: (purchase: PurchaseInvoice) => void
   onPrint: (purchase: PurchaseInvoice) => void
   onCancel: (purchase: PurchaseInvoice) => void
   onDelete: (purchase: PurchaseInvoice) => void
@@ -79,6 +80,7 @@ export function PurchasesTable({
   canNext,
   onPageChange,
   onViewDetails,
+  onEdit,
   onPrint,
   onCancel,
   onDelete,
@@ -227,6 +229,9 @@ export function PurchasesTable({
                 purchase={purchase}
                 stopPropagation
                 onViewDetails={() => onViewDetails(purchase)}
+                onEdit={
+                  purchase.status === "draft" ? () => onEdit(purchase) : undefined
+                }
                 onPrint={
                   purchase.status !== "draft" ? () => onPrint(purchase) : undefined
                 }
@@ -368,6 +373,14 @@ export function PurchasesTable({
                 onViewDetails(contextMenu.purchase)
                 setContextMenu(null)
               }}
+              onEdit={
+                contextMenu.purchase.status === "draft"
+                  ? () => {
+                      onEdit(contextMenu.purchase)
+                      setContextMenu(null)
+                    }
+                  : undefined
+              }
               onPrint={
                 contextMenu.purchase.status !== "draft"
                   ? () => {

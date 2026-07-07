@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { LayoutGrid, RefreshCw, Settings2, Table } from "lucide-react"
+import { LayoutGrid, Plus, RefreshCw, Settings2, Table } from "lucide-react"
 import { DashboardPageHeader } from "@/components/dashboard"
 import { DateRangeDialog } from "@/components/shared/DateRangeDialog"
 import { Button } from "@/components/ui/button"
@@ -93,6 +93,11 @@ export function PurchasesView() {
     router.push(`/dashboard/purchases/${purchase.id}/print`)
   }
 
+  function openEdit(purchase: PurchaseInvoice) {
+    if (purchase.status !== "draft") return
+    router.push(`/dashboard/purchases/${purchase.id}/edit`)
+  }
+
   function openDelete(purchase: PurchaseInvoice) {
     setDeleteTarget(purchase)
     setDeleteOpen(true)
@@ -117,6 +122,10 @@ export function PurchasesView() {
           </h1>
         </DashboardPageHeader.Lead>
         <DashboardPageHeader.Actions>
+          <Button className="gap-2 rounded-xl shadow-sm" onClick={() => router.push("/dashboard/purchases/new")}>
+            <Plus className="h-4 w-4" />
+            إنشاء فاتورة
+          </Button>
           <PurchasesPeriodControls preset={periodPreset} onPresetChange={setPeriodPreset} />
           <PurchaseColumnCustomizer visibleColumns={visibleColumns} onChange={setColumnVisibility} />
           <DropdownMenu>
@@ -225,6 +234,7 @@ export function PurchasesView() {
           canNext={canNext}
           onPageChange={setPage}
           onViewDetails={openDetails}
+          onEdit={openEdit}
           onPrint={openPrint}
           onCancel={openCancel}
           onDelete={openDelete}

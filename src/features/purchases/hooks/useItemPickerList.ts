@@ -4,40 +4,38 @@ import { useMemo } from "react"
 import { useApiQuery } from "@/lib/hooks/useApiQuery"
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue"
 import type { QueryParams } from "@/lib/api"
-import type { Supplier, SuppliersListMeta } from "@/features/suppliers/types/supplier.types"
+import type { Item, ItemsListMeta } from "@/features/items/types/item.types"
 
-const ENDPOINT = "suppliers"
+const ENDPOINT = "items"
 const PICKER_PER_PAGE = 100
 
-export type SupplierPickerRow = {
+export type ItemPickerRow = {
   id: string
   name: string
   code: string
-  phone: string
-  currentBalance: string | number | null
+  itemType: Item["item_type"]
+  currentQuantityKg: string | number | null
+  averageCost: string | number | null
 }
 
-function mapSupplier(s: Supplier): SupplierPickerRow {
+function mapItem(item: Item): ItemPickerRow {
   return {
-    id: String(s.id),
-    name: s.name,
-    code: s.code?.trim() ? s.code : "—",
-    phone: s.phone?.trim() ? s.phone : "—",
-    currentBalance: s.current_balance ?? null,
+    id: String(item.id),
+    name: item.name,
+    code: item.code?.trim() ? item.code : "—",
+    itemType: item.item_type,
+    currentQuantityKg: item.current_quantity_kg,
+    averageCost: item.average_cost,
   }
 }
 
-type UseSupplierPickerListArgs = {
+type UseItemPickerListArgs = {
   open: boolean
   search: string
   debounceMs?: number
 }
 
-export function useSupplierPickerList({
-  open,
-  search,
-  debounceMs = 350,
-}: UseSupplierPickerListArgs) {
+export function useItemPickerList({ open, search, debounceMs = 350 }: UseItemPickerListArgs) {
   const debouncedSearch = useDebouncedValue(search, debounceMs)
 
   const queryParams = useMemo((): QueryParams => {
@@ -54,16 +52,16 @@ export function useSupplierPickerList({
   }, [debouncedSearch])
 
   const swrKey = useMemo(
-    () => (open ? `supplier-picker:${JSON.stringify(queryParams)}` : null),
+    () => (open ? `item-picker:${JSON.stringify(queryParams)}` : null),
     [open, queryParams]
   )
 
-  const { data, meta, isLoading, error, mutate } = useApiQuery<Supplier[]>(swrKey, ENDPOINT, {
+  const { data, meta, isLoading, error, mutate } = useApiQuery<Item[]>(swrKey, ENDPOINT, {
     queryParams,
   })
 
-  const rows = useMemo(() => (data ?? []).map(mapSupplier), [data])
-  const listMeta = meta as SuppliersListMeta | undefined
+  const rows = useMemo(() => (data ?? []).map(mapItem), [data])
+  const listMeta = meta as ItemsListMeta | undefined
 
   return {
     rows,

@@ -23,6 +23,7 @@ interface PurchasesDataViewProps {
   canNext: boolean
   onPageChange: (page: number) => void
   onViewDetails: (purchase: PurchaseInvoice) => void
+  onEdit: (purchase: PurchaseInvoice) => void
   onPrint: (purchase: PurchaseInvoice) => void
   onCancel: (purchase: PurchaseInvoice) => void
   onDelete: (purchase: PurchaseInvoice) => void
@@ -38,6 +39,7 @@ export function PurchasesDataView(props: PurchasesDataViewProps) {
         isFilteredNoHits={props.isFilteredNoHits}
         isTrueEmpty={props.isTrueEmpty}
         onViewDetails={props.onViewDetails}
+        onEdit={props.onEdit}
         onPrint={props.onPrint}
         onCancel={props.onCancel}
         onDelete={props.onDelete}
@@ -63,6 +65,7 @@ export function PurchasesDataView(props: PurchasesDataViewProps) {
       canNext={props.canNext}
       onPageChange={props.onPageChange}
       onViewDetails={props.onViewDetails}
+      onEdit={props.onEdit}
       onPrint={props.onPrint}
       onCancel={props.onCancel}
       onDelete={props.onDelete}

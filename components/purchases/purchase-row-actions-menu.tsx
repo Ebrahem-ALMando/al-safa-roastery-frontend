@@ -1,7 +1,7 @@
 "use client"
 
 import type { MouseEvent } from "react"
-import { Ban, Eye, Printer, Trash2 } from "lucide-react"
+import { Ban, Eye, Pencil, Printer, Trash2 } from "lucide-react"
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,6 +16,7 @@ const itemClass =
 type PurchaseRowActionsMenuContentProps = {
   purchase: PurchaseInvoice
   onViewDetails: () => void
+  onEdit?: () => void
   onPrint?: () => void
   onCancel?: () => void
   onDelete?: () => void
@@ -31,6 +32,7 @@ function stopIfNeeded(event: MouseEvent, stopPropagation: boolean) {
 export function PurchaseRowActionsMenuContent({
   purchase,
   onViewDetails,
+  onEdit,
   onPrint,
   onCancel,
   onDelete,
@@ -56,6 +58,22 @@ export function PurchaseRowActionsMenuContent({
         <Eye className="size-4 text-sky-600 dark:text-sky-300" />
         عرض التفاصيل
       </DropdownMenuItem>
+
+      {isDraft && onEdit ? (
+        <DropdownMenuItem
+          className={cn(
+            itemClass,
+            "text-emerald-800 focus:bg-emerald-50 focus:text-emerald-900 dark:text-emerald-200 dark:focus:bg-emerald-950/40"
+          )}
+          onClick={(event) => {
+            stopIfNeeded(event, stopPropagation)
+            onEdit()
+          }}
+        >
+          <Pencil className="size-4 text-emerald-600 dark:text-emerald-300" />
+          تعديل المسودة
+        </DropdownMenuItem>
+      ) : null}
 
       {canPrint && onPrint ? (
         <DropdownMenuItem
