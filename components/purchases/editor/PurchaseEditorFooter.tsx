@@ -23,22 +23,31 @@ export function PurchaseEditorFooter({
   const busy = isSaving || isCompleting
 
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 border-t border-border/50 bg-gradient-to-t from-muted/30 to-background px-4 py-4 sm:-mx-6 sm:px-6">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-start gap-2">
+    <div className="rounded-xl border border-border/60 bg-background p-3 shadow-sm">
+      <div className="grid gap-2">
         <Button
           type="button"
-          variant="outline"
-          className="rounded-xl gap-2"
-          onClick={onCancel}
-          disabled={busy}
+          className="h-11 w-full rounded-xl gap-2 shadow-sm"
+          onClick={onComplete}
+          disabled={disabled || busy}
+          aria-busy={isCompleting}
         >
-          <X className="size-4" />
-          إلغاء
+          {isCompleting ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              جارٍ الاعتماد
+            </>
+          ) : (
+            <>
+              <Check className="size-4" />
+              اعتماد الفاتورة
+            </>
+          )}
         </Button>
         <Button
           type="button"
           variant="secondary"
-          className="min-w-36 rounded-xl gap-2"
+          className="h-10 w-full rounded-xl gap-2"
           onClick={onSaveDraft}
           disabled={disabled || busy}
           aria-busy={isSaving}
@@ -57,22 +66,13 @@ export function PurchaseEditorFooter({
         </Button>
         <Button
           type="button"
-          className="min-w-36 rounded-xl gap-2 shadow-sm"
-          onClick={onComplete}
-          disabled={disabled || busy}
-          aria-busy={isCompleting}
+          variant="outline"
+          className="h-10 w-full rounded-xl gap-2"
+          onClick={onCancel}
+          disabled={busy}
         >
-          {isCompleting ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              جارٍ الاعتماد
-            </>
-          ) : (
-            <>
-              <Check className="size-4" />
-              اعتماد الفاتورة
-            </>
-          )}
+          <X className="size-4" />
+          إلغاء
         </Button>
       </div>
     </div>

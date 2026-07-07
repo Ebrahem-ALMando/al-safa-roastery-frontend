@@ -198,7 +198,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
   const remaining = calculateRemaining(total, form.paidAmount)
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl" lang="ar">
+    <div className="space-y-6 pb-8" dir="rtl" lang="ar">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <Link href="/dashboard/purchases">
@@ -255,19 +255,18 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
           />
         </div>
 
-        <div className="lg:self-start">
+        <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <PurchaseEditorSummaryPanel form={form} fieldErrors={fieldErrors} />
+          <PurchaseEditorFooter
+            onCancel={handleCancel}
+            onSaveDraft={handleSaveDraft}
+            onComplete={openCompleteDialog}
+            isSaving={isSaving}
+            isCompleting={isCompleting}
+            disabled={isSaving || isCompleting}
+          />
         </div>
       </div>
-
-      <PurchaseEditorFooter
-        onCancel={handleCancel}
-        onSaveDraft={handleSaveDraft}
-        onComplete={openCompleteDialog}
-        isSaving={isSaving}
-        isCompleting={isCompleting}
-        disabled={isSaving || isCompleting}
-      />
 
       <PurchaseCompleteConfirmDialog
         open={completeOpen}
