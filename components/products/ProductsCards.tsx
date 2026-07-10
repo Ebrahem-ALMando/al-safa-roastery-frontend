@@ -1,36 +1,46 @@
-"use client"
+"use client";
 
-import { ChevronLeft, ChevronRight, MoreHorizontal, Package, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatProductPrice,
   formatQuantityKg,
   linkedItemName,
   type Product,
   type ProductsListMeta,
-} from "@/features/products"
-import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge"
-import { ProductStatusBadge } from "./ProductStatusBadge"
-import { ProductStockStatusBadge } from "./ProductStockStatusBadge"
-import { ProductRowActionsMenuContent } from "./product-row-actions-menu"
+} from "@/features/products";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Package,
+  Search,
+} from "lucide-react";
+import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge";
+import { ProductStatusBadge } from "./ProductStatusBadge";
+import { ProductStockStatusBadge } from "./ProductStockStatusBadge";
+import { ProductRowActionsMenuContent } from "./product-row-actions-menu";
 
 type ProductsCardsProps = {
-  products: Product[]
-  meta?: ProductsListMeta
-  isLoading?: boolean
-  isFilteredNoHits: boolean
-  isTrueEmpty: boolean
-  currentPage: number
-  canPrev: boolean
-  canNext: boolean
-  onPageChange: (page: number) => void
-  onViewDetails: (product: Product) => void
-  onDelete: (product: Product) => void
-  onToggleActive: (product: Product) => void
-}
+  products: Product[];
+  meta?: ProductsListMeta;
+  isLoading?: boolean;
+  isFilteredNoHits: boolean;
+  isTrueEmpty: boolean;
+  currentPage: number;
+  canPrev: boolean;
+  canNext: boolean;
+  onPageChange: (page: number) => void;
+  onViewDetails: (product: Product) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  onToggleActive: (product: Product) => void;
+};
 
 function ProductCardSkeleton() {
   return (
@@ -40,7 +50,7 @@ function ProductCardSkeleton() {
       <Skeleton className="h-16 w-full" />
       <Skeleton className="h-9 w-full" />
     </div>
-  )
+  );
 }
 
 export function ProductsCards({
@@ -54,6 +64,7 @@ export function ProductsCards({
   canNext,
   onPageChange,
   onViewDetails,
+  onEdit,
   onDelete,
   onToggleActive,
 }: ProductsCardsProps) {
@@ -64,16 +75,18 @@ export function ProductsCards({
           <ProductCardSkeleton key={i} />
         ))}
       </div>
-    )
+    );
   }
 
   if (isFilteredNoHits) {
     return (
       <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 p-8 text-center">
         <Search className="size-6 opacity-60" />
-        <p className="font-medium">لا توجد منتجات مطابقة للبحث أو الفلاتر الحالية.</p>
+        <p className="font-medium">
+          لا توجد منتجات مطابقة للبحث أو الفلاتر الحالية.
+        </p>
       </div>
-    )
+    );
   }
 
   if (isTrueEmpty) {
@@ -82,7 +95,7 @@ export function ProductsCards({
         <Package className="size-10 text-primary" strokeWidth={1.25} />
         <p className="text-lg font-semibold">لا توجد منتجات حالياً</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -97,8 +110,13 @@ export function ProductsCards({
             <CardHeader className="px-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <CardTitle className="truncate text-base">{product.name}</CardTitle>
-                  <p className="mt-1 font-mono text-xs text-muted-foreground" dir="ltr">
+                  <CardTitle className="truncate text-base">
+                    {product.name}
+                  </CardTitle>
+                  <p
+                    className="mt-1 font-mono text-xs text-muted-foreground"
+                    dir="ltr"
+                  >
                     {product.code || product.barcode || "—"}
                   </p>
                 </div>
@@ -107,8 +125,22 @@ export function ProductsCards({
             </CardHeader>
             <CardContent className="space-y-3 px-4">
               <InfoLine label="الصنف المرتبط" value={linkedItemName(product)} />
-              <InfoLine label="السعر" value={formatProductPrice(product.current_price ?? product.default_price)} dir="ltr" />
-              <InfoLine label="المخزون المتاح" value={product.ready_item_id ? formatQuantityKg(product.current_quantity_kg) : "—"} dir="ltr" />
+              <InfoLine
+                label="السعر"
+                value={formatProductPrice(
+                  product.current_price ?? product.default_price,
+                )}
+                dir="ltr"
+              />
+              <InfoLine
+                label="المخزون المتاح"
+                value={
+                  product.ready_item_id
+                    ? formatQuantityKg(product.current_quantity_kg)
+                    : "—"
+                }
+                dir="ltr"
+              />
               <div className="flex flex-wrap gap-2">
                 <ProductPriceStatusBadge status={product.price_status} />
                 <ProductStockStatusBadge product={product} />
@@ -129,6 +161,7 @@ export function ProductsCards({
                     product={product}
                     stopPropagation
                     onViewDetails={() => onViewDetails(product)}
+                    onEdit={() => onEdit(product)}
                     onToggleActive={() => onToggleActive(product)}
                     onDelete={() => onDelete(product)}
                   />
@@ -141,24 +174,42 @@ export function ProductsCards({
 
       {meta && meta.last_page > 1 ? (
         <div className="flex items-center justify-center gap-2 border-t border-border/40 px-4 py-3">
-          <Button variant="outline" size="sm" disabled={!canPrev} onClick={() => onPageChange(Math.max(1, currentPage - 1))}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!canPrev}
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          >
             <ChevronRight className="size-4" />
             السابق
           </Button>
           <span className="text-sm text-muted-foreground">
             صفحة {currentPage} من {meta.last_page}
           </span>
-          <Button variant="outline" size="sm" disabled={!canNext} onClick={() => onPageChange(currentPage + 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!canNext}
+            onClick={() => onPageChange(currentPage + 1)}
+          >
             التالي
             <ChevronLeft className="size-4" />
           </Button>
         </div>
       ) : null}
     </div>
-  )
+  );
 }
 
-function InfoLine({ label, value, dir }: { label: string; value: string; dir?: "ltr" | "rtl" }) {
+function InfoLine({
+  label,
+  value,
+  dir,
+}: {
+  label: string;
+  value: string;
+  dir?: "ltr" | "rtl";
+}) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <span className="text-muted-foreground">{label}</span>
@@ -166,5 +217,5 @@ function InfoLine({ label, value, dir }: { label: string; value: string; dir?: "
         {value}
       </span>
     </div>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, MoreHorizontal, Package, Search } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   formatArDateTime,
   formatProductPrice,
@@ -26,30 +26,40 @@ import {
   type Product,
   type ProductTableColumnId,
   type ProductsListMeta,
-} from "@/features/products"
-import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge"
-import { ProductStatusBadge } from "./ProductStatusBadge"
-import { ProductStockStatusBadge } from "./ProductStockStatusBadge"
-import { ProductRowActionsMenuContent } from "./product-row-actions-menu"
+} from "@/features/products";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Package,
+  Search,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge";
+import { ProductStatusBadge } from "./ProductStatusBadge";
+import { ProductStockStatusBadge } from "./ProductStockStatusBadge";
+import { ProductRowActionsMenuContent } from "./product-row-actions-menu";
 
 type ProductsTableProps = {
-  products: Product[]
-  meta?: ProductsListMeta
-  visibleColumns: ProductTableColumnId[]
-  isLoading?: boolean
-  isFilteredNoHits: boolean
-  isTrueEmpty: boolean
-  currentPage: number
-  lastPage: number
-  canPrev: boolean
-  canNext: boolean
-  onPageChange: (page: number) => void
-  onViewDetails: (product: Product) => void
-  onDelete: (product: Product) => void
-  onToggleActive: (product: Product) => void
-}
+  products: Product[];
+  meta?: ProductsListMeta;
+  visibleColumns: ProductTableColumnId[];
+  isLoading?: boolean;
+  isFilteredNoHits: boolean;
+  isTrueEmpty: boolean;
+  currentPage: number;
+  lastPage: number;
+  canPrev: boolean;
+  canNext: boolean;
+  onPageChange: (page: number) => void;
+  onViewDetails: (product: Product) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  onToggleActive: (product: Product) => void;
+};
 
-type ContextMenuState = { x: number; y: number; product: Product }
+type ContextMenuState = { x: number; y: number; product: Product };
 
 function TableRowSkeleton({ colCount }: { colCount: number }) {
   return (
@@ -60,7 +70,7 @@ function TableRowSkeleton({ colCount }: { colCount: number }) {
         </TableCell>
       ))}
     </TableRow>
-  )
+  );
 }
 
 export function ProductsTable({
@@ -75,44 +85,55 @@ export function ProductsTable({
   canPrev,
   canNext,
   onPageChange,
+  onEdit,
   onDelete,
   onToggleActive,
 }: ProductsTableProps) {
-  const router = useRouter()
-  const perPage = meta?.per_page ?? 15
-  const orderedCols = visibleColumns.map((id) => ({ id, label: getProductColumnLabel(id) }))
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
-  const contextMenuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter();
+  const perPage = meta?.per_page ?? 15;
+  const orderedCols = visibleColumns.map((id) => ({
+    id,
+    label: getProductColumnLabel(id),
+  }));
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   function goToProduct(id: number) {
-    router.push(`/dashboard/products/${id}`)
+    router.push(`/dashboard/products/${id}`);
   }
 
   useEffect(() => {
-    if (!contextMenu) return
+    if (!contextMenu) return;
     function close() {
-      setContextMenu(null)
+      setContextMenu(null);
     }
-    document.addEventListener("click", close)
-    document.addEventListener("scroll", close, true)
+    document.addEventListener("click", close);
+    document.addEventListener("scroll", close, true);
     return () => {
-      document.removeEventListener("click", close)
-      document.removeEventListener("scroll", close, true)
-    }
-  }, [contextMenu])
+      document.removeEventListener("click", close);
+      document.removeEventListener("scroll", close, true);
+    };
+  }, [contextMenu]);
 
-  function renderCell(colId: ProductTableColumnId, product: Product, rowIndex: number) {
-    const key = `${product.id}-${colId}`
-    const rowNumber = (currentPage - 1) * perPage + rowIndex + 1
-    const itemCode = linkedItemCode(product)
+  function renderCell(
+    colId: ProductTableColumnId,
+    product: Product,
+    rowIndex: number,
+  ) {
+    const key = `${product.id}-${colId}`;
+    const rowNumber = (currentPage - 1) * perPage + rowIndex + 1;
+    const itemCode = linkedItemCode(product);
 
     switch (colId) {
       case "row_number":
         return (
-          <TableCell key={key} className="w-12 text-center font-mono text-xs text-muted-foreground">
+          <TableCell
+            key={key}
+            className="w-12 text-center font-mono text-xs text-muted-foreground"
+          >
             {rowNumber}
           </TableCell>
-        )
+        );
       case "product":
         return (
           <TableCell key={key} className="text-right">
@@ -124,80 +145,96 @@ export function ProductsTable({
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{product.name}</p>
-                <p className="mt-0.5 font-mono text-[11px] text-muted-foreground" dir="ltr">
+                <p
+                  className="mt-0.5 font-mono text-[11px] text-muted-foreground"
+                  dir="ltr"
+                >
                   {product.code || product.barcode || "—"}
                 </p>
               </div>
             </div>
           </TableCell>
-        )
+        );
       case "linked_item":
         return (
           <TableCell key={key} className="text-right text-sm">
             <p className="font-medium">{linkedItemName(product)}</p>
-            <p className="mt-0.5 font-mono text-[11px] text-muted-foreground" dir="ltr">
+            <p
+              className="mt-0.5 font-mono text-[11px] text-muted-foreground"
+              dir="ltr"
+            >
               {itemCode || "—"}
             </p>
           </TableCell>
-        )
+        );
       case "price":
         return (
-          <TableCell key={key} className="text-center font-semibold tabular-nums" dir="ltr">
+          <TableCell
+            key={key}
+            className="text-center font-semibold tabular-nums"
+            dir="ltr"
+          >
             {formatProductPrice(product.current_price ?? product.default_price)}
           </TableCell>
-        )
+        );
       case "price_status":
         return (
           <TableCell key={key} className="text-center">
             <ProductPriceStatusBadge status={product.price_status} />
           </TableCell>
-        )
+        );
       case "available_stock":
         return (
           <TableCell key={key} className="text-center text-sm" dir="ltr">
-            {product.ready_item_id ? formatQuantityKg(product.current_quantity_kg) : "—"}
+            {product.ready_item_id
+              ? formatQuantityKg(product.current_quantity_kg)
+              : "—"}
           </TableCell>
-        )
+        );
       case "stock_status":
         return (
           <TableCell key={key} className="text-center">
             <ProductStockStatusBadge product={product} />
           </TableCell>
-        )
+        );
       case "is_active":
         return (
           <TableCell key={key} className="text-center">
             <ProductStatusBadge isActive={product.is_active} />
           </TableCell>
-        )
+        );
       case "code":
       case "barcode":
       case "sku":
         return (
-          <TableCell key={key} className="text-center font-mono text-xs" dir="ltr">
+          <TableCell
+            key={key}
+            className="text-center font-mono text-xs"
+            dir="ltr"
+          >
             {product[colId] || "—"}
           </TableCell>
-        )
+        );
       case "notes":
         return (
           <TableCell key={key} className="text-right text-sm">
             <span className="line-clamp-2">{product.notes || "—"}</span>
           </TableCell>
-        )
+        );
       case "created_at":
       case "updated_at":
         return (
           <TableCell key={key} className="text-center text-xs">
             {formatArDateTime(product[colId])}
           </TableCell>
-        )
+        );
       case "created_by":
       case "updated_by":
         return (
           <TableCell key={key} className="text-center text-sm">
             {product[colId]?.name || "—"}
           </TableCell>
-        )
+        );
       case "actions":
         return (
           <TableCell key={key} className="text-center">
@@ -217,12 +254,13 @@ export function ProductsTable({
                 product={product}
                 stopPropagation
                 onViewDetails={() => goToProduct(product.id)}
+                onEdit={() => onEdit(product)}
                 onToggleActive={() => onToggleActive(product)}
                 onDelete={() => onDelete(product)}
               />
             </DropdownMenu>
           </TableCell>
-        )
+        );
     }
   }
 
@@ -248,7 +286,9 @@ export function ProductsTable({
       ) : isFilteredNoHits ? (
         <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 p-8 text-center">
           <Search className="size-6 opacity-60" />
-          <p className="font-medium">لا توجد منتجات مطابقة للبحث أو الفلاتر الحالية.</p>
+          <p className="font-medium">
+            لا توجد منتجات مطابقة للبحث أو الفلاتر الحالية.
+          </p>
         </div>
       ) : isTrueEmpty ? (
         <div className="flex min-h-[280px] flex-col items-center justify-center gap-5 px-6 py-12 text-center">
@@ -273,8 +313,12 @@ export function ProductsTable({
                 className="cursor-pointer transition-colors hover:bg-muted/40"
                 onClick={() => goToProduct(product.id)}
                 onContextMenu={(event) => {
-                  event.preventDefault()
-                  setContextMenu({ x: event.clientX, y: event.clientY, product })
+                  event.preventDefault();
+                  setContextMenu({
+                    x: event.clientX,
+                    y: event.clientY,
+                    product,
+                  });
                 }}
               >
                 {orderedCols.map((col) => renderCell(col.id, product, index))}
@@ -286,15 +330,30 @@ export function ProductsTable({
 
       {!isLoading && products.length > 0 && meta != null && lastPage > 1 ? (
         <div className="flex flex-col items-stretch justify-between gap-3 border-t border-border/40 px-4 py-3 sm:flex-row sm:items-center sm:px-6">
-          <p className="text-center text-sm text-muted-foreground sm:text-start" dir="ltr">
+          <p
+            className="text-center text-sm text-muted-foreground sm:text-start"
+            dir="ltr"
+          >
             {meta.total} - صفحة {currentPage} من {lastPage}
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={!canPrev}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={!canPrev}
+            >
               <ChevronRight className="size-4" />
               السابق
             </Button>
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => onPageChange(currentPage + 1)} disabled={!canNext}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={!canNext}
+            >
               التالي
               <ChevronLeft className="size-4" />
             </Button>
@@ -304,28 +363,44 @@ export function ProductsTable({
 
       {contextMenu ? (
         <div ref={contextMenuRef}>
-          <DropdownMenu open onOpenChange={(open) => !open && setContextMenu(null)}>
+          <DropdownMenu
+            open
+            onOpenChange={(open) => !open && setContextMenu(null)}
+          >
             <DropdownMenuTrigger asChild>
-              <span className="fixed" style={{ top: contextMenu.y, left: contextMenu.x, width: 1, height: 1, pointerEvents: "none" }} />
+              <span
+                className="fixed"
+                style={{
+                  top: contextMenu.y,
+                  left: contextMenu.x,
+                  width: 1,
+                  height: 1,
+                  pointerEvents: "none",
+                }}
+              />
             </DropdownMenuTrigger>
             <ProductRowActionsMenuContent
               product={contextMenu.product}
               onViewDetails={() => {
-                goToProduct(contextMenu.product.id)
-                setContextMenu(null)
+                goToProduct(contextMenu.product.id);
+                setContextMenu(null);
+              }}
+              onEdit={() => {
+                onEdit(contextMenu.product);
+                setContextMenu(null);
               }}
               onToggleActive={() => {
-                onToggleActive(contextMenu.product)
-                setContextMenu(null)
+                onToggleActive(contextMenu.product);
+                setContextMenu(null);
               }}
               onDelete={() => {
-                onDelete(contextMenu.product)
-                setContextMenu(null)
+                onDelete(contextMenu.product);
+                setContextMenu(null);
               }}
             />
           </DropdownMenu>
         </div>
       ) : null}
     </div>
-  )
+  );
 }

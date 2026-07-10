@@ -1,11 +1,8 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
-import { LayoutGrid, RefreshCw, Settings2, Table } from "lucide-react"
-import { DashboardPageHeader } from "@/components/dashboard"
-import { DateRangeDialog } from "@/components/shared/DateRangeDialog"
-import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/dashboard";
+import { DateRangeDialog } from "@/components/shared/DateRangeDialog";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -13,24 +10,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dropdown-menu";
 import {
   defaultCustomPeriod,
   useProductActions,
   useProductSummary,
   useProductsPage,
   type Product,
-} from "@/features/products"
-import { ProductColumnCustomizer } from "./ProductColumnCustomizer"
-import { ProductDeleteDialog } from "./ProductDeleteDialog"
-import { ProductsDataView } from "./ProductsDataView"
-import { ProductsFilters } from "./ProductsFilters"
-import { ProductsPeriodControls } from "./ProductsPeriodControls"
-import { ProductsSummary } from "./ProductsSummary"
+} from "@/features/products";
+import { cn } from "@/lib/utils";
+import { LayoutGrid, Plus, RefreshCw, Settings2, Table } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { ProductColumnCustomizer } from "./ProductColumnCustomizer";
+import { ProductDeleteDialog } from "./ProductDeleteDialog";
+import { ProductFormDialog } from "./ProductFormDialog";
+import { ProductsDataView } from "./ProductsDataView";
+import { ProductsFilters } from "./ProductsFilters";
+import { ProductsPeriodControls } from "./ProductsPeriodControls";
+import { ProductsSummary } from "./ProductsSummary";
 
 export function ProductsView() {
-  const router = useRouter()
+  const router = useRouter();
   const {
     periodPreset,
     setPeriodPreset,
@@ -69,7 +70,7 @@ export function ProductsView() {
     canPrev,
     canNext,
     setPage,
-  } = useProductsPage()
+  } = useProductsPage();
 
   const summaryFilters = useMemo(
     () => ({
@@ -81,17 +82,37 @@ export function ProductsView() {
       date_from: dateRange?.from,
       date_to: dateRange?.to,
     }),
-    [search, isActive, priceStatus, stockStatus, linkedItemId, dateRange]
-  )
-  const { summary, isLoading: summaryLoading, error: summaryError } = useProductSummary(summaryFilters)
-  const { toggleProductActive, deleteProduct } = useProductActions()
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+    [search, isActive, priceStatus, stockStatus, linkedItemId, dateRange],
+  );
+  const {
+    summary,
+    isLoading: summaryLoading,
+    error: summaryError,
+  } = useProductSummary(summaryFilters);
+  const { createProduct, updateProduct, toggleProductActive, deleteProduct } =
+    useProductActions();
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const customFrom = customPeriod?.from ?? defaultCustomPeriod().from
-  const customTo = customPeriod?.to ?? defaultCustomPeriod().to
+  const customFrom = customPeriod?.from ?? defaultCustomPeriod().from;
+  const customTo = customPeriod?.to ?? defaultCustomPeriod().to;
 
   function openDetails(product: Product) {
-    router.push(`/dashboard/products/${product.id}`)
+    router.push(`/dashboard/products/${product.id}`);
+  }
+
+  function openCreateDialog() {
+    setEditingProduct(null);
+    setDialogMode("create");
+    setDialogOpen(true);
+  }
+
+  function openEditDialog(product: Product) {
+    setEditingProduct(product);
+    setDialogMode("edit");
+    setDialogOpen(true);
   }
 
   return (
@@ -99,14 +120,29 @@ export function ProductsView() {
       <DashboardPageHeader>
         <DashboardPageHeader.Lead>
           <h1 className="flex items-center gap-2 text-md font-bold tracking-tight">
-            المنتجات
-            /
-            <p className="text-md text-muted-foreground">إدارة كتالوج المنتجات القابلة للبيع</p>
+            المنتجات /
+            <p className="text-md text-muted-foreground">
+              إدارة كتالوج المنتجات القابلة للبيع
+            </p>
           </h1>
         </DashboardPageHeader.Lead>
         <DashboardPageHeader.Actions>
-          <ProductsPeriodControls preset={periodPreset} onPresetChange={setPeriodPreset} />
-          <ProductColumnCustomizer visibleColumns={visibleColumns} onChange={setColumnVisibility} />
+          <ProductsPeriodControls
+            preset={periodPreset}
+            onPresetChange={setPeriodPreset}
+          />
+          <Button
+            variant="default"
+            className="gap-2 rounded-xl"
+            onClick={openCreateDialog}
+          >
+            <Plus className="h-4 w-4" />
+            إضافة منتج
+          </Button>
+          <ProductColumnCustomizer
+            visibleColumns={visibleColumns}
+            onChange={setColumnVisibility}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 rounded-xl">
@@ -125,7 +161,9 @@ export function ProductsView() {
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={config.showFilters}
-                onCheckedChange={(checked) => toggleShowFilters(Boolean(checked))}
+                onCheckedChange={(checked) =>
+                  toggleShowFilters(Boolean(checked))
+                }
               >
                 إظهار الفلاتر
               </DropdownMenuCheckboxItem>
@@ -135,7 +173,11 @@ export function ProductsView() {
             <Button
               variant={config.viewMode === "cards" ? "default" : "ghost"}
               size="sm"
-              className={cn("gap-2", config.viewMode === "cards" && "bg-primary text-primary-foreground")}
+              className={cn(
+                "gap-2",
+                config.viewMode === "cards" &&
+                  "bg-primary text-primary-foreground",
+              )}
               onClick={() => setViewMode("cards")}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -144,7 +186,11 @@ export function ProductsView() {
             <Button
               variant={config.viewMode === "table" ? "default" : "ghost"}
               size="sm"
-              className={cn("gap-2", config.viewMode === "table" && "bg-primary text-primary-foreground")}
+              className={cn(
+                "gap-2",
+                config.viewMode === "table" &&
+                  "bg-primary text-primary-foreground",
+              )}
               onClick={() => setViewMode("table")}
             >
               <Table className="h-4 w-4" />
@@ -177,12 +223,12 @@ export function ProductsView() {
             linkedItemLabel,
           }}
           onChange={(next) => {
-            setSearch(next.search)
-            setIsActive(next.isActive)
-            setPriceStatus(next.priceStatus)
-            setStockStatus(next.stockStatus)
-            setLinkedItemId(next.linkedItemId)
-            setLinkedItemLabel(next.linkedItemLabel)
+            setSearch(next.search);
+            setIsActive(next.isActive);
+            setPriceStatus(next.priceStatus);
+            setStockStatus(next.stockStatus);
+            setLinkedItemId(next.linkedItemId);
+            setLinkedItemLabel(next.linkedItemLabel);
           }}
           isLoading={isLoading}
         />
@@ -190,10 +236,18 @@ export function ProductsView() {
 
       {error && !isLoading ? (
         <div className="flex flex-col items-center gap-3 py-4">
-          <p className="text-center text-sm text-muted-foreground" role="status">
+          <p
+            className="text-center text-sm text-muted-foreground"
+            role="status"
+          >
             تعذر تحميل البيانات. حاول مرة أخرى.
           </p>
-          <Button variant="outline" size="sm" className="gap-2 rounded-xl" onClick={() => void mutate()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-xl"
+            onClick={() => void mutate()}
+          >
             <RefreshCw className="size-4" />
             إعادة المحاولة
           </Button>
@@ -221,10 +275,27 @@ export function ProductsView() {
           canNext={canNext}
           onPageChange={setPage}
           onViewDetails={openDetails}
+          onEdit={openEditDialog}
           onToggleActive={(product) => void toggleProductActive(product)}
           onDelete={setDeleteTarget}
         />
       </div>
+
+      <ProductFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        product={editingProduct}
+        onCreate={async (payload) => {
+          await createProduct(payload);
+          await mutate();
+        }}
+        onUpdate={async (id, payload) => {
+          await updateProduct(id, payload);
+          await mutate();
+        }}
+        onSaved={() => void mutate()}
+      />
 
       <DateRangeDialog
         open={customDialogOpen}
@@ -237,14 +308,14 @@ export function ProductsView() {
       <ProductDeleteDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null)
+          if (!open) setDeleteTarget(null);
         }}
         product={deleteTarget}
         onDelete={async (id) => {
-          await deleteProduct(id)
-          void mutate()
+          await deleteProduct(id);
+          void mutate();
         }}
       />
     </div>
-  )
+  );
 }
