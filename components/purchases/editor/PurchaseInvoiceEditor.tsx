@@ -31,7 +31,6 @@ import { PurchaseEditorInvoiceInfo } from "./PurchaseEditorInvoiceInfo"
 import { PurchaseEditorLinesSection } from "./PurchaseEditorLinesSection"
 import { PurchaseEditorNotesSection } from "./PurchaseEditorNotesSection"
 import { PurchaseEditorSummaryPanel } from "./PurchaseEditorSummaryPanel"
-import { PurchaseEditorFooter } from "./PurchaseEditorFooter"
 import { PurchaseCompleteConfirmDialog } from "./PurchaseCompleteConfirmDialog"
 
 type PurchaseInvoiceEditorProps = {
@@ -62,6 +61,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
       return
     }
     const next = purchaseToEditorForm(purchase)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate the editor once the draft purchase is loaded.
     setForm(next)
     setInitialForm(next)
     setHydrated(true)
@@ -236,15 +236,15 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
             error={fieldErrors.supplier_id}
             disabled={isSaving || isCompleting}
           />
-          <PurchaseEditorInvoiceInfo
-            form={form}
-            onChange={patchForm}
-            fieldErrors={fieldErrors}
-            disabled={isSaving || isCompleting}
-          />
           <PurchaseEditorLinesSection
             lines={form.lines}
             onChange={(lines) => patchForm({ lines })}
+            fieldErrors={fieldErrors}
+            disabled={isSaving || isCompleting}
+          />
+          <PurchaseEditorInvoiceInfo
+            form={form}
+            onChange={patchForm}
             fieldErrors={fieldErrors}
             disabled={isSaving || isCompleting}
           />
@@ -256,8 +256,9 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-          <PurchaseEditorSummaryPanel form={form} fieldErrors={fieldErrors} />
-          <PurchaseEditorFooter
+          <PurchaseEditorSummaryPanel
+            form={form}
+            fieldErrors={fieldErrors}
             onCancel={handleCancel}
             onSaveDraft={handleSaveDraft}
             onComplete={openCompleteDialog}

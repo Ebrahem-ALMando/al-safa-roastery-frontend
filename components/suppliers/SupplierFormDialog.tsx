@@ -52,9 +52,10 @@ interface SupplierFormDialogProps {
   onOpenChange: (open: boolean) => void
   mode: "create" | "edit"
   supplier?: Supplier | null
+  initialName?: string
   onCreate?: (payload: CreateSupplierInput) => Promise<unknown>
   onUpdate?: (id: number, payload: UpdateSupplierInput) => Promise<unknown>
-  onSaved?: () => void
+  onSaved?: (saved?: unknown) => void
 }
 
 export function SupplierFormDialog({
@@ -62,6 +63,7 @@ export function SupplierFormDialog({
   onOpenChange,
   mode,
   supplier,
+  initialName,
   onCreate,
   onUpdate,
   onSaved,
@@ -72,13 +74,14 @@ export function SupplierFormDialog({
 
   React.useEffect(() => {
     if (!open) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate dialog form from the selected mode/supplier when it opens.
     setFieldErrors({})
     if (mode === "edit" && supplier) {
       setForm(supplierToForm(supplier))
     } else {
-      setForm(emptySupplierForm())
+      setForm({ ...emptySupplierForm(), name: initialName?.trim() ?? "" })
     }
-  }, [open, mode, supplier])
+  }, [open, mode, supplier, initialName])
 
   function handleOpenChange(next: boolean) {
     onOpenChange(next)
@@ -107,12 +110,13 @@ export function SupplierFormDialog({
     setSubmitting(true)
     setFieldErrors({})
     try {
+      let saved: unknown
       if (mode === "create" && onCreate) {
-        await onCreate(formToCreatePayload(form))
+        saved = await onCreate(formToCreatePayload(form))
       } else if (mode === "edit" && supplier && onUpdate) {
-        await onUpdate(supplier.id, formToUpdatePayload(form))
+        saved = await onUpdate(supplier.id, formToUpdatePayload(form))
       }
-      onSaved?.()
+      onSaved?.(saved)
       handleOpenChange(false)
     } catch (err) {
       if (err instanceof ApiRequestError && err.errors) {

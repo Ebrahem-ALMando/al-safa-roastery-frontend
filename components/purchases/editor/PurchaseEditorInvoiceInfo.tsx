@@ -46,7 +46,7 @@ export function PurchaseEditorInvoiceInfo({
   return (
     <FormSection icon={FileText} title="معلومات الفاتورة">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <Label className={adminFormLabelClass}>
             تاريخ الفاتورة <span className="text-destructive">*</span>
           </Label>
@@ -90,80 +90,82 @@ export function PurchaseEditorInvoiceInfo({
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
-          <Label className={adminFormLabelClass}>الخصم</Label>
-          <div className="relative">
-            <FormFieldIcon>
-              <Wallet className="size-4" />
-            </FormFieldIcon>
-            <Input
-              inputMode="decimal"
-              value={form.discount}
-              disabled={disabled}
-              onChange={(e) => onChange({ discount: e.target.value })}
-              className={cn(adminFormInputClass, "tabular-nums", fieldErrors.discount && "border-destructive/60")}
-              dir="ltr"
-            />
+        <div className="grid grid-cols-1 gap-3 sm:col-span-2 md:grid-cols-3">
+          <div className="w-full space-y-1.5">
+            <Label className={adminFormLabelClass}>المبلغ المدفوع</Label>
+            <div className="relative">
+              <FormFieldIcon>
+                <Wallet className="size-4" />
+              </FormFieldIcon>
+              <Input
+                inputMode="decimal"
+                value={form.paidAmount}
+                disabled={disabled}
+                onChange={(e) => onChange({ paidAmount: e.target.value })}
+                className={cn(adminFormInputClass, "w-full tabular-nums", fieldErrors.paid_amount && "border-destructive/60")}
+                dir="ltr"
+              />
+            </div>
+            {fieldErrors.paid_amount ? (
+              <p className={adminFormFieldErrorClass} role="alert">
+                {fieldErrors.paid_amount}
+              </p>
+            ) : null}
           </div>
-          {fieldErrors.discount ? (
-            <p className={adminFormFieldErrorClass} role="alert">
-              {fieldErrors.discount}
-            </p>
-          ) : null}
-        </div>
 
-        <div className="space-y-1.5">
-          <Label className={adminFormLabelClass}>المبلغ المدفوع</Label>
-          <div className="relative">
-            <FormFieldIcon>
-              <Wallet className="size-4" />
-            </FormFieldIcon>
-            <Input
-              inputMode="decimal"
-              value={form.paidAmount}
-              disabled={disabled}
-              onChange={(e) => onChange({ paidAmount: e.target.value })}
-              className={cn(adminFormInputClass, "tabular-nums", fieldErrors.paid_amount && "border-destructive/60")}
-              dir="ltr"
-            />
+          <div className="w-full space-y-1.5">
+            <Label className={adminFormLabelClass}>الخصم</Label>
+            <div className="relative">
+              <FormFieldIcon>
+                <Wallet className="size-4" />
+              </FormFieldIcon>
+              <Input
+                inputMode="decimal"
+                value={form.discount}
+                disabled={disabled}
+                onChange={(e) => onChange({ discount: e.target.value })}
+                className={cn(adminFormInputClass, "w-full tabular-nums", fieldErrors.discount && "border-destructive/60")}
+                dir="ltr"
+              />
+            </div>
+            {fieldErrors.discount ? (
+              <p className={adminFormFieldErrorClass} role="alert">
+                {fieldErrors.discount}
+              </p>
+            ) : null}
           </div>
-          {fieldErrors.paid_amount ? (
-            <p className={adminFormFieldErrorClass} role="alert">
-              {fieldErrors.paid_amount}
-            </p>
-          ) : null}
-        </div>
 
-        <div className="space-y-1.5">
-          <Label className={adminFormLabelClass}>
-            طريقة الدفع{paidPositive ? <span className="text-destructive"> *</span> : null}
-          </Label>
-          <Select
-            value={form.paymentMethod || "none"}
-            disabled={disabled || !paidPositive}
-            onValueChange={(v) =>
-              onChange({ paymentMethod: v === "none" ? "" : (v as PurchasePaymentMethod) })
-            }
-          >
-            <SelectTrigger
-              className={cn("h-11 rounded-lg", fieldErrors.payment_method && "border-destructive/60")}
+          <div className="w-full space-y-1.5">
+            <Label className={adminFormLabelClass}>
+              طريقة الدفع{paidPositive ? <span className="text-destructive"> *</span> : null}
+            </Label>
+            <Select
+              value={form.paymentMethod || "none"}
+              disabled={disabled || !paidPositive}
+              onValueChange={(v) =>
+                onChange({ paymentMethod: v === "none" ? "" : (v as PurchasePaymentMethod) })
+              }
             >
-              <SelectValue placeholder="—" />
-            </SelectTrigger>
-            <SelectContent dir="rtl">
-              <SelectItem value="none">—</SelectItem>
-              {PAYMENT_METHODS.map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {fieldErrors.payment_method ? (
-            <p className={adminFormFieldErrorClass} role="alert">
-              {fieldErrors.payment_method}
-            </p>
-          ) : null}
+              <SelectTrigger
+                className={cn("h-11 w-full rounded-lg", fieldErrors.payment_method && "border-destructive/60")}
+              >
+                <SelectValue placeholder="—" />
+              </SelectTrigger>
+              <SelectContent dir="rtl">
+                <SelectItem value="none">—</SelectItem>
+                {PAYMENT_METHODS.map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.payment_method ? (
+              <p className={adminFormFieldErrorClass} role="alert">
+                {fieldErrors.payment_method}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     </FormSection>

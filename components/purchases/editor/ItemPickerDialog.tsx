@@ -47,16 +47,17 @@ export function ItemPickerDialog({
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
 
-  React.useEffect(() => {
-    if (!open) setQuery("")
-  }, [open])
-
   const { rows, meta, isLoading, error, isSearchPending } = useItemPickerList({ open, search: query })
   const filteredRows = rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10)))
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setQuery("")
+    onOpenChange(nextOpen)
+  }
+
   const handlePick = (item: ItemPickerRow) => {
     onSelect(item)
-    onOpenChange(false)
+    handleOpenChange(false)
   }
 
   const totalInDb = meta?.total
@@ -68,7 +69,7 @@ export function ItemPickerDialog({
   const showEndSpinner = isSearchPending || (isLoading && filteredRows.length > 0)
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         dir="rtl"
         lang="ar"
@@ -77,7 +78,7 @@ export function ItemPickerDialog({
       >
         <DialogHeader className="relative space-y-0 overflow-hidden border-b bg-linear-to-bl from-primary/10 via-primary/5 to-transparent p-0">
           <div className="relative px-6 pt-6 pb-5">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4" dir="rtl">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-card text-primary shadow-md">
                 <Package className="size-7" strokeWidth={1.5} />
               </div>
@@ -124,8 +125,8 @@ export function ItemPickerDialog({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(88vh-220px)] flex-1">
-          <div className="space-y-2 p-4">
+        <ScrollArea className="max-h-[calc(88vh-220px)] flex-1" dir="rtl">
+          <div className="space-y-2 p-4" dir="rtl">
             {error ? (
               <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center">
                 <AlertCircle className="size-6 text-destructive" />
@@ -158,18 +159,21 @@ export function ItemPickerDialog({
                           "group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-right transition-all",
                           "hover:border-primary/35 hover:bg-card hover:shadow-md"
                         )}
+                        dir="rtl"
                       >
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground">
                           <Package className="size-4" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
+                        <div className="min-w-0 flex-1 text-right">
+                          <div className="flex flex-wrap items-center justify-start gap-2">
                             <p className="truncate text-sm font-bold">{item.name}</p>
                             <ItemTypeBadge itemType={item.itemType} />
                           </div>
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground" dir="ltr">
-                            {item.code} · {formatQuantityKg(item.currentQuantityKg)} ·{" "}
-                            {formatCostPerKg(item.averageCost)}
+                          <p className="mt-0.5 truncate text-right text-xs text-muted-foreground" dir="ltr">
+                            <span dir="ltr">
+                              {item.code} · {formatQuantityKg(item.currentQuantityKg)} ·{" "}
+                              {formatCostPerKg(item.averageCost)}
+                            </span>
                           </p>
                         </div>
                       </motion.button>

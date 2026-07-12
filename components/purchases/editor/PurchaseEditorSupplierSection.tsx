@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { LayoutGrid, Search, Truck, X } from "lucide-react"
+import { LayoutGrid, Search, Truck, UserPlus, X } from "lucide-react"
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue"
 import { useApiQuery } from "@/lib/hooks/useApiQuery"
 import { useAuth } from "@/src/features/auth/hooks/useAuth"
 import type { Supplier } from "@/features/suppliers/types/supplier.types"
+import { useSupplierActions } from "@/features/suppliers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { formatUsd } from "@/features/purchases"
 import type { PurchaseEditorSupplier } from "@/features/purchases/types/purchase-editor.types"
 import type { SupplierPickerRow } from "@/features/purchases/hooks/useSupplierPickerList"
+import { SupplierFormDialog } from "@/components/suppliers/SupplierFormDialog"
 import { SupplierSelectionDialog } from "./SupplierSelectionDialog"
 
 type PurchaseEditorSupplierSectionProps = {
@@ -54,8 +56,11 @@ export function PurchaseEditorSupplierSection({
   const [search, setSearch] = React.useState("")
   const [showDropdown, setShowDropdown] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [supplierFormOpen, setSupplierFormOpen] = React.useState(false)
+  const [supplierFormPrefill, setSupplierFormPrefill] = React.useState("")
   const boxRef = React.useRef<HTMLDivElement>(null)
   const debouncedSearch = useDebouncedValue(search, 350)
+  const { createSupplier } = useSupplierActions()
 
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const authReady = !authLoading && isAuthenticated
@@ -86,12 +91,35 @@ export function PurchaseEditorSupplierSection({
     }
   }, [showDropdown])
 
+  function openAddSupplier(prefill = search) {
+    setSupplierFormPrefill(prefill.trim())
+    setShowDropdown(false)
+    setDialogOpen(false)
+    window.setTimeout(() => setSupplierFormOpen(true), 0)
+  }
+
+  async function handleCreateSupplier(payload: Parameters<typeof createSupplier>[0]) {
+    const created = await createSupplier(payload)
+    onChange(mapApiToEditor(created))
+    setSearch("")
+    return created
+  }
+
   return (
     <>
       <SupplierSelectionDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSelect={(s) => onChange(mapPickerToEditor(s))}
+        onRequestAddSupplier={openAddSupplier}
+      />
+
+      <SupplierFormDialog
+        open={supplierFormOpen}
+        onOpenChange={setSupplierFormOpen}
+        mode="create"
+        initialName={supplierFormPrefill}
+        onCreate={handleCreateSupplier}
       />
 
       <Card className="border-border/60 shadow-sm">
@@ -176,6 +204,7 @@ export function PurchaseEditorSupplierSection({
                                 key={supplier.id}
                                 type="button"
                                 role="option"
+                                aria-selected={false}
                                 onClick={() => {
                                   onChange(supplier)
                                   setSearch("")
@@ -197,8 +226,17 @@ export function PurchaseEditorSupplierSection({
                               </button>
                             ))
                           ) : (
-                            <div className="p-4 text-center text-sm text-muted-foreground">
-                              لا يوجد مورد يطابق البحث
+                            <div className="space-y-3 p-4 text-center">
+                              <p className="text-sm text-muted-foreground">لا يوجد مورد يطابق البحث</p>
+                              <Button
+                                type="button"
+                                className="w-full gap-2 rounded-xl"
+                                disabled={disabled}
+                                onClick={() => openAddSupplier(search)}
+                              >
+                                <UserPlus className="size-4" />
+                                إضافة مورد
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -208,6 +246,17 @@ export function PurchaseEditorSupplierSection({
                 </AnimatePresence>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 rounded-xl"
+                  disabled={disabled}
+                  onClick={() => openAddSupplier(search)}
+                >
+                  <UserPlus className="size-4" />
+                  إضافة مورد
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
