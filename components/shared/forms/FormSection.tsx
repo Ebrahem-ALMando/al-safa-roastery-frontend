@@ -11,14 +11,22 @@ type FormSectionProps = {
   icon: LucideIcon
   title: string
   children: ReactNode
+  actions?: ReactNode
 }
 
-export function FormSection({ icon: Icon, title, children }: FormSectionProps) {
+export function FormSection({ icon: Icon, title, children, actions }: FormSectionProps) {
   return (
     <div className={adminFormSectionClass}>
-      <div className="flex items-center gap-2">
-        <Icon className="size-4 text-primary" aria-hidden />
-        <p className={adminFormSectionTitleClass}>{title}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Icon className="size-4 text-primary" aria-hidden />
+          <p className={adminFormSectionTitleClass}>{title}</p>
+        </div>
+        {actions ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {actions}
+          </div>
+        ) : null}
       </div>
       {children}
     </div>

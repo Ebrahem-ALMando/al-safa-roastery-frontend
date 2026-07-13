@@ -20,12 +20,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   PURCHASE_PAYMENT_METHOD_LABELS_AR,
   type PurchasePaymentMethod,
 } from "@/features/purchases";
 import type { PurchaseEditorFormState } from "@/features/purchases/types/purchase-editor.types";
 import { cn } from "@/lib/utils";
-import { Banknote, Calendar, CreditCard, FileText, Hash, Wallet } from "lucide-react";
+import { Banknote, Calendar, CreditCard, FileText, Hash, Info, Wallet } from "lucide-react";
 
 const PAYMENT_METHODS = Object.entries(PURCHASE_PAYMENT_METHOD_LABELS_AR) as [
   PurchasePaymentMethod,
@@ -52,7 +57,57 @@ export function PurchaseEditorInvoiceInfo({
   const canUsePaymentShortcuts = !disabled && normalizedTotal > 0;
 
   return (
-    <FormSection icon={FileText} title="معلومات الفاتورة">
+    <FormSection
+      icon={FileText}
+      title="معلومات الفاتورة"
+      actions={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="h-9 gap-2 rounded-lg"
+            disabled={!canUsePaymentShortcuts}
+            onClick={() =>
+              onChange({
+                paidAmount: normalizedTotal.toFixed(2),
+                paymentMethod: form.paymentMethod || "cash",
+              })
+            }
+          >
+            <Banknote className="size-4" />
+            دفع كامل الفاتورة
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2 rounded-lg"
+            disabled={disabled}
+            onClick={() => onChange({ paidAmount: "0", paymentMethod: form.paymentMethod || "cash" })}
+          >
+            <Wallet className="size-4" />
+            شراء آجل
+          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="rounded-lg text-muted-foreground"
+                aria-label="تلميحات الفاتورة"
+              >
+                <Info className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
+              Ctrl + Enter لاعتماد الفاتورة. حفظ كمسودة يبقي المخزون ورصيد المورد دون تغيير حتى الاعتماد.
+            </TooltipContent>
+          </Tooltip>
+        </>
+      }
+    >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label className={adminFormLabelClass}>
@@ -104,36 +159,6 @@ export function PurchaseEditorInvoiceInfo({
         </div>
 
         <div className="sm:col-span-2">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="h-9 gap-2 rounded-lg"
-              disabled={!canUsePaymentShortcuts}
-              onClick={() =>
-                onChange({
-                  paidAmount: normalizedTotal.toFixed(2),
-                  paymentMethod: form.paymentMethod || "cash",
-                })
-              }
-            >
-              <Banknote className="size-4" />
-              دفع كامل الفاتورة
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 gap-2 rounded-lg"
-              disabled={disabled}
-              onClick={() => onChange({ paidAmount: "0", paymentMethod: form.paymentMethod || "cash" })}
-            >
-              <Wallet className="size-4" />
-              شراء آجل
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] [&>*]:min-w-0">
           <div className="w-full space-y-1.5">
             <Label className={adminFormLabelClass}>المبلغ المدفوع</Label>

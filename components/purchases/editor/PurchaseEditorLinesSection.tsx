@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { AlertTriangle, Package, Plus, Trash2 } from "lucide-react"
+import { AlertTriangle, Info, Package, Plus, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/custom-toast-with-icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Kbd } from "@/components/ui/kbd"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { ItemTypeBadge } from "@/components/items/item-type-badge"
 import {
@@ -201,15 +203,43 @@ export function PurchaseEditorLinesSection({
               أضف الأصناف دفعة واحدة، ثم أدخل الكمية وسعر الكيلو لكل صنف.
             </CardDescription>
           </div>
-          <Button
-            type="button"
-            className="gap-2 rounded-xl"
-            disabled={disabled}
-            onClick={() => setPickerOpen(true)}
-          >
-            <Plus className="size-4" />
-            إضافة أصناف
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              type="button"
+              className="gap-2 rounded-xl"
+              disabled={disabled}
+              onClick={() => setPickerOpen(true)}
+            >
+              <Plus className="size-4" />
+              إضافة أصناف
+            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="rounded-lg text-muted-foreground"
+                  aria-label="اختصارات إدخال الأصناف"
+                >
+                  <Info className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
+                <div className="space-y-2">
+                  <p className="font-medium">اختصارات إدخال الأصناف</p>
+                  <p className="flex items-center gap-2">
+                    <Kbd>Enter</Kbd>
+                    من الكمية إلى سعر الكيلو.
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Kbd>Enter</Kbd>
+                    من السعر إلى كمية الصنف التالي.
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </CardHeader>
         <CardContent>
           {fieldErrors.lines ? (
