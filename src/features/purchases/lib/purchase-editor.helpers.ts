@@ -44,7 +44,7 @@ export function emptyPurchaseEditorForm(): PurchaseEditorFormState {
     invoiceNumber: "",
     discount: "0",
     paidAmount: "0",
-    paymentMethod: "",
+    paymentMethod: "cash",
     notes: "",
     lines: [],
   }
@@ -94,7 +94,7 @@ export function purchaseToEditorForm(purchase: PurchaseInvoice): PurchaseEditorF
     invoiceNumber: purchase.invoice_number ?? "",
     discount: String(parseNumericAmount(purchase.discount)),
     paidAmount: String(parseNumericAmount(purchase.paid_amount)),
-    paymentMethod: purchase.payment_method ?? "",
+    paymentMethod: purchase.payment_method ?? "cash",
     notes: purchase.notes ?? "",
     lines: (purchase.lines ?? []).map((line) => ({
       key: `line-${line.id}`,

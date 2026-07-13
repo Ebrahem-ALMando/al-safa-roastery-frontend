@@ -38,7 +38,7 @@ type PurchaseEditorSummaryPanelProps = {
   disabled?: boolean
 }
 
-function parseAmount(value: string | number): number {
+function parseAmount(value: string | number | null | undefined): number {
   const parsed = Number.parseFloat(String(value).replaceAll(",", ""))
   return Number.isFinite(parsed) ? parsed : 0
 }
@@ -53,6 +53,59 @@ function formatKg(value: number): string {
 function formatDate(value: string): string {
   const [year, month, day] = value.split("-")
   return year && month && day ? `${day}/${month}/${year}` : "غير محدد"
+}
+
+type BalanceTone = "warning" | "success" | "neutral"
+
+function getSupplierBalanceLabel(balance: number): string {
+  if (balance > 0.009) return "علينا للمورد"
+  if (balance < -0.009) return "رصيد لصالحنا"
+  return "متوازن"
+}
+
+function BalanceCallout({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string
+  hint?: string
+  tone: BalanceTone
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-4 py-3",
+        tone === "warning" &&
+          "border-amber-200 bg-amber-50/80 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-100",
+        tone === "success" &&
+          "border-emerald-200 bg-emerald-50/80 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-100",
+        tone === "neutral" &&
+          "border-sky-200 bg-sky-50/80 text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/25 dark:text-sky-100"
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex min-w-0 items-center gap-2 text-sm font-bold">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background/70">
+            <Icon className="size-4" />
+          </span>
+          <span className="truncate">{label}</span>
+        </span>
+        <span className="shrink-0 text-2xl font-black tabular-nums" dir="ltr">
+          {value}
+        </span>
+      </div>
+      {hint ? (
+        <p className="mt-2 text-xs font-medium opacity-75">
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  )
 }
 
 function MoneyRow({
@@ -107,6 +160,11 @@ export function PurchaseEditorSummaryPanel({
   const hasRemaining = remaining > 0
   const busy = isSaving || isCompleting
   const showSubtotal = Math.abs(subtotal - total) > 0.009
+  const currentSupplierBalance = parseAmount(form.supplier?.current_balance)
+  const supplierBalanceAfterInvoice = currentSupplierBalance + remaining
+  const supplierBalanceLabel = getSupplierBalanceLabel(supplierBalanceAfterInvoice)
+  const supplierBalanceTone: BalanceTone =
+    supplierBalanceAfterInvoice > 0.009 ? "warning" : supplierBalanceAfterInvoice < -0.009 ? "success" : "neutral"
 
   return (
     <Card className="flex max-h-[calc(100vh-7rem)] overflow-hidden border-border/60 bg-background py-0 shadow-md">
@@ -169,25 +227,24 @@ export function PurchaseEditorSummaryPanel({
               <MoneyRow icon={Wallet} label="المدفوع" value={formatUsd(form.paidAmount)} />
             </div>
 
-            <div
-              className={cn(
-                "rounded-xl border px-4 py-3",
-                hasRemaining
-                  ? "border-amber-200 bg-amber-50/80 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-100"
-                  : "border-emerald-200 bg-emerald-50/80 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-100"
-              )}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 text-sm font-bold">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-background/70">
-                    <HandCoins className="size-4" />
-                  </span>
-                  المتبقي للمورد
-                </span>
-                <span className="shrink-0 text-2xl font-black tabular-nums" dir="ltr">
-                  {formatUsd(remaining)}
-                </span>
-              </div>
+            <div className="space-y-2">
+              <BalanceCallout
+                icon={HandCoins}
+                label="باقي هذه الفاتورة"
+                value={formatUsd(remaining)}
+                hint={hasRemaining ? "المبلغ غير المدفوع من هذه الفاتورة فقط" : "هذه الفاتورة مسددة بالكامل"}
+                tone={hasRemaining ? "warning" : "success"}
+              />
+
+              {form.supplier ? (
+                <BalanceCallout
+                  icon={Wallet}
+                  label="رصيد المورد بعد الاعتماد"
+                  value={formatUsd(Math.abs(supplierBalanceAfterInvoice))}
+                  hint={`الرصيد الحالي: ${formatUsd(Math.abs(currentSupplierBalance))} · ${supplierBalanceLabel}`}
+                  tone={supplierBalanceTone}
+                />
+              ) : null}
             </div>
 
             {fieldErrors.paid_amount ? (

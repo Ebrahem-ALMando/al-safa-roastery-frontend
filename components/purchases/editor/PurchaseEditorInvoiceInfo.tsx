@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, FileText, Hash, Wallet } from "lucide-react"
+import { Calendar, CreditCard, FileText, Hash, Wallet } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -90,7 +90,7 @@ export function PurchaseEditorInvoiceInfo({
           ) : null}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:col-span-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:col-span-2 md:grid-cols-3 [&>*]:min-w-0">
           <div className="w-full space-y-1.5">
             <Label className={adminFormLabelClass}>المبلغ المدفوع</Label>
             <div className="relative">
@@ -139,27 +139,29 @@ export function PurchaseEditorInvoiceInfo({
             <Label className={adminFormLabelClass}>
               طريقة الدفع{paidPositive ? <span className="text-destructive"> *</span> : null}
             </Label>
-            <Select
-              value={form.paymentMethod || "none"}
-              disabled={disabled || !paidPositive}
-              onValueChange={(v) =>
-                onChange({ paymentMethod: v === "none" ? "" : (v as PurchasePaymentMethod) })
-              }
-            >
-              <SelectTrigger
-                className={cn("h-11 w-full rounded-lg", fieldErrors.payment_method && "border-destructive/60")}
+            <div className="relative">
+              <FormFieldIcon>
+                <CreditCard className="size-4" />
+              </FormFieldIcon>
+              <Select
+                value={form.paymentMethod || "cash"}
+                disabled={disabled}
+                onValueChange={(v) => onChange({ paymentMethod: v as PurchasePaymentMethod })}
               >
-                <SelectValue placeholder="—" />
-              </SelectTrigger>
-              <SelectContent dir="rtl">
-                <SelectItem value="none">—</SelectItem>
-                {PAYMENT_METHODS.map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                <SelectTrigger
+                  className={cn(adminFormInputClass, "w-full justify-between", fieldErrors.payment_method && "border-destructive/60")}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  {PAYMENT_METHODS.map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {fieldErrors.payment_method ? (
               <p className={adminFormFieldErrorClass} role="alert">
                 {fieldErrors.payment_method}

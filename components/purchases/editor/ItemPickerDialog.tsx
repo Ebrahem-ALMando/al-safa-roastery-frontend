@@ -30,11 +30,11 @@ type ItemPickerDialogProps = {
 
 function RowSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/50 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/50 px-4 py-3" dir="rtl">
       <Skeleton className="size-9 shrink-0 rounded-lg" />
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <Skeleton className="h-4 w-2/3" />
-        <Skeleton className="h-3 w-1/3" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="ms-auto h-4 w-2/3" />
+        <Skeleton className="ms-auto h-3 w-1/2" />
       </div>
     </div>
   )
@@ -48,7 +48,7 @@ export function ItemPickerDialog({
   excludeItemIds = [],
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(() => new Set())
+  const [selectedItems, setSelectedItems] = React.useState<Map<string, ItemPickerRow>>(() => new Map())
 
   const { rows, meta, isLoading, error, isSearchPending } = useItemPickerList({ open, search: query })
   const filteredRows = rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10)))
@@ -56,7 +56,7 @@ export function ItemPickerDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setQuery("")
-      setSelectedIds(new Set())
+      setSelectedItems(new Map())
     }
     onOpenChange(nextOpen)
   }
@@ -66,25 +66,25 @@ export function ItemPickerDialog({
     handleOpenChange(false)
   }
 
-  const toggleSelection = (itemId: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(itemId)) {
-        next.delete(itemId)
+  const toggleSelection = (item: ItemPickerRow) => {
+    setSelectedItems((prev) => {
+      const next = new Map(prev)
+      if (next.has(item.id)) {
+        next.delete(item.id)
       } else {
-        next.add(itemId)
+        next.set(item.id, item)
       }
       return next
     })
   }
 
   const handleConfirmSelection = () => {
-    const selectedItems = filteredRows.filter((item) => selectedIds.has(item.id))
-    if (selectedItems.length === 0) return
+    const items = Array.from(selectedItems.values())
+    if (items.length === 0) return
     if (onSelectMany) {
-      onSelectMany(selectedItems)
+      onSelectMany(items)
     } else {
-      selectedItems.forEach(onSelect)
+      items.forEach(onSelect)
     }
     handleOpenChange(false)
   }
@@ -99,7 +99,7 @@ export function ItemPickerDialog({
   const showEmpty = !isLoading && !error && filteredRows.length === 0
   const showList = filteredRows.length > 0
   const showEndSpinner = isSearchPending || (isLoading && filteredRows.length > 0)
-  const selectedCount = selectedIds.size
+  const selectedCount = selectedItems.size
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -109,27 +109,31 @@ export function ItemPickerDialog({
         className="flex max-h-[min(88vh,720px)] w-[min(100%-1.25rem,560px)] max-w-[min(100%-1.25rem,560px)] flex-col overflow-hidden rounded-3xl border-border/60 p-0 shadow-2xl sm:max-w-[min(100%-1.25rem,560px)]"
         showCloseButton
       >
-        <DialogHeader className="relative space-y-0 overflow-hidden border-b bg-linear-to-bl from-primary/10 via-primary/5 to-transparent p-0">
-          <div className="relative px-6 pt-6 pb-5">
+        <DialogHeader className="relative z-10 shrink-0 space-y-0 overflow-visible border-b bg-linear-to-bl from-primary/10 via-primary/5 to-transparent p-0">
+          <div className="relative px-6 pt-6 pb-6">
             <div className="flex items-start gap-4" dir="rtl">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-card text-primary shadow-md">
                 <Package className="size-7" strokeWidth={1.5} />
               </div>
               <div className="min-w-0 flex-1 space-y-2">
-                <DialogTitle className="text-xl font-bold">اختيار صنف</DialogTitle>
+                <div className="flex items-start justify-between gap-3">
+                  <DialogTitle className="text-xl font-bold">اختيار صنف</DialogTitle>
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                    {selectedCount > 0 ? (
+                      <Badge className="gap-1 rounded-lg text-[11px]">
+                        {selectedCount} محدد
+                      </Badge>
+                    ) : null}
+                    {query.trim() !== "" ? (
+                      <Badge variant="secondary" className="gap-1 rounded-lg text-[11px]">
+                        {filteredRows.length} مطابقة
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
                 <DialogDescription className="text-sm">
                   ابحث بالاسم أو الكود ثم اختر صنفاً نشطاً.
                 </DialogDescription>
-                {query.trim() !== "" ? (
-                  <Badge variant="secondary" className="gap-1 rounded-lg text-[11px]">
-                    {filteredRows.length} مطابقة
-                  </Badge>
-                ) : null}
-                {selectedCount > 0 ? (
-                  <Badge className="gap-1 rounded-lg text-[11px]">
-                    {selectedCount} محدد
-                  </Badge>
-                ) : null}
               </div>
             </div>
             <div className="mt-5">
@@ -165,8 +169,9 @@ export function ItemPickerDialog({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(88vh-220px)] flex-1" dir="rtl">
-          <div className="space-y-2 p-4" dir="rtl">
+        <div className="relative z-0 min-h-0 flex-1 overflow-hidden bg-background">
+          <ScrollArea className="h-full" dir="rtl">
+            <div className="space-y-2 p-4 pb-5" dir="rtl">
             {error ? (
               <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center">
                 <AlertCircle className="size-6 text-destructive" />
@@ -194,35 +199,48 @@ export function ItemPickerDialog({
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(index * 0.02, 0.3) }}
-                        onClick={() => toggleSelection(item.id)}
+                        onClick={() => toggleSelection(item)}
                         onDoubleClick={() => handlePick(item)}
                         className={cn(
                           "group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-right transition-all",
                           "hover:border-primary/35 hover:bg-card hover:shadow-md",
-                          selectedIds.has(item.id) && "border-primary/50 bg-primary/5 ring-2 ring-primary/15"
+                          selectedItems.has(item.id) && "border-primary/50 bg-primary/5 ring-2 ring-primary/15"
                         )}
                         dir="rtl"
-                        aria-pressed={selectedIds.has(item.id)}
+                        aria-pressed={selectedItems.has(item.id)}
                       >
                         <div
                           className={cn(
                             "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground",
-                            selectedIds.has(item.id) && "bg-primary text-primary-foreground"
+                            selectedItems.has(item.id) && "bg-primary text-primary-foreground"
                           )}
                         >
-                          {selectedIds.has(item.id) ? <Check className="size-4" /> : <Package className="size-4" />}
+                          {selectedItems.has(item.id) ? <Check className="size-4" /> : <Package className="size-4" />}
                         </div>
                         <div className="min-w-0 flex-1 text-right">
                           <div className="flex flex-wrap items-center justify-start gap-2">
                             <p className="truncate text-sm font-bold">{item.name}</p>
                             <ItemTypeBadge itemType={item.itemType} />
                           </div>
-                          <p className="mt-0.5 truncate text-right text-xs text-muted-foreground" dir="ltr">
-                            <span dir="ltr">
-                              {item.code} · {formatQuantityKg(item.currentQuantityKg)} ·{" "}
-                              {formatCostPerKg(item.averageCost)}
-                            </span>
+                          <p className="sr-only">
+                            {item.code} {formatQuantityKg(item.currentQuantityKg)} {formatCostPerKg(item.averageCost)}
                           </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <span>الكود:</span>
+                              <span className="font-medium tabular-nums" dir="ltr">{item.code}</span>
+                            </span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span>المخزون:</span>
+                              <span className="tabular-nums" dir="ltr">{formatQuantityKg(item.currentQuantityKg)}</span>
+                            </span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span>التكلفة:</span>
+                              <span className="tabular-nums" dir="ltr">{formatCostPerKg(item.averageCost)}</span>
+                            </span>
+                          </div>
                         </div>
                       </motion.button>
                     ))}
@@ -240,8 +258,9 @@ export function ItemPickerDialog({
                 ) : null}
               </AnimatePresence>
             )}
-          </div>
-        </ScrollArea>
+            </div>
+          </ScrollArea>
+        </div>
 
         <div className="shrink-0 border-t border-border/50 bg-background px-4 py-3">
           <div className="flex items-center justify-between gap-3">
