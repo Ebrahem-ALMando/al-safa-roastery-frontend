@@ -79,7 +79,7 @@ function BalanceCallout({
   return (
     <div
       className={cn(
-        "rounded-xl border px-4 py-3",
+        "rounded-xl border px-3 py-2.5",
         tone === "warning" &&
           "border-amber-200 bg-amber-50/80 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-100",
         tone === "success" &&
@@ -89,18 +89,18 @@ function BalanceCallout({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="flex min-w-0 items-center gap-2 text-sm font-bold">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background/70">
-            <Icon className="size-4" />
+        <span className="flex min-w-0 items-center gap-2 text-xs font-bold sm:text-sm">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-background/70">
+            <Icon className="size-3.5" />
           </span>
           <span className="truncate">{label}</span>
         </span>
-        <span className="shrink-0 text-2xl font-black tabular-nums" dir="ltr">
+        <span className="shrink-0 font-mono text-xl font-extrabold tabular-nums" dir="ltr">
           {value}
         </span>
       </div>
       {hint ? (
-        <p className="mt-2 text-xs font-medium opacity-75">
+        <p className="mt-1 truncate text-[11px] font-medium leading-snug opacity-75">
           {hint}
         </p>
       ) : null}
@@ -122,17 +122,17 @@ function MoneyRow({
   strong?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg px-1 py-1.5">
+    <div className="flex items-center justify-between gap-3 rounded-lg px-1 py-1">
       <span className={cn("flex items-center gap-2 text-sm", muted ? "text-muted-foreground" : "text-foreground")}>
-        <span className="flex size-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
           <Icon className="size-3.5" />
         </span>
         <span className={cn(strong && "font-bold")}>{label}</span>
       </span>
       <span
         className={cn(
-          "shrink-0 tabular-nums",
-          strong ? "text-xl font-black text-foreground" : "text-sm font-bold text-foreground",
+          "shrink-0 font-mono tabular-nums",
+          strong ? "text-lg font-extrabold text-foreground" : "text-sm font-bold text-foreground",
           muted && "text-muted-foreground"
         )}
         dir="ltr"
@@ -169,42 +169,42 @@ export function PurchaseEditorSummaryPanel({
   return (
     <Card className="flex max-h-[calc(100vh-7rem)] overflow-hidden border-border/60 bg-background py-0 shadow-md">
       <div className="flex min-h-0 w-full flex-col">
-        <CardHeader className="shrink-0 border-b border-border/50 bg-sky-50/70 px-5 py-4 dark:bg-sky-950/20">
-          <CardTitle className="flex items-start justify-between gap-3 text-xl">
+        <CardHeader className="shrink-0 border-b border-border/50 bg-sky-50/70 px-4 py-2.5 dark:bg-sky-950/20">
+          <CardTitle className="flex items-start justify-between gap-3 text-lg">
             <span className="flex min-w-0 items-start gap-2">
-              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-background text-primary shadow-sm">
-                <Receipt className="size-5" />
+              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-background text-primary shadow-sm">
+                <Receipt className="size-4" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate">ملخص الفاتورة</span>
-                <span className="mt-1 block text-xs font-medium text-muted-foreground">
+                <span className="mt-0.5 block font-mono text-[11px] font-medium text-muted-foreground tabular-nums">
                   {formatDate(form.invoiceDate)}
                 </span>
               </span>
             </span>
-            <span className="rounded-full bg-background px-3 py-1 text-xs font-bold text-primary shadow-sm">
+            <span className="rounded-full bg-background px-2.5 py-0.5 text-[11px] font-bold text-primary shadow-sm">
               {form.lines.length} صنف
             </span>
           </CardTitle>
         </CardHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <CardContent className="space-y-4 px-5 py-5">
+          <CardContent className="space-y-2.5 px-4 py-3">
             {form.supplier ? (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">المورد</p>
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground">المورد</p>
                 <div
-                  className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-linear-to-l from-primary/8 via-primary/4 to-transparent p-3 shadow-sm"
+                  className="flex items-center gap-2 rounded-xl border border-primary/20 bg-linear-to-l from-primary/8 via-primary/4 to-transparent p-2 shadow-sm"
                   dir="rtl"
                 >
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                    <Truck className="size-5" />
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                    <Truck className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1 text-right">
-                    <p className="truncate text-sm font-semibold leading-tight text-foreground sm:text-base">
+                    <p className="truncate text-sm font-semibold leading-tight text-foreground">
                       {form.supplier.name}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground tabular-nums sm:text-sm" dir="ltr">
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground tabular-nums" dir="ltr">
                       {form.supplier.phone || "لا يوجد هاتف"}
                     </p>
                   </div>
@@ -216,18 +216,18 @@ export function PurchaseEditorSummaryPanel({
               </div>
             )}
 
-            <div className="space-y-1 rounded-xl border border-border/50 bg-muted/10 p-3">
+            <div className="space-y-0.5 rounded-xl border border-border/50 bg-muted/10 p-2.5">
               {showSubtotal ? (
                 <MoneyRow icon={Package} label="إجمالي الأصناف" value={formatUsd(subtotal)} />
               ) : null}
               <MoneyRow icon={Scale} label="الكمية" value={formatKg(totalQuantity)} muted />
               <MoneyRow icon={BadgePercent} label="الخصم" value={formatUsd(form.discount)} muted />
-              <Separator className="my-2" />
+              <Separator className="my-1.5" />
               <MoneyRow icon={Calculator} label="الإجمالي النهائي" value={formatUsd(total)} strong />
               <MoneyRow icon={Wallet} label="المدفوع" value={formatUsd(form.paidAmount)} />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <BalanceCallout
                 icon={HandCoins}
                 label="باقي هذه الفاتورة"
@@ -260,11 +260,11 @@ export function PurchaseEditorSummaryPanel({
           </CardContent>
         </div>
 
-        <div className="relative z-10 shrink-0 border-t border-border/50 bg-background p-3 shadow-[0_-8px_24px_rgba(15,23,42,0.06)]">
-          <div className="grid gap-2">
+        <div className="relative z-10 shrink-0 border-t border-border/50 bg-background p-2.5 shadow-[0_-8px_24px_rgba(15,23,42,0.06)]">
+          <div className="grid gap-1.5">
             <Button
               type="button"
-              className="h-12 w-full rounded-xl px-4 shadow-sm"
+              className="h-11 w-full rounded-xl px-4 shadow-sm"
               onClick={onComplete}
               disabled={disabled || busy}
               aria-busy={isCompleting}
@@ -286,7 +286,7 @@ export function PurchaseEditorSummaryPanel({
             <Button
               type="button"
               variant="secondary"
-              className="h-10 w-full rounded-xl gap-2"
+              className="h-9 w-full rounded-xl gap-2"
               onClick={onSaveDraft}
               disabled={disabled || busy}
               aria-busy={isSaving}
@@ -306,7 +306,7 @@ export function PurchaseEditorSummaryPanel({
             <Button
               type="button"
               variant="outline"
-              className="h-10 w-full rounded-xl gap-2"
+              className="h-9 w-full rounded-xl gap-2"
               onClick={onCancel}
               disabled={busy}
             >
