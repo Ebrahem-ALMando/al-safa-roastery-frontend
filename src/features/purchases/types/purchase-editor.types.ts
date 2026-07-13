@@ -17,6 +17,7 @@ export type PurchaseEditorLine = {
   itemType: ItemType
   quantityKg: string
   unitPrice: string
+  referenceCost?: string | number | null
   highlight?: boolean
 }
 

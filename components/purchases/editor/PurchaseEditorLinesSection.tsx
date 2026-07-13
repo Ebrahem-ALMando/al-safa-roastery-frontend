@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { Package, Plus, Trash2 } from "lucide-react"
+import { AlertTriangle, Package, Plus, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/custom-toast-with-icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -55,6 +55,12 @@ function pickerRowToItem(row: ItemPickerRow): Item {
     created_at: null,
     updated_at: null,
   }
+}
+
+function parseAmount(value: string | number | null | undefined): number {
+  if (value === null || value === undefined || value === "") return 0
+  const parsed = Number.parseFloat(String(value).replaceAll(",", ""))
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
 function LineAmountField({
@@ -225,6 +231,11 @@ export function PurchaseEditorLinesSection({
                 const lineTotal = calculateLineTotal(line.quantityKg, line.unitPrice)
                 const qtyError = fieldErrors[`lines.${index}.quantity_kg`]
                 const priceError = fieldErrors[`lines.${index}.unit_price`]
+                const price = parseAmount(line.unitPrice)
+                const referenceCost = parseAmount(line.referenceCost)
+                const priceDiffRatio =
+                  price > 0 && referenceCost > 0 ? Math.abs(price - referenceCost) / referenceCost : 0
+                const showPriceWarning = priceDiffRatio >= 0.15
                 return (
                   <motion.div
                     key={line.key}
@@ -297,6 +308,14 @@ export function PurchaseEditorLinesSection({
                           </Button>
                         </div>
                       </div>
+                      {showPriceWarning ? (
+                        <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-200 lg:col-span-2">
+                          <AlertTriangle className="size-4 shrink-0" />
+                          <span>
+                            السعر بعيد عن التكلفة المرجعية {formatUsd(referenceCost)}.
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   </motion.div>
                 )

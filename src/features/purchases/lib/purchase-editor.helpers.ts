@@ -66,6 +66,7 @@ export function createEditorLineFromItem(item: Item): PurchaseEditorLine {
     ...mapItemToEditorLine(item),
     quantityKg: "",
     unitPrice: avg > 0 ? String(avg) : "",
+    referenceCost: item.last_purchase_price ?? item.average_cost,
   }
 }
 
@@ -104,6 +105,7 @@ export function purchaseToEditorForm(purchase: PurchaseInvoice): PurchaseEditorF
       itemType: (line.item?.item_type as PurchaseEditorLine["itemType"]) ?? "raw",
       quantityKg: String(parseNumericAmount(line.quantity_kg)),
       unitPrice: String(parseNumericAmount(line.unit_price)),
+      referenceCost: line.item?.average_cost ?? line.previous_average_cost,
     })),
   }
 }

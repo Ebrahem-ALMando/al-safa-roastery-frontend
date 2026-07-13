@@ -166,7 +166,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
     }
   }
 
-  function openCompleteDialog() {
+  const openCompleteDialog = React.useCallback(() => {
     const errors = validatePurchaseEditorForm(form)
     if (hasPurchaseEditorErrors(errors)) {
       setFieldErrors(errors)
@@ -174,7 +174,20 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
       return
     }
     setCompleteOpen(true)
-  }
+  }, [form])
+
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (!(event.ctrlKey || event.metaKey) || event.key !== "Enter") return
+      if (isSaving || isCompleting || completeOpen) return
+
+      event.preventDefault()
+      openCompleteDialog()
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [completeOpen, isCompleting, isSaving, openCompleteDialog])
 
   if (isEdit && (isLoading || !hydrated)) {
     return (
@@ -244,6 +257,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
           />
           <PurchaseEditorInvoiceInfo
             form={form}
+            invoiceTotal={total}
             onChange={patchForm}
             fieldErrors={fieldErrors}
             disabled={isSaving || isCompleting}
