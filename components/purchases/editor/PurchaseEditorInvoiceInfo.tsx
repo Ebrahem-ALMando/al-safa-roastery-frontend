@@ -70,7 +70,7 @@ export function PurchaseEditorInvoiceInfo({
         </div>
 
         <div className="space-y-1.5">
-          <Label className={adminFormLabelClass}>رقم فاتورة المورد (اختياري)</Label>
+          <Label className={adminFormLabelClass}>رقم فاتورة المورد الخارجية (اختياري)</Label>
           <div className="relative">
             <FormFieldIcon>
               <Hash className="size-4" />
@@ -79,7 +79,7 @@ export function PurchaseEditorInvoiceInfo({
               value={form.invoiceNumber}
               disabled={disabled}
               onChange={(e) => onChange({ invoiceNumber: e.target.value })}
-              placeholder="رقم خارجي اختياري"
+              placeholder="مثال: رقم الفاتورة المطبوعة من المورد"
               className={adminFormInputClass}
             />
           </div>

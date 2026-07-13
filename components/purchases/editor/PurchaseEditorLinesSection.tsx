@@ -1,19 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { motion } from "framer-motion"
 import { Package, Plus, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/custom-toast-with-icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import { ItemTypeBadge } from "@/components/items/item-type-badge"
 import {
@@ -31,6 +24,14 @@ type PurchaseEditorLinesSectionProps = {
   lines: PurchaseEditorLine[]
   onChange: (lines: PurchaseEditorLine[]) => void
   fieldErrors: Record<string, string | undefined>
+  disabled?: boolean
+}
+
+type LineAmountFieldProps = {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  error?: string
   disabled?: boolean
 }
 
@@ -54,6 +55,27 @@ function pickerRowToItem(row: ItemPickerRow): Item {
   }
 }
 
+function LineAmountField({ label, value, onChange, error, disabled }: LineAmountFieldProps) {
+  return (
+    <label className="block min-w-0 space-y-1.5">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <Input
+        inputMode="decimal"
+        value={value}
+        disabled={disabled}
+        placeholder="0.00"
+        onChange={(e) => onChange(e.target.value)}
+        className={cn(
+          "h-11 rounded-xl border-border/70 bg-muted/10 text-center font-semibold tabular-nums shadow-inner transition-colors focus-visible:bg-background",
+          error && "border-destructive/60"
+        )}
+        dir="ltr"
+      />
+      {error ? <p className="text-[10px] text-destructive">{error}</p> : null}
+    </label>
+  )
+}
+
 export function PurchaseEditorLinesSection({
   lines,
   onChange,
@@ -61,7 +83,7 @@ export function PurchaseEditorLinesSection({
   disabled = false,
 }: PurchaseEditorLinesSectionProps) {
   const [pickerOpen, setPickerOpen] = React.useState(false)
-  const lineRefs = React.useRef<Record<string, HTMLTableRowElement | null>>({})
+  const lineRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
 
   const excludeIds = lines.map((l) => l.itemId)
 
@@ -85,6 +107,29 @@ export function PurchaseEditorLinesSection({
     onChange([...lines, createEditorLineFromItem(pickerRowToItem(row))])
   }
 
+  function handleAddItems(rows: ItemPickerRow[]) {
+    const existingIds = new Set(lines.map((l) => l.itemId))
+    const nextLines = [...lines]
+    let skipped = 0
+
+    rows.forEach((row) => {
+      const itemId = Number.parseInt(row.id, 10)
+      if (existingIds.has(itemId)) {
+        skipped += 1
+        return
+      }
+      existingIds.add(itemId)
+      nextLines.push(createEditorLineFromItem(pickerRowToItem(row)))
+    })
+
+    if (skipped > 0) {
+      toast.info(PURCHASE_MESSAGES.duplicateItem)
+    }
+    if (nextLines.length !== lines.length) {
+      onChange(nextLines)
+    }
+  }
+
   function updateLine(key: string, patch: Partial<PurchaseEditorLine>) {
     onChange(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)))
   }
@@ -99,6 +144,7 @@ export function PurchaseEditorLinesSection({
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onSelect={handleAddItem}
+        onSelectMany={handleAddItems}
         excludeItemIds={excludeIds}
       />
 
@@ -110,7 +156,7 @@ export function PurchaseEditorLinesSection({
               أصناف الفاتورة
             </CardTitle>
             <CardDescription>
-              أضف الأصناف التي تم شراؤها من المورد، وحدد الكمية وسعر الكيلو لكل صنف.
+              أضف الأصناف دفعة واحدة، ثم أدخل الكمية وسعر الكيلو لكل صنف.
             </CardDescription>
           </div>
           <Button
@@ -120,7 +166,7 @@ export function PurchaseEditorLinesSection({
             onClick={() => setPickerOpen(true)}
           >
             <Plus className="size-4" />
-            إضافة صنف
+            إضافة أصناف
           </Button>
         </CardHeader>
         <CardContent>
@@ -134,117 +180,32 @@ export function PurchaseEditorLinesSection({
             <div className="rounded-2xl border border-dashed border-border/60 bg-muted/15 px-6 py-10 text-center">
               <p className="font-semibold">لم تتم إضافة أصناف إلى الفاتورة بعد.</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                ابدأ باختيار صنف لإضافته إلى الفاتورة.
+                ابدأ باختيار صنف أو أكثر لإضافته إلى الفاتورة.
               </p>
             </div>
           ) : (
-            <>
-              <div className="hidden overflow-x-auto md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-right">الصنف</TableHead>
-                      <TableHead className="w-[120px] text-right">الكمية (كغ)</TableHead>
-                      <TableHead className="w-[120px] text-right">سعر الكيلو</TableHead>
-                      <TableHead className="w-[120px] text-right">الإجمالي</TableHead>
-                      <TableHead className="w-[60px]" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lines.map((line, index) => {
-                      const lineTotal = calculateLineTotal(line.quantityKg, line.unitPrice)
-                      const qtyError = fieldErrors[`lines.${index}.quantity_kg`]
-                      const priceError = fieldErrors[`lines.${index}.unit_price`]
-                      return (
-                        <TableRow
-                          key={line.key}
-                          ref={(el) => {
-                            lineRefs.current[line.key] = el
-                          }}
-                          className={cn(
-                            line.highlight && "bg-amber-50/80 ring-2 ring-amber-400/50 dark:bg-amber-950/30"
-                          )}
-                        >
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="font-semibold">{line.itemName}</p>
-                                <ItemTypeBadge itemType={line.itemType} />
-                              </div>
-                              <p className="text-xs text-muted-foreground" dir="ltr">
-                                {line.itemCode ?? "—"}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              inputMode="decimal"
-                              value={line.quantityKg}
-                              disabled={disabled}
-                              onChange={(e) => updateLine(line.key, { quantityKg: e.target.value })}
-                              className={cn("h-9 tabular-nums", qtyError && "border-destructive/60")}
-                              dir="ltr"
-                            />
-                            {qtyError ? (
-                              <p className="mt-1 text-[10px] text-destructive">{qtyError}</p>
-                            ) : null}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              inputMode="decimal"
-                              value={line.unitPrice}
-                              disabled={disabled}
-                              onChange={(e) => updateLine(line.key, { unitPrice: e.target.value })}
-                              className={cn("h-9 tabular-nums", priceError && "border-destructive/60")}
-                              dir="ltr"
-                            />
-                            {priceError ? (
-                              <p className="mt-1 text-[10px] text-destructive">{priceError}</p>
-                            ) : null}
-                          </TableCell>
-                          <TableCell className="tabular-nums font-semibold" dir="ltr">
-                            {formatUsd(lineTotal)}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              disabled={disabled}
-                              onClick={() => removeLine(line.key)}
-                              className="text-destructive hover:bg-destructive/10"
-                              aria-label="حذف الصنف"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="space-y-3 md:hidden">
-                {lines.map((line, index) => {
-                  const lineTotal = calculateLineTotal(line.quantityKg, line.unitPrice)
-                  const qtyError = fieldErrors[`lines.${index}.quantity_kg`]
-                  const priceError = fieldErrors[`lines.${index}.unit_price`]
-                  return (
-                    <div
-                      key={line.key}
-                      ref={(el) => {
-                        lineRefs.current[line.key] = el as unknown as HTMLTableRowElement
-                      }}
-                      className={cn(
-                        "rounded-2xl border border-border/60 p-4",
-                        line.highlight && "ring-2 ring-amber-400/50"
-                      )}
-                    >
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <div>
+            <div className="space-y-3">
+              {lines.map((line, index) => {
+                const lineTotal = calculateLineTotal(line.quantityKg, line.unitPrice)
+                const qtyError = fieldErrors[`lines.${index}.quantity_kg`]
+                const priceError = fieldErrors[`lines.${index}.unit_price`]
+                return (
+                  <motion.div
+                    key={line.key}
+                    ref={(el) => {
+                      lineRefs.current[line.key] = el
+                    }}
+                    layout
+                    className={cn(
+                      "rounded-2xl border border-border/60 bg-background p-4 shadow-sm transition-[box-shadow,border-color]",
+                      line.highlight && "border-amber-400/70 bg-amber-50/60 ring-2 ring-amber-400/40 dark:bg-amber-950/25"
+                    )}
+                  >
+                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,1.7fr)] lg:items-center">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1 text-right">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold">{line.itemName}</p>
+                            <p className="truncate font-semibold">{line.itemName}</p>
                             <ItemTypeBadge itemType={line.itemType} />
                           </div>
                           <p className="text-xs text-muted-foreground" dir="ltr">
@@ -257,49 +218,40 @@ export function PurchaseEditorLinesSection({
                           size="icon-sm"
                           disabled={disabled}
                           onClick={() => removeLine(line.key)}
-                          className="text-destructive"
+                          className="shrink-0 rounded-full text-destructive hover:bg-destructive/10"
+                          aria-label="حذف الصنف"
                         >
                           <Trash2 className="size-4" />
                         </Button>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="mb-1 text-xs text-muted-foreground">الكمية (كغ)</p>
-                          <Input
-                            inputMode="decimal"
-                            value={line.quantityKg}
-                            disabled={disabled}
-                            onChange={(e) => updateLine(line.key, { quantityKg: e.target.value })}
-                            className="tabular-nums"
-                            dir="ltr"
-                          />
-                          {qtyError ? (
-                            <p className="mt-1 text-[10px] text-destructive">{qtyError}</p>
-                          ) : null}
-                        </div>
-                        <div>
-                          <p className="mb-1 text-xs text-muted-foreground">سعر الكيلو</p>
-                          <Input
-                            inputMode="decimal"
-                            value={line.unitPrice}
-                            disabled={disabled}
-                            onChange={(e) => updateLine(line.key, { unitPrice: e.target.value })}
-                            className="tabular-nums"
-                            dir="ltr"
-                          />
-                          {priceError ? (
-                            <p className="mt-1 text-[10px] text-destructive">{priceError}</p>
-                          ) : null}
+
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(120px,0.8fr)] sm:items-end">
+                        <LineAmountField
+                          label="الكمية (كغ)"
+                          value={line.quantityKg}
+                          disabled={disabled}
+                          error={qtyError}
+                          onChange={(value) => updateLine(line.key, { quantityKg: value })}
+                        />
+                        <LineAmountField
+                          label="سعر الكيلو"
+                          value={line.unitPrice}
+                          disabled={disabled}
+                          error={priceError}
+                          onChange={(value) => updateLine(line.key, { unitPrice: value })}
+                        />
+                        <div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2.5 text-center">
+                          <p className="text-xs font-medium text-muted-foreground">الإجمالي</p>
+                          <p className="mt-1 truncate text-base font-black tabular-nums text-primary" dir="ltr">
+                            {formatUsd(lineTotal)}
+                          </p>
                         </div>
                       </div>
-                      <p className="mt-3 text-sm font-semibold tabular-nums" dir="ltr">
-                        الإجمالي: {formatUsd(lineTotal)}
-                      </p>
                     </div>
-                  )
-                })}
-              </div>
-            </>
+                  </motion.div>
+                )
+              })}
+            </div>
           )}
         </CardContent>
       </Card>

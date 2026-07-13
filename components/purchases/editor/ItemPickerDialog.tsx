@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { AlertCircle, Loader2, Package, Search } from "lucide-react"
+import { AlertCircle, Check, Loader2, Package, Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +24,7 @@ type ItemPickerDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSelect: (item: ItemPickerRow) => void
+  onSelectMany?: (items: ItemPickerRow[]) => void
   excludeItemIds?: number[]
 }
 
@@ -43,15 +44,20 @@ export function ItemPickerDialog({
   open,
   onOpenChange,
   onSelect,
+  onSelectMany,
   excludeItemIds = [],
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(() => new Set())
 
   const { rows, meta, isLoading, error, isSearchPending } = useItemPickerList({ open, search: query })
   const filteredRows = rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10)))
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) setQuery("")
+    if (!nextOpen) {
+      setQuery("")
+      setSelectedIds(new Set())
+    }
     onOpenChange(nextOpen)
   }
 
@@ -60,13 +66,40 @@ export function ItemPickerDialog({
     handleOpenChange(false)
   }
 
+  const toggleSelection = (itemId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(itemId)) {
+        next.delete(itemId)
+      } else {
+        next.add(itemId)
+      }
+      return next
+    })
+  }
+
+  const handleConfirmSelection = () => {
+    const selectedItems = filteredRows.filter((item) => selectedIds.has(item.id))
+    if (selectedItems.length === 0) return
+    if (onSelectMany) {
+      onSelectMany(selectedItems)
+    } else {
+      selectedItems.forEach(onSelect)
+    }
+    handleOpenChange(false)
+  }
+
   const totalInDb = meta?.total
   const showMetaHint =
-    typeof totalInDb === "number" && totalInDb > filteredRows.length && filteredRows.length > 0
+    query.trim() !== "" &&
+    typeof totalInDb === "number" &&
+    totalInDb > filteredRows.length &&
+    filteredRows.length > 0
   const showSkeleton = isLoading && filteredRows.length === 0
   const showEmpty = !isLoading && !error && filteredRows.length === 0
   const showList = filteredRows.length > 0
   const showEndSpinner = isSearchPending || (isLoading && filteredRows.length > 0)
+  const selectedCount = selectedIds.size
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -92,35 +125,42 @@ export function ItemPickerDialog({
                     {filteredRows.length} مطابقة
                   </Badge>
                 ) : null}
+                {selectedCount > 0 ? (
+                  <Badge className="gap-1 rounded-lg text-[11px]">
+                    {selectedCount} محدد
+                  </Badge>
+                ) : null}
               </div>
             </div>
-            <div className="relative mt-5">
-              {showEndSpinner ? (
-                <Loader2 className="pointer-events-none absolute right-4 top-1/2 z-1 size-4 -translate-y-1/2 animate-spin text-primary" />
-              ) : null}
-              <Search className="pointer-events-none absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="الاسم أو الكود..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className={cn(
-                  "h-11 rounded-xl border-border/60 bg-card/80",
-                  showEndSpinner ? "pe-16" : "pe-10",
-                  query.trim() !== "" ? "ps-16" : "ps-3"
-                )}
-                aria-label="بحث الأصناف"
-              />
-              {query.trim() !== "" ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-1/2 left-1 h-8 -translate-y-1/2 rounded-lg text-xs text-muted-foreground"
-                  onClick={() => setQuery("")}
-                >
-                  مسح
-                </Button>
-              ) : null}
+            <div className="mt-5">
+              <div className="relative">
+                {showEndSpinner ? (
+                  <Loader2 className="pointer-events-none absolute right-4 top-1/2 z-1 size-4 -translate-y-1/2 animate-spin text-primary" />
+                ) : null}
+                <Search className="pointer-events-none absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="الاسم أو الكود..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className={cn(
+                    "h-11 rounded-xl border-border/60 bg-card/80 shadow-sm backdrop-blur supports-backdrop-filter:bg-card/70",
+                    showEndSpinner ? "pe-16" : "pe-10",
+                    query.trim() !== "" ? "ps-16" : "ps-3"
+                  )}
+                  aria-label="بحث الأصناف"
+                />
+                {query.trim() !== "" ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-1/2 left-1 h-8 -translate-y-1/2 rounded-lg text-xs text-muted-foreground"
+                    onClick={() => setQuery("")}
+                  >
+                    مسح
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -154,15 +194,23 @@ export function ItemPickerDialog({
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(index * 0.02, 0.3) }}
-                        onClick={() => handlePick(item)}
+                        onClick={() => toggleSelection(item.id)}
+                        onDoubleClick={() => handlePick(item)}
                         className={cn(
                           "group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-right transition-all",
-                          "hover:border-primary/35 hover:bg-card hover:shadow-md"
+                          "hover:border-primary/35 hover:bg-card hover:shadow-md",
+                          selectedIds.has(item.id) && "border-primary/50 bg-primary/5 ring-2 ring-primary/15"
                         )}
                         dir="rtl"
+                        aria-pressed={selectedIds.has(item.id)}
                       >
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Package className="size-4" />
+                        <div
+                          className={cn(
+                            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground",
+                            selectedIds.has(item.id) && "bg-primary text-primary-foreground"
+                          )}
+                        >
+                          {selectedIds.has(item.id) ? <Check className="size-4" /> : <Package className="size-4" />}
                         </div>
                         <div className="min-w-0 flex-1 text-right">
                           <div className="flex flex-wrap items-center justify-start gap-2">
@@ -194,6 +242,23 @@ export function ItemPickerDialog({
             )}
           </div>
         </ScrollArea>
+
+        <div className="shrink-0 border-t border-border/50 bg-background px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">
+              {selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
+            </p>
+            <Button
+              type="button"
+              className="min-w-32 gap-2 rounded-xl"
+              disabled={selectedCount === 0}
+              onClick={handleConfirmSelection}
+            >
+              <Check className="size-4" />
+              إضافة المحدد
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )
