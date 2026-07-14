@@ -48,7 +48,7 @@ function pickerRowToItem(row: ItemPickerRow): Item {
     unit: null,
     current_quantity_kg: row.currentQuantityKg,
     average_cost: row.averageCost,
-    last_purchase_price: null,
+    last_purchase_price: row.lastPurchasePrice,
     minimum_quantity_kg: null,
     auto_create_default_product: false,
     is_active: true,
@@ -108,6 +108,29 @@ export function PurchaseEditorLinesSection({
 
   const excludeIds = lines.map((l) => l.itemId)
 
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (disabled || pickerOpen) return
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return
+
+      const target = event.target as HTMLElement | null
+      const tagName = target?.tagName
+      const isTyping =
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT" ||
+        target?.isContentEditable
+
+      if (isTyping) return
+
+      event.preventDefault()
+      setPickerOpen(true)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [disabled, pickerOpen])
+
   function handleAddItem(row: ItemPickerRow) {
     const itemId = Number.parseInt(row.id, 10)
     const existing = lines.find((l) => l.itemId === itemId)
@@ -125,13 +148,17 @@ export function PurchaseEditorLinesSection({
       }, 1500)
       return
     }
-    onChange([...lines, createEditorLineFromItem(pickerRowToItem(row))])
+    const nextLine = createEditorLineFromItem(pickerRowToItem(row))
+    onChange([...lines, nextLine])
+    queueFocusLineInput(nextLine.key, "quantity")
   }
 
   function handleAddItems(rows: ItemPickerRow[]) {
     const existingIds = new Set(lines.map((l) => l.itemId))
     const nextLines = [...lines]
     let skipped = 0
+
+    const addedLines: PurchaseEditorLine[] = []
 
     rows.forEach((row) => {
       const itemId = Number.parseInt(row.id, 10)
@@ -140,7 +167,9 @@ export function PurchaseEditorLinesSection({
         return
       }
       existingIds.add(itemId)
-      nextLines.push(createEditorLineFromItem(pickerRowToItem(row)))
+      const nextLine = createEditorLineFromItem(pickerRowToItem(row))
+      nextLines.push(nextLine)
+      addedLines.push(nextLine)
     })
 
     if (skipped > 0) {
@@ -148,6 +177,7 @@ export function PurchaseEditorLinesSection({
     }
     if (nextLines.length !== lines.length) {
       onChange(nextLines)
+      queueFocusLineInput(addedLines[0]?.key, "quantity")
     }
   }
 
@@ -165,6 +195,10 @@ export function PurchaseEditorLinesSection({
       inputRefs.current[lineKey]?.[field]?.focus()
       inputRefs.current[lineKey]?.[field]?.select()
     })
+  }
+
+  function queueFocusLineInput(lineKey: string | undefined, field: "quantity" | "price") {
+    window.setTimeout(() => focusLineInput(lineKey, field), 0)
   }
 
   function handleAmountEnter(
@@ -228,6 +262,10 @@ export function PurchaseEditorLinesSection({
               <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
                 <div className="space-y-2">
                   <p className="font-medium">اختصارات إدخال الأصناف</p>
+                  <p className="flex items-center gap-2">
+                    <Kbd>/</Kbd>
+                    فتح اختيار الأصناف.
+                  </p>
                   <p className="flex items-center gap-2">
                     <Kbd>Enter</Kbd>
                     من الكمية إلى سعر الكيلو.

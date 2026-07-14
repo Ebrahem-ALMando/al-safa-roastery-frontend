@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { AlertCircle, Check, Loader2, Package, Search } from "lucide-react"
+import { AlertCircle, Check, Info, Loader2, Package, Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Kbd } from "@/components/ui/kbd"
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { formatCostPerKg, formatQuantityKg } from "@/features/items"
 import { useItemPickerList, type ItemPickerRow } from "@/features/purchases/hooks/useItemPickerList"
@@ -49,9 +51,35 @@ export function ItemPickerDialog({
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
   const [selectedItems, setSelectedItems] = React.useState<Map<string, ItemPickerRow>>(() => new Map())
+  const [activeIndex, setActiveIndex] = React.useState(0)
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null)
+  const rowRefs = React.useRef<Record<string, HTMLButtonElement | null>>({})
 
-  const { rows, meta, isLoading, error, isSearchPending } = useItemPickerList({ open, search: query })
-  const filteredRows = rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10)))
+  const { rows, isLoading, error, isSearchPending } = useItemPickerList({
+    open,
+    search: query,
+    activeOnly: true,
+    clientSearch: true,
+  })
+  const filteredRows = React.useMemo(
+    () => rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10))),
+    [excludeItemIds, rows]
+  )
+  const activeRowIndex = filteredRows.length === 0 ? 0 : Math.min(activeIndex, filteredRows.length - 1)
+
+  React.useEffect(() => {
+    if (!open) return
+    window.requestAnimationFrame(() => {
+      searchInputRef.current?.focus()
+      searchInputRef.current?.select()
+    })
+  }, [open])
+
+  React.useEffect(() => {
+    const activeItem = filteredRows[activeRowIndex]
+    if (!activeItem) return
+    rowRefs.current[activeItem.id]?.scrollIntoView({ block: "nearest" })
+  }, [activeRowIndex, filteredRows])
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -89,12 +117,60 @@ export function ItemPickerDialog({
     handleOpenChange(false)
   }
 
-  const totalInDb = meta?.total
-  const showMetaHint =
-    query.trim() !== "" &&
-    typeof totalInDb === "number" &&
-    totalInDb > filteredRows.length &&
-    filteredRows.length > 0
+  const selectVisibleRows = () => {
+    if (filteredRows.length === 0) return
+    setSelectedItems((prev) => {
+      const next = new Map(prev)
+      filteredRows.forEach((item) => next.set(item.id, item))
+      return next
+    })
+  }
+
+  const handleDialogKeyboard = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.nativeEvent.isComposing) return
+
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault()
+      if (selectedItems.size > 0) {
+        handleConfirmSelection()
+        return
+      }
+      const activeItem = filteredRows[activeRowIndex]
+      if (activeItem) {
+        onSelect(activeItem)
+        handleOpenChange(false)
+      }
+      return
+    }
+
+    if (event.altKey && event.key.toLowerCase() === "a") {
+      event.preventDefault()
+      selectVisibleRows()
+      return
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      setActiveIndex((current) => (filteredRows.length === 0 ? 0 : Math.min(current + 1, filteredRows.length - 1)))
+      return
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault()
+      setActiveIndex((current) => Math.max(current - 1, 0))
+      return
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault()
+      const activeItem = filteredRows[activeRowIndex]
+      if (activeItem) {
+        toggleSelection(activeItem)
+      }
+    }
+  }
+
+  const showMetaHint = false
   const showSkeleton = isLoading && filteredRows.length === 0
   const showEmpty = !isLoading && !error && filteredRows.length === 0
   const showList = filteredRows.length > 0
@@ -107,10 +183,21 @@ export function ItemPickerDialog({
         dir="rtl"
         lang="ar"
         className="flex max-h-[min(88vh,720px)] w-[min(100%-1.25rem,560px)] max-w-[min(100%-1.25rem,560px)] flex-col overflow-hidden rounded-3xl border-border/60 p-0 shadow-2xl sm:max-w-[min(100%-1.25rem,560px)]"
-        showCloseButton
+        showCloseButton={false}
+        onKeyDownCapture={handleDialogKeyboard}
       >
         <DialogHeader className="relative z-10 shrink-0 space-y-0 overflow-visible border-b bg-linear-to-bl from-primary/10 via-primary/5 to-transparent p-0">
           <div className="relative px-6 pt-6 pb-6">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="absolute left-4 top-4 z-30 rounded-lg text-muted-foreground hover:bg-background/70 hover:text-foreground"
+              onClick={() => handleOpenChange(false)}
+              aria-label="إغلاق"
+            >
+              <X className="size-4" />
+            </Button>
             <div className="flex items-start gap-4" dir="rtl">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-card text-primary shadow-md">
                 <Package className="size-7" strokeWidth={1.5} />
@@ -143,9 +230,13 @@ export function ItemPickerDialog({
                 ) : null}
                 <Search className="pointer-events-none absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  ref={searchInputRef}
                   placeholder="الاسم أو الكود..."
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setQuery(e.target.value)
+                    setActiveIndex(0)
+                  }}
                   className={cn(
                     "h-11 rounded-xl border-border/60 bg-card/80 shadow-sm backdrop-blur supports-backdrop-filter:bg-card/70",
                     showEndSpinner ? "pe-16" : "pe-10",
@@ -192,30 +283,42 @@ export function ItemPickerDialog({
                         يُعرض أول {filteredRows.length} نتيجة — زِد دقة البحث.
                       </p>
                     ) : null}
-                    {filteredRows.map((item, index) => (
+                    {filteredRows.map((item, index) => {
+                      const isActive = index === activeRowIndex
+                      const isSelected = selectedItems.has(item.id)
+
+                      return (
                       <motion.button
                         key={item.id}
+                        ref={(el) => {
+                          rowRefs.current[item.id] = el
+                        }}
                         type="button"
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(index * 0.02, 0.3) }}
-                        onClick={() => toggleSelection(item)}
+                        onClick={() => {
+                          setActiveIndex(index)
+                          toggleSelection(item)
+                        }}
                         onDoubleClick={() => handlePick(item)}
                         className={cn(
                           "group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-right transition-all",
                           "hover:border-primary/35 hover:bg-card hover:shadow-md",
-                          selectedItems.has(item.id) && "border-primary/50 bg-primary/5 ring-2 ring-primary/15"
+                          isActive && "border-primary/45 ring-2 ring-primary/20",
+                          isSelected && "border-primary/50 bg-primary/5 ring-2 ring-primary/15"
                         )}
                         dir="rtl"
-                        aria-pressed={selectedItems.has(item.id)}
+                        aria-pressed={isSelected}
+                        aria-current={isActive ? "true" : undefined}
                       >
                         <div
                           className={cn(
                             "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground",
-                            selectedItems.has(item.id) && "bg-primary text-primary-foreground"
+                            isSelected && "bg-primary text-primary-foreground"
                           )}
                         >
-                          {selectedItems.has(item.id) ? <Check className="size-4" /> : <Package className="size-4" />}
+                          {isSelected ? <Check className="size-4" /> : <Package className="size-4" />}
                         </div>
                         <div className="min-w-0 flex-1 text-right">
                           <div className="flex flex-wrap items-center justify-start gap-2">
@@ -243,7 +346,8 @@ export function ItemPickerDialog({
                           </div>
                         </div>
                       </motion.button>
-                    ))}
+                      )
+                    })}
                   </motion.div>
                 ) : showEmpty ? (
                   <motion.div
@@ -264,9 +368,48 @@ export function ItemPickerDialog({
 
         <div className="shrink-0 border-t border-border/50 bg-background px-4 py-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">
-              {selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
-            </p>
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="truncate text-xs text-muted-foreground">
+                {selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
+              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-7 shrink-0 rounded-lg text-muted-foreground"
+                    aria-label="اختصارات اختيار الأصناف"
+                  >
+                    <Info className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
+                  <div className="space-y-2">
+                    <p className="font-medium">اختصارات الموديل</p>
+                    <p className="flex items-center gap-2">
+                      <Kbd>↑</Kbd>
+                      <Kbd>↓</Kbd>
+                      التنقل بين النتائج.
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Kbd>Enter</Kbd>
+                      تحديد النتيجة الحالية.
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Kbd>Alt</Kbd>
+                      <Kbd>A</Kbd>
+                      تحديد النتائج الظاهرة.
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Kbd>Ctrl</Kbd>
+                      <Kbd>Enter</Kbd>
+                      إضافة المحدد دفعة واحدة.
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Button
               type="button"
               className="min-w-32 gap-2 rounded-xl"

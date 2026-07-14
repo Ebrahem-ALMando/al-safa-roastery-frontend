@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import {
   BadgePercent,
   Calculator,
@@ -43,11 +44,11 @@ function parseAmount(value: string | number | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function formatKg(value: number): string {
+function formatKgAmount(value: number): string {
   return `${value.toLocaleString("en-US", {
     maximumFractionDigits: 2,
     minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-  })} كغ`
+  })}`
 }
 
 function formatDate(value: string): string {
@@ -72,7 +73,7 @@ function BalanceCallout({
 }: {
   icon: LucideIcon
   label: string
-  value: string
+  value: ReactNode
   hint?: string
   tone: BalanceTone
 }) {
@@ -218,9 +219,19 @@ export function PurchaseEditorSummaryPanel({
 
             <div className="space-y-0.5 rounded-xl border border-border/50 bg-muted/10 p-2.5">
               {showSubtotal ? (
-                <MoneyRow icon={Package} label="إجمالي الأصناف" value={formatUsd(subtotal)} />
+                <MoneyRow icon={Package} label="الإجمالي قبل الخصم" value={formatUsd(subtotal)} />
               ) : null}
-              <MoneyRow icon={Scale} label="الكمية" value={formatKg(totalQuantity)} muted />
+              <MoneyRow
+                icon={Scale}
+                label="الكمية"
+                value={
+                  <span className="inline-flex items-baseline gap-1">
+                    <span className="font-mono tabular-nums">{formatKgAmount(totalQuantity)}</span>
+                    <span className="font-sans">كغ</span>
+                  </span>
+                }
+                muted
+              />
               <MoneyRow icon={BadgePercent} label="الخصم" value={formatUsd(form.discount)} muted />
               <Separator className="my-1.5" />
               <MoneyRow icon={Calculator} label="الإجمالي النهائي" value={formatUsd(total)} strong />
