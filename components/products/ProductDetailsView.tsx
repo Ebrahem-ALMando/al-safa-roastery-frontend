@@ -109,7 +109,7 @@ export function ProductDetailsView({ productId }: { productId: number }) {
               ["حالة التسعير", <ProductPriceStatusBadge key="price-status" status={product.price_status} />],
             ]} />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {(["car", "wholesale", "retail", "consumer"] as ProductPriceType[]).map((priceType) => {
+              {(["consumer", "retail", "wholesale", "car"] as ProductPriceType[]).map((priceType) => {
                 const price = product.prices?.find((item) => item.price_type === priceType)
                 return (
                   <div key={priceType} className="rounded-xl border border-border/60 bg-muted/15 p-3">

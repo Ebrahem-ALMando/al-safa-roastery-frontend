@@ -51,6 +51,18 @@ const CUSTOMER_TYPE_OPTIONS: {
   focusRingClass: string
 }[] = [
   {
+    value: "consumer",
+    label: CUSTOMER_TYPE_LABELS_AR.consumer,
+    icon: CircleUserRound,
+    selectedClass:
+      "border-emerald-500 bg-emerald-500/12 text-emerald-950 dark:border-emerald-400 dark:bg-emerald-500/15 dark:text-emerald-50",
+    idleClass:
+      "border-border/50 bg-muted/20 text-foreground/80 hover:border-emerald-400/45 hover:bg-emerald-500/5",
+    iconSelectedClass: "text-emerald-600 dark:text-emerald-300",
+    iconIdleClass: "text-emerald-600/80",
+    focusRingClass: "focus-visible:ring-emerald-500/40",
+  },
+  {
     value: "retail",
     label: CUSTOMER_TYPE_LABELS_AR.retail,
     icon: ShoppingBag,
@@ -111,7 +123,7 @@ export function emptyCustomerForm(): CustomerFormState {
   return {
     name: "",
     contactPerson: "",
-    customerType: "retail",
+    customerType: "consumer",
     carNumber: "",
     phone: "",
     secondaryPhone: "",
@@ -130,7 +142,7 @@ export function customerToForm(customer: Customer): CustomerFormState {
   return {
     name: customer.name ?? "",
     contactPerson: customer.contact_person ?? "",
-    customerType: customer.customer_type ?? "retail",
+    customerType: customer.customer_type ?? "consumer",
     carNumber: customer.car_number ?? "",
     phone: customer.phone ?? "",
     secondaryPhone: customer.secondary_phone ?? "",
@@ -290,7 +302,7 @@ export function CustomerFormFields({
               نوع الزبون <span className="text-destructive">*</span>
             </Label>
             <div
-              className="grid grid-cols-3 gap-2"
+              className="grid grid-cols-2 gap-2 sm:grid-cols-4"
               role="radiogroup"
               aria-label="نوع الزبون"
             >

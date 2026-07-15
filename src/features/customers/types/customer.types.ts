@@ -14,7 +14,7 @@ export type CustomerLastActivity = {
   date: string
 }
 
-export type CustomerType = "retail" | "wholesale" | "car"
+export type CustomerType = "consumer" | "retail" | "wholesale" | "car"
 
 export type Customer = {
   id: number

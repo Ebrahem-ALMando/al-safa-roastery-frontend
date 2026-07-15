@@ -34,6 +34,7 @@ export const CUSTOMERS_PERIOD_DROPDOWN_PRESETS = [
 ] as const satisfies readonly Exclude<CustomersPeriodPreset, "all">[]
 
 export const CUSTOMER_TYPE_LABELS_AR: Record<CustomerType, string> = {
+  consumer: "مستهلك",
   retail: "مفرق",
   wholesale: "جملة",
   car: "سيارة",

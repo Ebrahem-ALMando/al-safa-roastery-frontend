@@ -242,6 +242,7 @@ export function CustomersFilters({ value, onChange, isLoading = false }: Custome
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="consumer">مستهلك</SelectItem>
                 <SelectItem value="retail">مفرق</SelectItem>
                 <SelectItem value="wholesale">جملة</SelectItem>
                 <SelectItem value="car">سيارة</SelectItem>
@@ -359,7 +360,7 @@ export function CustomersFilters({ value, onChange, isLoading = false }: Custome
 
           {customerTypeLabel ? (
             <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
-              النوع: {customerTypeLabel}
+              نوع الزبون: {customerTypeLabel}
               <button
                 type="button"
                 className="mr-1 rounded-full p-0.5 hover:bg-blue-200/80 dark:hover:bg-blue-800"

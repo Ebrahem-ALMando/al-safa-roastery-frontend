@@ -16,11 +16,11 @@ type ProductPricesManagerProps = {
 const configs = {
   car: { title: "سعر السيارة", helper: "سعر البيع المخصص لزبائن السيارات.", icon: CarFront, accent: "sky" },
   wholesale: { title: "سعر الجملة", helper: "سعر البيع المخصص لزبائن الجملة.", icon: Boxes, accent: "amber" },
-  retail: { title: "سعر المفرق", helper: "سعر البيع الأساسي لزبائن المفرق.", icon: ShoppingBag, accent: "emerald" },
-  consumer: { title: "سعر المستهلك", helper: "السعر المرجعي المستقل المطلوب لاحتساب المبيعات والخصومات.", icon: UserRound, accent: "violet" },
+  retail: { title: "سعر المفرق", helper: "سعر البيع المفرق حسب سياسة المحمصة.", icon: ShoppingBag, accent: "emerald" },
+  consumer: { title: "سعر المستهلك", helper: "سعر الزبون العادي الذي يشتري لنفسه.", icon: UserRound, accent: "violet" },
 } as const;
 
-const displayOrder: ProductPriceType[] = ["car", "wholesale", "retail", "consumer"];
+const displayOrder: ProductPriceType[] = ["consumer", "retail", "wholesale", "car"];
 
 export function ProductPricesManager({
   value,
