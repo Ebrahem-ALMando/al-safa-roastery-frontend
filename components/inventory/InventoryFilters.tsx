@@ -1,0 +1,31 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import { Check, ChevronsUpDown, Filter, Search, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useApiQuery } from "@/lib/hooks/useApiQuery"
+import { useAuth } from "@/src/features/auth/hooks/useAuth"
+import { cn } from "@/lib/utils"
+import { INVENTORY_ITEM_TYPE_LABELS_AR, INVENTORY_STOCK_STATUS_LABELS_AR, type InventoryItemType, type InventoryStockStatusFilter } from "@/src/features/inventory"
+
+type PickerItem = { id: number; code: string; name: string; item_type: InventoryItemType }
+export type InventoryFiltersValue = { search: string; itemType: InventoryItemType | "all"; stockStatus: InventoryStockStatusFilter | "all"; itemId: number | null; quantityMin: string; quantityMax: string }
+
+function ItemFilterPicker({ value, onChange }: { value: number | null; onChange: (id: number | null) => void }) {
+  const [open, setOpen] = useState(false); const [activated, setActivated] = useState(false); const [query, setQuery] = useState(""); const { isAuthenticated, isLoading } = useAuth()
+  const result = useApiQuery<PickerItem[]>(activated && !isLoading && isAuthenticated ? "inventory-item-picker" : null, "items/picker", { queryParams: { is_active: 1, limit: 1000 } })
+  const items = useMemo(() => (result.data ?? []).filter((item) => `${item.name} ${item.code}`.toLowerCase().includes(query.trim().toLowerCase())), [result.data, query]); const selected = (result.data ?? []).find((item) => item.id === value)
+  return <Popover open={open} onOpenChange={(next) => { setOpen(next); if (next) setActivated(true) }}><PopoverTrigger asChild><Button variant="outline" role="combobox" className="h-10 w-full justify-between font-normal"><span className="truncate">{selected ? `${selected.name} · ${selected.code}` : "كل الأصناف"}</span><ChevronsUpDown className="size-4 opacity-50" /></Button></PopoverTrigger><PopoverContent align="end" className="w-[320px] p-2" dir="rtl"><div className="relative mb-2"><Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث بالاسم أو الكود..." className="pr-9" /></div><div className="max-h-64 overflow-y-auto"><button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm hover:bg-muted" onClick={() => { onChange(null); setOpen(false) }}><Check className={cn("size-4", value === null ? "opacity-100" : "opacity-0")} />كل الأصناف</button>{items.map((item) => <button key={item.id} type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm hover:bg-muted" onClick={() => { onChange(item.id); setOpen(false) }}><Check className={cn("size-4", value === item.id ? "opacity-100" : "opacity-0")} /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{item.name}</span><span className="font-mono text-xs text-muted-foreground" dir="ltr">{item.code}</span></span></button>)}</div></PopoverContent></Popover>
+}
+
+export function InventoryFilters({ value, onChange, onReset, isLoading = false }: { value: InventoryFiltersValue; onChange: (value: InventoryFiltersValue) => void; onReset: () => void; isLoading?: boolean }) {
+  const [advanced, setAdvanced] = useState(true)
+  const active = value.search.trim() || value.itemType !== "all" || value.stockStatus !== "all" || value.itemId || value.quantityMin || value.quantityMax
+  return <div className="rounded-xl border bg-card p-4 shadow-sm"><div className="flex flex-col gap-3 md:flex-row"><div className="relative flex-1"><Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={value.search} onChange={(e) => onChange({ ...value, search: e.target.value })} placeholder="ابحث باسم الصنف أو الكود..." className="pr-10" /></div><Button variant="outline" onClick={() => setAdvanced((v) => !v)} className="gap-2"><Filter className="size-4" />بحث متقدم</Button>{active ? <Button variant="ghost" onClick={onReset} className="gap-2 text-rose-600"><X className="size-4" />مسح الفلاتر</Button> : null}</div>
+    {advanced ? <div className="mt-4 grid gap-4 border-t pt-4 md:grid-cols-4"><div className="space-y-2"><Label>نوع الصنف</Label><Select value={value.itemType} onValueChange={(v) => onChange({ ...value, itemType: v as InventoryItemType | "all" })} disabled={isLoading}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="raw">{INVENTORY_ITEM_TYPE_LABELS_AR.raw}</SelectItem><SelectItem value="ready">{INVENTORY_ITEM_TYPE_LABELS_AR.ready}</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label>حالة المخزون</Label><Select value={value.stockStatus} onValueChange={(v) => onChange({ ...value, stockStatus: v as InventoryStockStatusFilter | "all" })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="reorder_required">{INVENTORY_STOCK_STATUS_LABELS_AR.reorder_required}</SelectItem><SelectItem value="available">{INVENTORY_STOCK_STATUS_LABELS_AR.available}</SelectItem><SelectItem value="low">{INVENTORY_STOCK_STATUS_LABELS_AR.low}</SelectItem><SelectItem value="out_of_stock">{INVENTORY_STOCK_STATUS_LABELS_AR.out_of_stock}</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label>الصنف</Label><ItemFilterPicker value={value.itemId} onChange={(itemId) => onChange({ ...value, itemId })} /></div><div className="space-y-2"><Label>نطاق الكمية</Label><div className="grid grid-cols-2 gap-2"><Input value={value.quantityMin} onChange={(e) => onChange({ ...value, quantityMin: e.target.value })} placeholder="من الكمية" inputMode="decimal" dir="ltr" /><Input value={value.quantityMax} onChange={(e) => onChange({ ...value, quantityMax: e.target.value })} placeholder="إلى الكمية" inputMode="decimal" dir="ltr" /></div></div></div> : null}
+  </div>
+}
