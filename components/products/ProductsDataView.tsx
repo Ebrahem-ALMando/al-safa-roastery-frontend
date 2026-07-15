@@ -24,6 +24,7 @@ type ProductsDataViewProps = {
   onPageChange: (page: number) => void;
   onViewDetails: (product: Product) => void;
   onEdit: (product: Product) => void;
+  onManagePrices: (product: Product) => void;
   onDelete: (product: Product) => void;
   onToggleActive: (product: Product) => void;
 };

@@ -14,14 +14,36 @@ export type ProductLinkedItem = {
   stock_status?: ProductStockStatus | null;
 };
 
+export type ProductPriceType = "retail" | "wholesale" | "car" | "consumer";
+
 export type ProductPrice = {
   id: number;
   product_id: number;
-  price_type: "retail" | "wholesale" | "car" | "consumer" | string;
+  price_type: ProductPriceType;
   price: string | number;
   min_quantity: string | number | null;
   is_active: boolean;
   notes: string | null;
+};
+
+export type ProductPriceFormValue = {
+  price: string;
+  is_active: boolean;
+  notes: string;
+};
+
+export type ProductPricesFormValue = Record<ProductPriceType, ProductPriceFormValue>;
+
+export type SaveProductPriceInput = {
+  price_type: ProductPriceType;
+  price: number;
+  min_quantity: number;
+  is_active: boolean;
+  notes: string | null;
+};
+
+export type SaveProductPricesInput = {
+  prices: SaveProductPriceInput[];
 };
 
 export type ProductPriceStatus = "priced" | "unpriced";

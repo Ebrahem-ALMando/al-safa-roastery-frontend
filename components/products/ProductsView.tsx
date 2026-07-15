@@ -25,6 +25,7 @@ import { useMemo, useState } from "react";
 import { ProductColumnCustomizer } from "./ProductColumnCustomizer";
 import { ProductDeleteDialog } from "./ProductDeleteDialog";
 import { ProductFormDialog } from "./ProductFormDialog";
+import { ProductPricesDialog } from "./prices/ProductPricesDialog";
 import { ProductsDataView } from "./ProductsDataView";
 import { ProductsFilters } from "./ProductsFilters";
 import { ProductsPeriodControls } from "./ProductsPeriodControls";
@@ -89,12 +90,13 @@ export function ProductsView() {
     isLoading: summaryLoading,
     error: summaryError,
   } = useProductSummary(summaryFilters);
-  const { createProduct, updateProduct, toggleProductActive, deleteProduct } =
+  const { createProduct, updateProduct, toggleProductActive, deleteProduct, saveProductPrices } =
     useProductActions();
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [priceTarget, setPriceTarget] = useState<Product | null>(null);
 
   const customFrom = customPeriod?.from ?? defaultCustomPeriod().from;
   const customTo = customPeriod?.to ?? defaultCustomPeriod().to;
@@ -276,6 +278,7 @@ export function ProductsView() {
           onPageChange={setPage}
           onViewDetails={openDetails}
           onEdit={openEditDialog}
+          onManagePrices={setPriceTarget}
           onToggleActive={(product) => void toggleProductActive(product)}
           onDelete={setDeleteTarget}
         />
@@ -287,15 +290,17 @@ export function ProductsView() {
         onOpenChange={setDialogOpen}
         mode={dialogMode}
         product={editingProduct}
-        onCreate={async (payload) => {
-          await createProduct(payload);
-          await mutate();
+        onCreate={createProduct}
+        onUpdate={updateProduct}
+        onSavePrices={(id, payload) => saveProductPrices(id, payload, { notify: false })}
+      />
+
+      <ProductPricesDialog
+        open={priceTarget !== null}
+        onOpenChange={(next) => {
+          if (!next) setPriceTarget(null);
         }}
-        onUpdate={async (id, payload) => {
-          await updateProduct(id, payload);
-          await mutate();
-        }}
-        onSaved={() => void mutate()}
+        product={priceTarget}
       />
 
       <DateRangeDialog

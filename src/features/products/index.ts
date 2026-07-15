@@ -1,5 +1,6 @@
 export { useProductActions } from "./hooks/useProductActions";
 export { useProductDetails } from "./hooks/useProductDetails";
+export { useProductPrices } from "./hooks/useProductPrices";
 export { useProducts } from "./hooks/useProducts";
 export {
   useProductsPage,
@@ -14,12 +15,17 @@ export type {
   Product,
   ProductLinkedItem,
   ProductPrice,
+  ProductPriceFormValue,
+  ProductPricesFormValue,
+  ProductPriceType,
   ProductPriceStatus,
   ProductsListFilters,
   ProductsListMeta,
   ProductStockStatus,
   ProductSummaryFilters,
   ProductSummaryResponse,
+  SaveProductPriceInput,
+  SaveProductPricesInput,
   UpdateProductInput,
 } from "./types/product.types";
 
@@ -58,3 +64,15 @@ export {
 } from "./lib/products.helpers";
 
 export { PRODUCT_MESSAGES } from "./lib/products.messages";
+
+export {
+  emptyProductPricesForm,
+  findActiveDisplayPrice,
+  formatProductPriceSummary,
+  hasProductPriceChanges,
+  PRODUCT_PRICE_TYPES,
+  PRODUCT_PRICE_TYPE_LABELS_AR,
+  productPricesToForm,
+  productPricesToPayload,
+  validateProductPrices,
+} from "./lib/product-prices";

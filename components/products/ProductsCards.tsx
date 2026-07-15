@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  formatProductPrice,
+  formatProductPriceSummary,
   formatQuantityKg,
   linkedItemName,
   type Product,
@@ -38,6 +38,7 @@ type ProductsCardsProps = {
   onPageChange: (page: number) => void;
   onViewDetails: (product: Product) => void;
   onEdit: (product: Product) => void;
+  onManagePrices: (product: Product) => void;
   onDelete: (product: Product) => void;
   onToggleActive: (product: Product) => void;
 };
@@ -65,6 +66,7 @@ export function ProductsCards({
   onPageChange,
   onViewDetails,
   onEdit,
+  onManagePrices,
   onDelete,
   onToggleActive,
 }: ProductsCardsProps) {
@@ -127,9 +129,7 @@ export function ProductsCards({
               <InfoLine label="الصنف المرتبط" value={linkedItemName(product)} />
               <InfoLine
                 label="السعر"
-                value={formatProductPrice(
-                  product.current_price ?? product.default_price,
-                )}
+                value={formatProductPriceSummary(product)}
                 dir="ltr"
               />
               <InfoLine
@@ -162,6 +162,7 @@ export function ProductsCards({
                     stopPropagation
                     onViewDetails={() => onViewDetails(product)}
                     onEdit={() => onEdit(product)}
+                    onManagePrices={() => onManagePrices(product)}
                     onToggleActive={() => onToggleActive(product)}
                     onDelete={() => onDelete(product)}
                   />

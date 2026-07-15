@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, CalendarClock, DollarSign, Info, Package, RefreshCw, Settings } from "lucide-react"
+import { ArrowRight, CalendarClock, CircleDollarSign, DollarSign, Info, Package, RefreshCw, Settings } from "lucide-react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,15 +13,19 @@ import {
   linkedItemCode,
   linkedItemName,
   type Product,
+  PRODUCT_PRICE_TYPE_LABELS_AR,
+  type ProductPriceType,
 } from "@/features/products"
 import { useProductDetails } from "@/features/products"
 import { ItemTypeBadge } from "@/components/items/item-type-badge"
 import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge"
 import { ProductStatusBadge } from "./ProductStatusBadge"
 import { ProductStockStatusBadge } from "./ProductStockStatusBadge"
+import { ProductPricesDialog } from "./prices/ProductPricesDialog"
 
 export function ProductDetailsView({ productId }: { productId: number }) {
   const { product, isLoading, error, mutate } = useProductDetails(productId)
+  const [pricesOpen, setPricesOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -92,21 +97,36 @@ export function ProductDetailsView({ productId }: { productId: number }) {
           </DetailsCard>
 
           <DetailsCard icon={DollarSign} title="التسعير">
+            <div className="mb-4 flex justify-end">
+              <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setPricesOpen(true)}>
+                <CircleDollarSign className="size-4" />
+                إدارة الأسعار
+              </Button>
+            </div>
             <InfoGrid rows={[
               ["السعر الحالي", formatProductPrice(product.current_price ?? product.default_price)],
               ["نوع السعر الحالي", product.current_price_type || "—"],
               ["حالة التسعير", <ProductPriceStatusBadge key="price-status" status={product.price_status} />],
             ]} />
-            {product.prices && product.prices.length > 0 ? (
-              <div className="mt-4 overflow-hidden rounded-xl border border-border/60">
-                {product.prices.map((price) => (
-                  <div key={price.id} className="flex items-center justify-between gap-3 border-b border-border/40 px-3 py-2 text-sm last:border-b-0">
-                    <span className="font-medium">{price.price_type}</span>
-                    <span className="font-bold tabular-nums" dir="ltr">{formatProductPrice(price.price)}</span>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {(["car", "wholesale", "retail", "consumer"] as ProductPriceType[]).map((priceType) => {
+                const price = product.prices?.find((item) => item.price_type === priceType)
+                return (
+                  <div key={priceType} className="rounded-xl border border-border/60 bg-muted/15 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold">{PRODUCT_PRICE_TYPE_LABELS_AR[priceType]}</span>
+                      <span className={price?.is_active ? "text-xs font-medium text-emerald-700 dark:text-emerald-300" : "text-xs font-medium text-muted-foreground"}>
+                        {price?.is_active ? "فعال" : "موقوف"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-lg font-bold tabular-nums" dir="ltr">
+                      {price ? formatProductPrice(price.price) : "غير محدد"}
+                    </p>
+                    {price?.notes ? <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{price.notes}</p> : null}
                   </div>
-                ))}
-              </div>
-            ) : null}
+                )
+              })}
+            </div>
           </DetailsCard>
         </div>
 
@@ -128,6 +148,11 @@ export function ProductDetailsView({ productId }: { productId: number }) {
           </DetailsCard>
         </div>
       </div>
+      <ProductPricesDialog
+        open={pricesOpen}
+        onOpenChange={setPricesOpen}
+        product={product}
+      />
     </div>
   )
 }

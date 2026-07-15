@@ -1,6 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { toast } from "@/components/ui/custom-toast-with-icons";
 import {
   Dialog,
@@ -15,17 +21,27 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   CreateProductInput,
+  ProductPricesFormValue,
+  SaveProductPricesInput,
   Product,
   UpdateProductInput,
 } from "@/features/products";
+import {
+  emptyProductPricesForm,
+  hasProductPriceChanges,
+  productPricesToForm,
+  productPricesToPayload,
+  validateProductPrices,
+} from "@/features/products";
 import { ApiRequestError } from "@/lib/api";
 import { motion } from "framer-motion";
-import { Check, Loader2, Package, Pencil, X } from "lucide-react";
+import { Check, CircleDollarSign, Loader2, Package, Pencil, X } from "lucide-react";
 import * as React from "react";
 import {
   ProductLinkedItemSelector,
   type ProductLinkedItemPreview,
 } from "./ProductLinkedItemSelector";
+import { ProductPricesManager } from "./prices/ProductPricesManager";
 
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const fadeUp = {
@@ -51,6 +67,7 @@ type ProductFormDialogProps = {
   product?: Product | null;
   onCreate?: (payload: CreateProductInput) => Promise<unknown>;
   onUpdate?: (id: number, payload: UpdateProductInput) => Promise<unknown>;
+  onSavePrices?: (id: number, payload: SaveProductPricesInput) => Promise<unknown>;
   onSaved?: () => void;
 };
 
@@ -142,6 +159,7 @@ export function ProductFormDialog({
   product,
   onCreate,
   onUpdate,
+  onSavePrices,
   onSaved,
 }: ProductFormDialogProps) {
   const [form, setForm] = React.useState<ProductFormState>(() =>
@@ -152,6 +170,12 @@ export function ProductFormDialog({
     Record<string, string[]>
   >({});
   const [selectorOpen, setSelectorOpen] = React.useState(false);
+  const [priceForm, setPriceForm] = React.useState<ProductPricesFormValue>(() =>
+    mode === "edit" && product ? productPricesToForm(product.prices) : emptyProductPricesForm()
+  );
+  const [priceSection, setPriceSection] = React.useState("");
+  const [priceDirty, setPriceDirty] = React.useState(false);
+  const [priceErrors, setPriceErrors] = React.useState<Record<string, string[]>>({});
 
   const formResetKey = React.useMemo(
     () => `${mode}-${product?.id ?? "new"}-${open ? "open" : "closed"}`,
@@ -164,6 +188,10 @@ export function ProductFormDialog({
       setForm(emptyForm());
       setFieldErrors({});
       setSelectorOpen(false);
+      setPriceForm(emptyProductPricesForm());
+      setPriceSection("");
+      setPriceDirty(false);
+      setPriceErrors({});
     }
   }
 
@@ -188,13 +216,41 @@ export function ProductFormDialog({
       return;
     }
 
+    const shouldSavePrices = priceDirty && hasProductPriceChanges(priceForm);
+    if (shouldSavePrices) {
+      const validationErrors = validateProductPrices(priceForm);
+      if (Object.keys(validationErrors).length > 0) {
+        setPriceErrors(validationErrors);
+        setPriceSection("prices");
+        return;
+      }
+    }
+
     setSubmitting(true);
     setFieldErrors({});
+    setPriceErrors({});
     try {
+      let savedProduct: Product | null = null;
       if (mode === "create" && onCreate) {
-        await onCreate(toCreatePayload(form));
+        savedProduct = (await onCreate(toCreatePayload(form))) as Product;
       } else if (mode === "edit" && product && onUpdate) {
-        await onUpdate(product.id, toUpdatePayload(form));
+        savedProduct = (await onUpdate(product.id, toUpdatePayload(form))) as Product;
+      }
+
+      const savedProductId = savedProduct?.id ?? product?.id;
+      if (shouldSavePrices && savedProductId && onSavePrices) {
+        try {
+          await onSavePrices(savedProductId, productPricesToPayload(priceForm));
+        } catch {
+          toast.warning(
+            mode === "create"
+              ? "تم إنشاء المنتج، لكن تعذر حفظ الأسعار. يمكنك تعديل الأسعار من إجراء إدارة الأسعار."
+              : "تم تحديث المنتج، لكن تعذر حفظ الأسعار. يمكنك إعادة المحاولة من إجراء إدارة الأسعار.",
+          );
+          onSaved?.();
+          handleOpenChange(false);
+          return;
+        }
       }
       onSaved?.();
       handleOpenChange(false);
@@ -418,6 +474,45 @@ export function ProductFormDialog({
                   </div>
                 </div>
               </motion.fieldset>
+
+              <motion.div variants={fadeUp}>
+                <Accordion
+                  type="single"
+                  collapsible
+                  value={priceSection}
+                  onValueChange={setPriceSection}
+                  dir="rtl"
+                >
+                  <AccordionItem
+                    value="prices"
+                    className="overflow-hidden rounded-2xl border border-b-0 border-primary/20 bg-primary/[0.025] shadow-sm"
+                  >
+                    <AccordionTrigger className="gap-3 rounded-xl bg-primary/[0.035] px-4 py-3.5 text-start! hover:bg-primary/[0.06] hover:no-underline data-[state=open]:bg-primary/[0.06]">
+                      <span className="flex w-full min-w-0 flex-1 flex-col items-stretch gap-1.5 text-start">
+                        <span className="inline-flex flex-row-reverse items-center gap-2 text-start text-base font-semibold tracking-tight text-foreground">
+                          <span className="min-w-0 text-pretty">إدارة الأسعار</span>
+                          <CircleDollarSign className="size-4 shrink-0 text-primary" aria-hidden />
+                        </span>
+                        <span className="text-pretty text-start text-[13px] font-normal leading-snug text-muted-foreground">
+                          يمكنك إضافة أسعار السيارة والجملة والمفرق أثناء إنشاء المنتج أو تعديلها لاحقاً.
+                        </span>
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 pt-0 sm:px-5">
+                      <ProductPricesManager
+                        value={priceForm}
+                        onChange={(next) => {
+                          setPriceForm(next);
+                          setPriceDirty(true);
+                        }}
+                        defaultExpanded={false}
+                        errors={priceErrors}
+                        disabled={submitting}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </motion.div>
 
               <motion.fieldset
                 variants={fadeUp}

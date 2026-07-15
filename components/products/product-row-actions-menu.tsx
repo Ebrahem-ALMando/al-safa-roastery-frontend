@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Product } from "@/features/products";
 import { cn } from "@/lib/utils";
-import { Eye, Pencil, Power, Trash2 } from "lucide-react";
+import { CircleDollarSign, Eye, Pencil, Power, Trash2 } from "lucide-react";
 import type { MouseEvent } from "react";
 
 const itemClass =
@@ -17,6 +17,7 @@ type ProductRowActionsMenuContentProps = {
   product: Product;
   onViewDetails: () => void;
   onEdit: () => void;
+  onManagePrices: () => void;
   onToggleActive: () => void;
   onDelete: () => void;
   stopPropagation?: boolean;
@@ -30,6 +31,7 @@ export function ProductRowActionsMenuContent({
   product,
   onViewDetails,
   onEdit,
+  onManagePrices,
   onToggleActive,
   onDelete,
   stopPropagation = false,
@@ -61,6 +63,19 @@ export function ProductRowActionsMenuContent({
       >
         <Pencil className="size-4 text-sky-600" />
         تعديل
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className={cn(
+          itemClass,
+          "text-violet-800 focus:bg-violet-50 focus:text-violet-900",
+        )}
+        onClick={(event) => {
+          stopIfNeeded(event, stopPropagation);
+          onManagePrices();
+        }}
+      >
+        <CircleDollarSign className="size-4 text-violet-600" />
+        إدارة الأسعار
       </DropdownMenuItem>
       <DropdownMenuItem
         className={cn(

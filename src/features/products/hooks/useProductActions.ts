@@ -13,6 +13,7 @@ import { PRODUCT_MESSAGES } from "../lib/products.messages";
 import type {
   CreateProductInput,
   Product,
+  SaveProductPricesInput,
   UpdateProductInput,
 } from "../types/product.types";
 
@@ -34,6 +35,13 @@ function isProductDetailKeyForId(key: unknown, id: number): boolean {
   if (typeof key === "string") return key === `product:${id}`;
   if (Array.isArray(key) && typeof key[0] === "string")
     return key[0] === `product:${id}`;
+  return false;
+}
+
+function isProductPricesKeyForId(key: unknown, id: number): boolean {
+  if (typeof key === "string") return key === `product-prices:${id}`;
+  if (Array.isArray(key) && typeof key[0] === "string")
+    return key[0] === `product-prices:${id}`;
   return false;
 }
 
@@ -61,6 +69,14 @@ export function useProductActions() {
   const revalidateDetail = useCallback(
     (id: number) =>
       mutateGlobal((key) => isProductDetailKeyForId(key, id), undefined, {
+        revalidate: true,
+      }),
+    [mutateGlobal],
+  );
+
+  const revalidatePrices = useCallback(
+    (id: number) =>
+      mutateGlobal((key) => isProductPricesKeyForId(key, id), undefined, {
         revalidate: true,
       }),
     [mutateGlobal],
@@ -225,10 +241,68 @@ export function useProductActions() {
     [execute, reportAction, invalidateList, invalidateSummary],
   );
 
+  const saveProductPrices = useCallback(
+    async (
+      id: number,
+      payload: SaveProductPricesInput,
+      options: { notify?: boolean } = {},
+    ) => {
+      const actionId = crypto.randomUUID();
+      const notify = options.notify ?? true;
+      try {
+        const res = await execute<ApiSuccessResponse<Product>>({
+          id: actionId,
+          endpoint: `products/${id}/prices`,
+          method: "PUT",
+          payload,
+          notify: false,
+        });
+        const { data } = extractMutationResult<Product>(res);
+        if (notify) {
+          reportAction({
+            id: actionId,
+            status: "success",
+            error: null,
+            successMessage: PRODUCT_MESSAGES.pricesUpdated,
+          });
+        }
+        await Promise.all([
+          invalidateList(),
+          invalidateSummary(),
+          revalidateDetail(id),
+          revalidatePrices(id),
+        ]);
+        return data;
+      } catch (error) {
+        if (notify) {
+          reportAction({
+            id: actionId,
+            status: "failed",
+            error: {
+              status: error instanceof ApiRequestError ? error.status : 0,
+              code: error instanceof ApiRequestError ? error.code : undefined,
+              message: PRODUCT_MESSAGES.pricesFailure,
+            },
+          });
+        }
+        throw error;
+      }
+    },
+    [
+      execute,
+      reportAction,
+      invalidateList,
+      invalidateSummary,
+      revalidateDetail,
+      revalidatePrices,
+    ],
+  );
+
   return {
     createProduct,
     updateProduct,
     toggleProductActive,
     deleteProduct,
+    saveProductPrices,
   };
 }

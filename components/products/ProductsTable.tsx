@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import {
   formatArDateTime,
-  formatProductPrice,
+  formatProductPriceSummary,
   formatQuantityKg,
   getProductColumnLabel,
   linkedItemCode,
@@ -55,6 +55,7 @@ type ProductsTableProps = {
   onPageChange: (page: number) => void;
   onViewDetails: (product: Product) => void;
   onEdit: (product: Product) => void;
+  onManagePrices: (product: Product) => void;
   onDelete: (product: Product) => void;
   onToggleActive: (product: Product) => void;
 };
@@ -86,6 +87,7 @@ export function ProductsTable({
   canNext,
   onPageChange,
   onEdit,
+  onManagePrices,
   onDelete,
   onToggleActive,
 }: ProductsTableProps) {
@@ -174,7 +176,7 @@ export function ProductsTable({
             className="text-center font-semibold tabular-nums"
             dir="ltr"
           >
-            {formatProductPrice(product.current_price ?? product.default_price)}
+            {formatProductPriceSummary(product)}
           </TableCell>
         );
       case "price_status":
@@ -255,6 +257,7 @@ export function ProductsTable({
                 stopPropagation
                 onViewDetails={() => goToProduct(product.id)}
                 onEdit={() => onEdit(product)}
+                onManagePrices={() => onManagePrices(product)}
                 onToggleActive={() => onToggleActive(product)}
                 onDelete={() => onDelete(product)}
               />
@@ -387,6 +390,10 @@ export function ProductsTable({
               }}
               onEdit={() => {
                 onEdit(contextMenu.product);
+                setContextMenu(null);
+              }}
+              onManagePrices={() => {
+                onManagePrices(contextMenu.product);
                 setContextMenu(null);
               }}
               onToggleActive={() => {
