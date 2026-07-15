@@ -15,6 +15,7 @@ import {
   TestTubes,
   Truck,
   Users,
+  Wallet,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -93,6 +94,14 @@ export const menuItems: readonly MenuItem[] = [
     label: "المشتريات",
     href: "/dashboard/purchases",
     icon: ShoppingCart,
+    section: "management",
+    matchPrefix: true,
+  },
+  {
+    id: "cashbox",
+    label: "الصندوق",
+    href: "/dashboard/cashbox",
+    icon: Wallet,
     section: "management",
     matchPrefix: true,
   },
