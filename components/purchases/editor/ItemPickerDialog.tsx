@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { formatCostPerKg, formatQuantityKg } from "@/features/items"
+import type { ItemType } from "@/features/items"
 import { useItemPickerList, type ItemPickerRow } from "@/features/purchases/hooks/useItemPickerList"
 import { ItemTypeBadge } from "@/components/items/item-type-badge"
 
@@ -28,6 +29,11 @@ type ItemPickerDialogProps = {
   onSelect: (item: ItemPickerRow) => void
   onSelectMany?: (items: ItemPickerRow[]) => void
   excludeItemIds?: number[]
+  title?: string
+  description?: string
+  itemType?: ItemType
+  activeOnly?: boolean
+  selectionMode?: "single" | "multiple"
 }
 
 function RowSkeleton() {
@@ -48,6 +54,11 @@ export function ItemPickerDialog({
   onSelect,
   onSelectMany,
   excludeItemIds = [],
+  title,
+  description,
+  itemType,
+  activeOnly = true,
+  selectionMode = "multiple",
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
   const [selectedItems, setSelectedItems] = React.useState<Map<string, ItemPickerRow>>(() => new Map())
@@ -58,7 +69,8 @@ export function ItemPickerDialog({
   const { rows, isLoading, error, isSearchPending } = useItemPickerList({
     open,
     search: query,
-    activeOnly: true,
+    activeOnly,
+    itemType,
     clientSearch: true,
   })
   const filteredRows = React.useMemo(
@@ -96,6 +108,10 @@ export function ItemPickerDialog({
 
   const toggleSelection = (item: ItemPickerRow) => {
     setSelectedItems((prev) => {
+      if (selectionMode === "single") {
+        return prev.has(item.id) ? new Map() : new Map([[item.id, item]])
+      }
+
       const next = new Map(prev)
       if (next.has(item.id)) {
         next.delete(item.id)
@@ -109,6 +125,12 @@ export function ItemPickerDialog({
   const handleConfirmSelection = () => {
     const items = Array.from(selectedItems.values())
     if (items.length === 0) return
+    if (selectionMode === "single") {
+      onSelect(items[0])
+      handleOpenChange(false)
+      return
+    }
+
     if (onSelectMany) {
       onSelectMany(items)
     } else {
@@ -143,7 +165,7 @@ export function ItemPickerDialog({
       return
     }
 
-    if (event.altKey && event.key.toLowerCase() === "a") {
+    if (selectionMode === "multiple" && event.altKey && event.key.toLowerCase() === "a") {
       event.preventDefault()
       selectVisibleRows()
       return
@@ -204,7 +226,7 @@ export function ItemPickerDialog({
               </div>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-start justify-between gap-3">
-                  <DialogTitle className="text-xl font-bold">اختيار صنف</DialogTitle>
+                  <DialogTitle className="text-xl font-bold">{title ?? "اختيار صنف"}</DialogTitle>
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                     {selectedCount > 0 ? (
                       <Badge className="gap-1 rounded-lg text-[11px]">
@@ -219,7 +241,7 @@ export function ItemPickerDialog({
                   </div>
                 </div>
                 <DialogDescription className="text-sm">
-                  ابحث بالاسم أو الكود ثم اختر صنفاً نشطاً.
+                  {description ?? "ابحث بالاسم أو الكود ثم اختر صنفاً نشطاً."}
                 </DialogDescription>
               </div>
             </div>
@@ -370,7 +392,11 @@ export function ItemPickerDialog({
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
               <p className="truncate text-xs text-muted-foreground">
-                {selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
+                {selectedCount > 0
+                  ? `تم تحديد ${selectedCount} صنف`
+                  : selectionMode === "single"
+                    ? "اختر صنفاً واحداً لربطه بالمنتج."
+                    : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
               </p>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -396,15 +422,17 @@ export function ItemPickerDialog({
                       <Kbd>Enter</Kbd>
                       تحديد النتيجة الحالية.
                     </p>
-                    <p className="flex items-center gap-2">
-                      <Kbd>Alt</Kbd>
-                      <Kbd>A</Kbd>
-                      تحديد النتائج الظاهرة.
-                    </p>
+                    {selectionMode === "multiple" ? (
+                      <p className="flex items-center gap-2">
+                        <Kbd>Alt</Kbd>
+                        <Kbd>A</Kbd>
+                        تحديد النتائج الظاهرة.
+                      </p>
+                    ) : null}
                     <p className="flex items-center gap-2">
                       <Kbd>Ctrl</Kbd>
                       <Kbd>Enter</Kbd>
-                      إضافة المحدد دفعة واحدة.
+                      {selectionMode === "single" ? "اختيار الصنف المحدد." : "إضافة المحدد دفعة واحدة."}
                     </p>
                   </div>
                 </TooltipContent>
@@ -417,7 +445,7 @@ export function ItemPickerDialog({
               onClick={handleConfirmSelection}
             >
               <Check className="size-4" />
-              إضافة المحدد
+              {selectionMode === "single" ? "اختيار الصنف" : "إضافة المحدد"}
             </Button>
           </div>
         </div>

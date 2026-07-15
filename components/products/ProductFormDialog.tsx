@@ -144,7 +144,9 @@ export function ProductFormDialog({
   onUpdate,
   onSaved,
 }: ProductFormDialogProps) {
-  const [form, setForm] = React.useState<ProductFormState>(emptyForm);
+  const [form, setForm] = React.useState<ProductFormState>(() =>
+    mode === "edit" && product ? toForm(product) : emptyForm()
+  );
   const [submitting, setSubmitting] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<
     Record<string, string[]>
@@ -162,15 +164,6 @@ export function ProductFormDialog({
       setForm(emptyForm());
       setFieldErrors({});
       setSelectorOpen(false);
-      return;
-    }
-
-    setFieldErrors({});
-    setSelectorOpen(false);
-    if (mode === "edit" && product) {
-      setForm(toForm(product));
-    } else {
-      setForm(emptyForm());
     }
   }
 

@@ -282,6 +282,7 @@ export function ProductsView() {
       </div>
 
       <ProductFormDialog
+        key={`${dialogMode}-${editingProduct?.id ?? "new"}-${dialogOpen ? "open" : "closed"}`}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         mode={dialogMode}

@@ -118,7 +118,7 @@ function MoneyRow({
 }: {
   icon: LucideIcon
   label: string
-  value: string
+  value: ReactNode
   muted?: boolean
   strong?: boolean
 }) {
