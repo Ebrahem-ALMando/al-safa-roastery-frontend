@@ -4,6 +4,7 @@ export type InventoryItemType = "raw" | "ready"
 export type InventoryStockStatus = "available" | "low" | "out_of_stock"
 export type InventoryStockStatusFilter = InventoryStockStatus | "reorder_required"
 export type InventoryDirection = "in" | "out"
+export type InventoryDirectionFilter = InventoryDirection | "adjustment"
 
 export type InventoryUserRef = { id: number; name: string; username?: string }
 export type InventoryLastActivity = { type: string; label: string; number: string | null; date: string }
@@ -67,6 +68,13 @@ export type InventorySummaryResponse = {
   movements_count_in_period: number
 }
 
+export type InventoryMovementSummaryResponse = {
+  movements_count: number
+  incoming_quantity_kg: string | number
+  outgoing_quantity_kg: string | number
+  adjustments_count: number
+}
+
 export type InventoryPaginationMeta = {
   total: number; current_page: number; per_page: number; last_page: number; from?: number; to?: number
 }
@@ -80,7 +88,7 @@ export type InventoryItemsFilters = {
 
 export type InventoryMovementFilters = {
   search?: string; item_id?: number; item_type?: InventoryItemType; movement_type?: string
-  direction?: InventoryDirection; source_type?: string; page?: number; per_page?: number
+  direction?: InventoryDirectionFilter; source_type?: string; page?: number; per_page?: number
   sort_by?: string; sort_direction?: "asc" | "desc"; date_from?: string; date_to?: string
 }
 

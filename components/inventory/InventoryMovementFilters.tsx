@@ -3,9 +3,20 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { InventoryDirection } from "@/src/features/inventory"
+import {
+  INVENTORY_DIRECTION_FILTER_LABELS_AR,
+  INVENTORY_MOVEMENT_TYPE_OPTIONS,
+  INVENTORY_SOURCE_TYPE_OPTIONS,
+  type InventoryDirectionFilter,
+} from "@/src/features/inventory"
 
-export type MovementFilterValue = { search: string; movementType: string; direction: InventoryDirection | "all"; sourceType: string }
+export type MovementFilterValue = { search: string; movementType: string; direction: InventoryDirectionFilter | "all"; sourceType: string }
+
 export function InventoryMovementFilters({ value, onChange }: { value: MovementFilterValue; onChange: (value: MovementFilterValue) => void }) {
-  return <div className="grid gap-3 rounded-xl border bg-muted/10 p-3 md:grid-cols-4"><div className="space-y-1.5"><Label>بحث الحركة</Label><Input value={value.search} onChange={(e) => onChange({ ...value, search: e.target.value })} placeholder="المرجع أو الملاحظات..." /></div><div className="space-y-1.5"><Label>نوع الحركة</Label><Select value={value.movementType} onValueChange={(movementType) => onChange({ ...value, movementType })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="purchase">فاتورة شراء</SelectItem><SelectItem value="production_input">سحب إنتاج</SelectItem><SelectItem value="production_output">ناتج إنتاج</SelectItem><SelectItem value="sale">بيع</SelectItem><SelectItem value="withdrawal">سحب يدوي</SelectItem><SelectItem value="damage">سحب تالف</SelectItem><SelectItem value="manual_adjustment">تسوية مخزون</SelectItem><SelectItem value="customer_return">مرتجع زبون</SelectItem><SelectItem value="supplier_return">مرتجع مورد</SelectItem></SelectContent></Select></div><div className="space-y-1.5"><Label>الاتجاه</Label><Select value={value.direction} onValueChange={(direction) => onChange({ ...value, direction: direction as InventoryDirection | "all" })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="in">وارد</SelectItem><SelectItem value="out">صادر</SelectItem></SelectContent></Select></div><div className="space-y-1.5"><Label>المصدر</Label><Select value={value.sourceType} onValueChange={(sourceType) => onChange({ ...value, sourceType })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="purchase_invoice_line">المشتريات</SelectItem><SelectItem value="stock_withdrawal">السحب اليدوي</SelectItem><SelectItem value="inventory_adjustment">التسويات</SelectItem><SelectItem value="production_batch_input">مدخلات الإنتاج</SelectItem><SelectItem value="production_batch_output">مخرجات الإنتاج</SelectItem><SelectItem value="sales_invoice_line">المبيعات</SelectItem></SelectContent></Select></div></div>
+  return <div className="grid gap-3 rounded-xl border bg-muted/10 p-3 md:grid-cols-4">
+    <div className="space-y-1.5"><Label>بحث الحركة</Label><Input value={value.search} onChange={(event) => onChange({ ...value, search: event.target.value })} placeholder="المرجع أو الملاحظات..." /></div>
+    <div className="space-y-1.5"><Label>نوع الحركة</Label><Select value={value.movementType} onValueChange={(movementType) => onChange({ ...value, movementType })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem>{INVENTORY_MOVEMENT_TYPE_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
+    <div className="space-y-1.5"><Label>الاتجاه</Label><Select value={value.direction} onValueChange={(direction) => onChange({ ...value, direction: direction as InventoryDirectionFilter | "all" })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem>{Object.entries(INVENTORY_DIRECTION_FILTER_LABELS_AR).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>
+    <div className="space-y-1.5"><Label>المصدر</Label><Select value={value.sourceType} onValueChange={(sourceType) => onChange({ ...value, sourceType })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem>{INVENTORY_SOURCE_TYPE_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
+  </div>
 }
