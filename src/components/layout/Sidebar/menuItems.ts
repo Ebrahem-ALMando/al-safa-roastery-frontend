@@ -3,6 +3,7 @@ import {
   ClipboardList,
   ClipboardPenLine,
   FolderTree,
+  History,
   LayoutDashboard,
   Package,
   PackageCheck,
@@ -26,6 +27,7 @@ export interface MenuItem {
   icon: LucideIcon
   section?: "main" | "management"
   matchPrefix?: boolean
+  excludedPrefixes?: readonly string[]
   hiddenForRoles?: UserRole[]
 }
 
@@ -74,6 +76,15 @@ export const menuItems: readonly MenuItem[] = [
     label: "المستودع",
     href: "/dashboard/inventory",
     icon: Warehouse,
+    section: "management",
+    matchPrefix: true,
+    excludedPrefixes: ["/dashboard/inventory/movements"],
+  },
+  {
+    id: "inventory-movements",
+    label: "حركات المستودع",
+    href: "/dashboard/inventory/movements",
+    icon: History,
     section: "management",
     matchPrefix: true,
   },

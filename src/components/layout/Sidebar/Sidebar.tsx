@@ -20,7 +20,10 @@ interface SidebarProps {
   onToggleCollapse: () => void
 }
 
-function isItemActive(pathname: string, href: string, matchPrefix?: boolean) {
+function isItemActive(pathname: string, href: string, matchPrefix?: boolean, excludedPrefixes: readonly string[] = []) {
+  if (excludedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return false
+  }
   if (matchPrefix) return pathname === href || pathname.startsWith(`${href}/`)
   return pathname === href
 }
@@ -111,7 +114,7 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
                 href={item.href}
                 label={item.label}
                 icon={item.icon}
-                isActive={isItemActive(pathname, item.href, item.matchPrefix)}
+                isActive={isItemActive(pathname, item.href, item.matchPrefix, item.excludedPrefixes)}
                 collapsed={collapsed}
                 onNavigate={onClose}
               />
@@ -129,7 +132,7 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
                   href={item.href}
                   label={item.label}
                   icon={item.icon}
-                  isActive={isItemActive(pathname, item.href, item.matchPrefix)}
+                  isActive={isItemActive(pathname, item.href, item.matchPrefix, item.excludedPrefixes)}
                   collapsed={collapsed}
                   onNavigate={onClose}
                 />
