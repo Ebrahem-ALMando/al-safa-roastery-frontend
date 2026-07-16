@@ -46,11 +46,11 @@ export function getBalanceStatusLabel(balance: string | number | null | undefine
 export function getBalanceBadgeClass(key: BalanceStatusLabel): string {
   switch (key) {
     case "receivable":
-      return "border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-300"
-    case "credit":
       return "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-    case "settled":
+    case "credit":
       return "border-amber-500/50 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+    case "settled":
+      return "border-slate-300 bg-slate-100/70 text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
   }
 }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownLeft, ArrowUpRight, Minus } from "lucide-react"
+import { ArrowDownToLine, ArrowUpFromLine, CircleCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   formatBalanceAmount,
@@ -17,7 +17,7 @@ export function CustomerBalanceBadge({
 }) {
   const info = getBalanceStatusLabel(balance)
   const Icon =
-    info.key === "receivable" ? ArrowDownLeft : info.key === "credit" ? ArrowUpRight : Minus
+    info.key === "receivable" ? ArrowDownToLine : info.key === "credit" ? ArrowUpFromLine : CircleCheck
 
   return (
     <div className="flex flex-col items-center gap-1">

@@ -23,7 +23,7 @@ export function StatementEntitySelector({ type, value, onChange }: { type: State
   }
 
   return <>
-    <Button type="button" variant="outline" onClick={() => setOpen(true)} className={cn("h-11 w-full justify-between gap-3 rounded-xl border-dashed px-3", value && "border-solid border-primary/30 bg-primary/5")}>
+    <Button type="button" variant="outline" onClick={() => setOpen(true)} className={cn("h-11 w-full justify-between gap-3 rounded-xl border-dashed px-3", value && "border-solid border-primary/30 bg-primary/5")} dir="rtl">
       <span className="flex min-w-0 items-center gap-2"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><EntityIcon className="size-4" /></span><span className="min-w-0 text-right"><span className="block truncate font-semibold">{value?.name || `اختر ${entityLabel}`}</span>{value?.code ? <span className="block font-mono text-[11px] text-muted-foreground" dir="ltr">{value.code}</span> : null}</span></span>
       {value ? <span role="button" tabIndex={0} className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted" onClick={(event) => { event.stopPropagation(); onChange(null) }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); onChange(null) } }} aria-label={`مسح ${entityLabel}`}><X className="size-4" /></span> : <Search className="size-4 text-muted-foreground" />}
     </Button>

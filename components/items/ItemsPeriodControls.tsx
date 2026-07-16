@@ -26,15 +26,16 @@ type Props = {
   preset: ItemsPeriodPreset
   onPresetChange: (preset: ItemsPeriodPreset) => void
   className?: string
+  dir?: "ltr" | "rtl"
 }
 
-export function ItemsPeriodControls({ preset, onPresetChange, className }: Props) {
+export function ItemsPeriodControls({ preset, onPresetChange, className, dir }: Props) {
   const allActive = preset === "all"
   const dropdownActive = !allActive
   const triggerLabel = allActive ? "الفترة" : ITEMS_PERIOD_LABELS_AR[preset]
 
   return (
-    <div className={cn("flex shrink-0 items-center gap-1.5 sm:gap-2", className)}>
+    <div className={cn("flex shrink-0 items-center gap-1.5 sm:gap-2", className)} dir={dir}>
       <Button
         type="button"
         variant="outline"
@@ -45,7 +46,7 @@ export function ItemsPeriodControls({ preset, onPresetChange, className }: Props
         <Layers className="h-3.5 w-3.5 shrink-0" aria-hidden />
         <span className="truncate">{ITEMS_PERIOD_LABELS_AR.all}</span>
       </Button>
-      <DropdownMenu>
+      <DropdownMenu dir={dir}>
         <DropdownMenuTrigger asChild>
           <Button
             type="button"

@@ -33,12 +33,13 @@ import {
   formatUsdAmount,
   formatCustomerLastActivity,
   getCustomerColumnLabel,
-  getCustomerTypeLabel,
+  getCustomerTypePresentation,
   customerInitials,
   type Customer,
   type CustomerTableColumnId,
   type CustomersListMeta,
 } from "@/features/customers"
+import { cn } from "@/lib/utils"
 import { CustomerBalanceBadge } from "./customer-balance-badge"
 import { CustomerContactBadges } from "./customer-contact-badges"
 import { CustomerRowActionsMenuContent } from "./customer-row-actions-menu"
@@ -77,6 +78,24 @@ function TableRowSkeleton({ colCount }: { colCount: number }) {
         </TableCell>
       ))}
     </TableRow>
+  )
+}
+
+function CustomerTypeBadge({ customer }: { customer: Customer }) {
+  const presentation = getCustomerTypePresentation(customer.customer_type)
+  const Icon = presentation.icon
+
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "inline-flex min-w-24 justify-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold shadow-sm",
+        presentation.selectedClass
+      )}
+    >
+      <Icon className={cn("size-3.5", presentation.iconSelectedClass)} aria-hidden />
+      {presentation.label}
+    </Badge>
   )
 }
 
@@ -172,8 +191,8 @@ export function CustomersTable({
         )
       case "customer_type":
         return (
-          <TableCell key={key} className="text-center text-sm">
-            {getCustomerTypeLabel(customer.customer_type)}
+          <TableCell key={key} className="text-center">
+            <CustomerTypeBadge customer={customer} />
           </TableCell>
         )
       case "code":

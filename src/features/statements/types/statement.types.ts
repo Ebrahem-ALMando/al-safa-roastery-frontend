@@ -1,3 +1,5 @@
+import type { CustomerType } from "../../customers/types/customer.types"
+
 export type StatementEntityType = "customer" | "supplier"
 
 export type StatementUserRef = {
@@ -11,6 +13,7 @@ export type StatementParty = {
   code: string | null
   name: string
   phone: string | null
+  customer_type?: CustomerType | null
   current_balance: string | number
 }
 

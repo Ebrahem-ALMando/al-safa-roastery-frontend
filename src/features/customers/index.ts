@@ -48,3 +48,8 @@ export {
   customerDisplayName,
   customerInitials,
 } from "./lib/customers.helpers"
+export {
+  CUSTOMER_TYPE_OPTIONS,
+  getCustomerTypePresentation,
+} from "./lib/customer-type-theme"
+export type { CustomerTypePresentation } from "./lib/customer-type-theme"

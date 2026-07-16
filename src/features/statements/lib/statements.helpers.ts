@@ -58,9 +58,9 @@ export function statementReferenceHref(entry: StatementEntry): string | null {
 
 export function statementBalanceMeaning(type: StatementEntityType, value: unknown): string {
   const amount = statementNumber(value)
-  if (amount === 0) return "الرصيد مسوّى"
+  if (amount === 0) return "متوازن"
   if (type === "customer") return amount > 0 ? "عليه لنا" : "له عندنا"
-  return amount > 0 ? "علينا للمورد" : "رصيد دائن لنا"
+  return amount > 0 ? "علينا للمورد" : "رصيد دائن لنا لدى المورد"
 }
 
 export function statementPrintHref(type: StatementEntityType, entityId: number, query: StatementQuery): string {

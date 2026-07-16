@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, CreditCard, ShoppingCart, Users } from "lucide-react"
+import { CircleAlert, HandCoins, ShoppingCart, Users } from "lucide-react"
 import { SummaryCards, type SummaryCard } from "@/components/ui/summary-cards"
 import { getThemeById, summaryCardsThemes } from "@/components/ui/summary-cards-themes"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -26,13 +26,11 @@ function formatKpiMoney(value: number | string | null | undefined): string {
 
 export function CustomersSummary({ dateRange }: CustomersSummaryProps) {
   const { summary, isLoading, error } = useCustomerSummary(dateRange)
-  const [selectedThemeId, setSelectedThemeId] = useState("default")
+  const [selectedThemeId, setSelectedThemeId] = useState(() => {
+    if (typeof window === "undefined") return "default"
+    return localStorage.getItem("customers-summary-theme") ?? "default"
+  })
   const [themeOpen, setThemeOpen] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem("customers-summary-theme")
-    if (saved) setSelectedThemeId(saved)
-  }, [])
 
   useEffect(() => {
     localStorage.setItem("customers-summary-theme", selectedThemeId)
@@ -62,18 +60,18 @@ export function CustomersSummary({ dateRange }: CustomersSummaryProps) {
       showProgress: false,
     },
     {
-      title: "إجمالي المستحقات من الزبائن",
+      title: "إجمالي ما لنا على الزبائن",
       value: receivablesTotal,
-      icon: CreditCard,
-      colorKey: "warning",
+      icon: HandCoins,
+      colorKey: "success",
       showPercentage: false,
       showProgress: false,
     },
     {
-      title: "الرصيد الدائن للزبائن",
+      title: "إجمالي الأرصدة الدائنة للزبائن",
       value: creditTotal,
-      icon: Check,
-      colorKey: "success",
+      icon: CircleAlert,
+      colorKey: "warning",
       showPercentage: false,
       showProgress: false,
     },

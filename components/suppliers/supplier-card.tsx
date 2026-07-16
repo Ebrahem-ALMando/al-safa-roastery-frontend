@@ -18,11 +18,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { SupplierBalanceBadge } from "./supplier-balance-badge"
 import {
   formatSupplierLastActivity,
   formatBalanceAmount,
-  formatUsdAmount,
-  getBalanceBadgeClass,
   getBalanceStatusLabel,
   supplierInitials,
   type Supplier,
@@ -118,12 +117,7 @@ export function SupplierCard({
                     {isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     {isActive ? "فعال" : "موقوف"}
                   </Badge>
-                  <Badge
-                    variant="outline"
-                    className={`px-2 py-0.5 text-[11px] font-medium ${getBalanceBadgeClass(balanceInfo.key)}`}
-                  >
-                    {balanceInfo.label}
-                  </Badge>
+                  <SupplierBalanceBadge balance={supplier.current_balance} showAmount={false} />
                 </div>
               </div>
             </div>

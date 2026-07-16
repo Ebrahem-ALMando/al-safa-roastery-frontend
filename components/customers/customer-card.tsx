@@ -18,10 +18,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { CustomerBalanceBadge } from "./customer-balance-badge"
 import {
   formatCustomerLastActivity,
   formatBalanceAmount,
-  getBalanceBadgeClass,
   getBalanceStatusLabel,
   getCustomerTypeLabel,
   customerInitials,
@@ -121,12 +121,7 @@ export function CustomerCard({
                   <Badge variant="outline" className="px-2 py-0.5 text-[11px] font-medium">
                     {getCustomerTypeLabel(customer.customer_type)}
                   </Badge>
-                  <Badge
-                    variant="outline"
-                    className={`px-2 py-0.5 text-[11px] font-medium ${getBalanceBadgeClass(balanceInfo.key)}`}
-                  >
-                    {balanceInfo.label}
-                  </Badge>
+                  <CustomerBalanceBadge balance={customer.current_balance} showAmount={false} />
                 </div>
               </div>
             </div>

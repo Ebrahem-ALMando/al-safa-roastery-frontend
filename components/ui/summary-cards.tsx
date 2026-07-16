@@ -28,6 +28,8 @@ export interface SummaryCard {
   value: number | string
   icon: LucideIcon
   description?: string
+  valueDescription?: string
+  valueDir?: "ltr" | "rtl"
   badge?: string
   percentage?: number | string | null
   showPercentage?: boolean
@@ -115,9 +117,9 @@ export function SummaryCards({
               <Sparkles className="h-4 w-4 text-[#fbbf24] animate-pulse" />
             </div>
 
-            <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
-              <div className="flex-1">
-                <CardTitle className={cn("text-sm font-medium truncate", colors.text)}>
+            <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2 relative z-10">
+              <div className="min-w-0 flex-1">
+                <CardTitle className={cn("max-w-full whitespace-normal break-words text-sm font-medium leading-6", colors.text)}>
                   {card.title}
                 </CardTitle>
                 {card.description ? (
@@ -137,7 +139,7 @@ export function SummaryCards({
                   "group-hover:shadow-lg group-hover:shadow-[#fbbf24]/20",
                   `bg-linear-to-br ${colors.iconBg}`,
                   colors.icon,
-                  "shrink-0 shadow-sm border border-[#fbbf24]/20"
+                  "shrink-0 self-start shadow-sm border border-[#fbbf24]/20"
                 )}
               >
                 <Icon className="h-5 w-5 drop-shadow-[0_0_2px_rgba(251,191,36,0.3)]" />
@@ -146,8 +148,18 @@ export function SummaryCards({
 
             <CardContent className="relative z-10">
               <div className="flex items-end justify-between">
-                <div className={cn("text-3xl font-bold transition-all group-hover:scale-105", colors.text)}>
-                  {typeof card.value === "number" ? card.value.toLocaleString("ar-EG") : card.value}
+                <div>
+                  <div
+                    className={cn("text-3xl font-bold transition-all group-hover:scale-105", colors.text)}
+                    dir={card.valueDir}
+                  >
+                    {typeof card.value === "number" ? card.value.toLocaleString("ar-EG") : card.value}
+                  </div>
+                  {card.valueDescription ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {card.valueDescription}
+                    </p>
+                  ) : null}
                 </div>
 
                 {showPercentage ? (
@@ -199,4 +211,3 @@ export function SummaryCards({
     </div>
   )
 }
-
