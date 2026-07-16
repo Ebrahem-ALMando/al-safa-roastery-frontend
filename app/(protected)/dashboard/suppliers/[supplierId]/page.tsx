@@ -309,9 +309,11 @@ export default function SupplierDetailPage() {
       <Separator />
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" className="gap-2 rounded-xl text-muted-foreground" disabled>
-          <FileText className="size-4" />
-          كشف الحساب (قريباً)
+        <Button variant="ghost" className="gap-2 rounded-xl text-muted-foreground" asChild>
+          <Link href={`/dashboard/statements?type=supplier&id=${supplier.id}`}>
+            <FileText className="size-4" />
+            كشف الحساب
+          </Link>
         </Button>
       </div>
     </div>

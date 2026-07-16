@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BookOpenText,
   ClipboardList,
   ClipboardPenLine,
   FolderTree,
@@ -53,6 +54,14 @@ export const menuItems: readonly MenuItem[] = [
     label: "الزبائن",
     href: "/dashboard/customers",
     icon: Users,
+    section: "management",
+    matchPrefix: true,
+  },
+  {
+    id: "statements",
+    label: "كشوف الحساب",
+    href: "/dashboard/statements",
+    icon: BookOpenText,
     section: "management",
     matchPrefix: true,
   },
