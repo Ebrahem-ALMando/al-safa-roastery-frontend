@@ -2,8 +2,11 @@
 
 import type { ProductPricesFormValue, ProductPriceType } from "@/features/products";
 import { PRODUCT_PRICE_TYPES } from "@/features/products";
-import { Boxes, CarFront, ShoppingBag, UserRound } from "lucide-react";
 import { ProductPriceFieldset } from "./ProductPriceFieldset";
+import {
+  PRODUCT_PRICE_DISPLAY_ORDER,
+  PRODUCT_PRICE_UI_CONFIG,
+} from "./product-price-theme";
 
 type ProductPricesManagerProps = {
   value: ProductPricesFormValue;
@@ -12,15 +15,6 @@ type ProductPricesManagerProps = {
   errors?: Record<string, string[]>;
   disabled?: boolean;
 };
-
-const configs = {
-  car: { title: "سعر السيارة", helper: "سعر البيع المخصص لزبائن السيارات.", icon: CarFront, accent: "sky" },
-  wholesale: { title: "سعر الجملة", helper: "سعر البيع المخصص لزبائن الجملة.", icon: Boxes, accent: "amber" },
-  retail: { title: "سعر المفرق", helper: "سعر البيع المفرق حسب سياسة المحمصة.", icon: ShoppingBag, accent: "emerald" },
-  consumer: { title: "سعر المستهلك", helper: "سعر الزبون العادي الذي يشتري لنفسه.", icon: UserRound, accent: "violet" },
-} as const;
-
-const displayOrder: ProductPriceType[] = ["consumer", "retail", "wholesale", "car"];
 
 export function ProductPricesManager({
   value,
@@ -31,8 +25,8 @@ export function ProductPricesManager({
 }: ProductPricesManagerProps) {
   return (
     <div className="space-y-3">
-      {displayOrder.map((priceType) => {
-        const config = configs[priceType];
+      {PRODUCT_PRICE_DISPLAY_ORDER.map((priceType) => {
+        const config = PRODUCT_PRICE_UI_CONFIG[priceType];
         const payloadIndex = PRODUCT_PRICE_TYPES.indexOf(priceType);
         return (
           <ProductPriceFieldset

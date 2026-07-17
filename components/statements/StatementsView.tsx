@@ -35,6 +35,7 @@ import { StatementEntityTypeToggle } from "./StatementEntityTypeToggle"
 import { StatementInvoiceFilters, StatementPaymentFilters, StatementReturnFilters } from "./StatementTabFilters"
 import { StatementInvoicesTable } from "./StatementInvoicesTable"
 import { StatementLedgerTable } from "./StatementLedgerTable"
+import { StatementMovementFilters } from "./StatementMovementFilters"
 import { StatementPartyBadge } from "./StatementPartyBadge"
 import { StatementPaymentsTable } from "./StatementPaymentsTable"
 import { StatementReturnsTable } from "./StatementReturnsTable"
@@ -78,9 +79,9 @@ export function StatementsView({ initialEntityType, initialEntityId }: { initial
         </TabsList>
 
         <TabsContent value="movements" className="space-y-4">
-          {page.error && !page.isLoading ? <TabError message="تعذر تحميل كشف الحساب. حاول مجدداً." onRetry={() => void page.mutate()} /> : <>
-            <StatementMovementSummary entityType={page.entityType} summary={page.statement?.summary} isLoading={page.isLoading} />
-            <div className="flex justify-end"><StatementColumnCustomizer definitions={STATEMENT_MOVEMENT_COLUMNS} visibleColumns={movementColumns.visibleColumns} onChange={movementColumns.setVisibleColumns} /></div>
+          <div className="flex flex-col gap-2 xl:flex-row xl:items-start"><div className="min-w-0 flex-1"><StatementMovementFilters entityType={page.entityType} search={page.movementSearch} entryType={page.movementEntryType} direction={page.movementDirection} amountMin={page.movementAmountMin} amountMax={page.movementAmountMax} amountRangeInvalid={page.movementAmountRangeInvalid} disabled={page.isLoading} onSearch={page.setMovementSearch} onEntryType={page.setMovementEntryType} onDirection={page.setMovementDirection} onAmountMin={page.setMovementAmountMin} onAmountMax={page.setMovementAmountMax} onClear={page.clearMovementFilters} /></div><StatementColumnCustomizer definitions={STATEMENT_MOVEMENT_COLUMNS} visibleColumns={movementColumns.visibleColumns} onChange={movementColumns.setVisibleColumns} /></div>
+          {page.error && !page.isLoading ? <TabError message="تعذر تحميل حركات الكشف. حاول مجدداً." onRetry={() => void page.mutate()} /> : <>
+            <StatementMovementSummary entityType={page.entityType} summary={page.statement?.movement_summary} isLoading={page.isLoading} />
             <div className="overflow-hidden rounded-xl border shadow-sm"><StatementLedgerTable entityType={page.entityType} entries={page.statement?.entries ?? []} visibleColumns={movementColumns.visibleColumns} isLoading={page.isLoading} hasSelection /></div>
           </>}
         </TabsContent>

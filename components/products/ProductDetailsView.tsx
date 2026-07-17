@@ -18,9 +18,10 @@ import {
   Power,
   RefreshCw,
   Settings,
-  Tag,
+  Trash2,
 } from "lucide-react"
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -30,29 +31,26 @@ import {
   formatQuantityKg,
   linkedItemCode,
   linkedItemName,
-  PRODUCT_PRICE_TYPES,
-  PRODUCT_PRICE_TYPE_LABELS_AR,
   useProductActions,
   useProductDetails,
   type Product,
   type ProductPrice,
   type ProductPriceType,
 } from "@/features/products"
+import { cn } from "@/lib/utils"
 import { ItemTypeBadge } from "@/components/items/item-type-badge"
 import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge"
 import { ProductStatusBadge } from "./ProductStatusBadge"
 import { ProductStockStatusBadge } from "./ProductStockStatusBadge"
 import { ProductClearPricesDialog } from "./ProductClearPricesDialog"
 import { ProductFormDialog } from "./ProductFormDialog"
+import { ProductToggleActiveDialog } from "./ProductToggleActiveDialog"
 import { ProductPricesDialog } from "./prices/ProductPricesDialog"
 import { ProductPricesReadOnlyDialog } from "./prices/ProductPricesReadOnlyDialog"
-
-const priceIcons = {
-  consumer: Tag,
-  retail: CircleDollarSign,
-  wholesale: Box,
-  car: Package,
-} as const
+import {
+  getProductPriceTheme,
+  PRODUCT_PRICE_DISPLAY_ORDER,
+} from "./prices/product-price-theme"
 
 export function ProductDetailsView({ productId }: { productId: number }) {
   const { product, isLoading, error, mutate } = useProductDetails(productId)
@@ -61,6 +59,7 @@ export function ProductDetailsView({ productId }: { productId: number }) {
   const [managePricesOpen, setManagePricesOpen] = useState(false)
   const [viewPricesOpen, setViewPricesOpen] = useState(false)
   const [clearPricesOpen, setClearPricesOpen] = useState(false)
+  const [toggleActiveOpen, setToggleActiveOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -119,10 +118,14 @@ export function ProductDetailsView({ productId }: { productId: number }) {
               <BadgeInfo className="size-4" />
               عرض الأسعار
             </Button>
+            <Button variant="outline" className="gap-2 rounded-xl border-amber-500/40 text-amber-700" onClick={() => setClearPricesOpen(true)}>
+              <Trash2 className="size-4" />
+              حذف التسعيرات
+            </Button>
             <Button
               variant="outline"
               className="gap-2 rounded-xl"
-              onClick={() => void toggleProductActive(product).then(() => mutate())}
+              onClick={() => setToggleActiveOpen(true)}
             >
               <Power className="size-4" />
               {product.is_active ? "إيقاف" : "تفعيل"}
@@ -182,7 +185,7 @@ export function ProductDetailsView({ productId }: { productId: number }) {
           </Button>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {PRODUCT_PRICE_TYPES.map((priceType) => (
+          {PRODUCT_PRICE_DISPLAY_ORDER.map((priceType) => (
             <PriceCard
               key={priceType}
               priceType={priceType}
@@ -226,6 +229,15 @@ export function ProductDetailsView({ productId }: { productId: number }) {
         product={product}
         onConfirm={async (id) => {
           await clearProductPrices(id)
+          await mutate()
+        }}
+      />
+      <ProductToggleActiveDialog
+        open={toggleActiveOpen}
+        onOpenChange={setToggleActiveOpen}
+        product={product}
+        onConfirm={async (target) => {
+          await toggleProductActive(target)
           await mutate()
         }}
       />
@@ -284,20 +296,40 @@ function PriceCard({
   priceType: ProductPriceType
   price?: ProductPrice
 }) {
-  const Icon = priceIcons[priceType]
+  const theme = getProductPriceTheme(priceType)
+  const Icon = theme.icon
+  const isActive = Boolean(price?.is_active)
+
   return (
-    <div className="rounded-xl border border-border/60 bg-muted/15 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold">{PRODUCT_PRICE_TYPE_LABELS_AR[priceType]}</span>
-        <Icon className="size-4 text-primary" />
+    <div className={cn("rounded-2xl border p-4 shadow-sm", theme.styles.card)}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold">{theme.title}</p>
+          <p className="mt-2 text-2xl font-bold tabular-nums" dir="ltr">
+            {price ? formatProductPrice(price.price) : "غير محدد"}
+          </p>
+        </div>
+        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl ring-1", theme.styles.iconBox)}>
+          <Icon className="size-5" />
+        </span>
       </div>
-      <p className="mt-2 text-lg font-bold tabular-nums" dir="ltr">
-        {price ? formatProductPrice(price.price) : "غير محدد"}
-      </p>
-      <p className={price?.is_active ? "mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-300" : "mt-1 text-xs font-medium text-muted-foreground"}>
-        {price?.is_active ? "فعال" : "موقوف"}
-      </p>
-      {price?.notes ? <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{price.notes}</p> : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Badge
+          variant="outline"
+          className={
+            isActive
+              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700"
+              : "border-slate-300 bg-slate-100 text-slate-700"
+          }
+        >
+          {isActive ? "فعال" : "موقوف"}
+        </Badge>
+      </div>
+      {price?.notes ? (
+        <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+          {price.notes}
+        </p>
+      ) : null}
     </div>
   )
 }

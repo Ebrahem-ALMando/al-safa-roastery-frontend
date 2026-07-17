@@ -1,4 +1,4 @@
-import type { StatementColumnDefinition, StatementInvoiceColumnId, StatementMovementColumnId, StatementPaymentColumnId, StatementReturnColumnId } from "../types/statement.types"
+import type { StatementColumnDefinition, StatementEntityType, StatementInvoiceColumnId, StatementMovementColumnId, StatementMovementDirection, StatementMovementEntryType, StatementPaymentColumnId, StatementReturnColumnId } from "../types/statement.types"
 
 export const STATEMENTS_PERIOD_STORAGE_KEY = "al-safa:statements-period"
 export const STATEMENTS_MOVEMENTS_COLUMNS_KEY = "al-safa:statements-movements-columns"
@@ -27,10 +27,25 @@ export const STATEMENT_ENTRY_LABELS_AR: Record<string, string> = {
 
 export const STATEMENT_MESSAGES = {
   selectEntity: "اختر زبوناً أو مورداً لعرض كشف الحساب.",
-  emptyPeriod: "لا توجد حركات ضمن الفترة المحددة.",
+  emptyPeriod: "لا توجد حركات ضمن الفلاتر الحالية.",
   loadingError: "تعذر تحميل كشف الحساب. حاول مجدداً.",
   fallback: "تعذر تنفيذ العملية. حاول مجدداً.",
 } as const
+
+export const STATEMENT_MOVEMENT_TYPE_OPTIONS: Array<{ value: StatementMovementEntryType; label: string; entityType?: StatementEntityType }> = [
+  { value: "opening_balance", label: "رصيد افتتاحي" },
+  { value: "sales_invoice", label: "فاتورة بيع", entityType: "customer" },
+  { value: "purchase_invoice", label: "فاتورة شراء", entityType: "supplier" },
+  { value: "customer_payment", label: "دفعة زبون", entityType: "customer" },
+  { value: "supplier_payment", label: "دفعة مورد", entityType: "supplier" },
+  { value: "customer_return", label: "مرتجع زبون", entityType: "customer" },
+  { value: "supplier_return", label: "مرتجع مورد", entityType: "supplier" },
+]
+
+export const STATEMENT_MOVEMENT_DIRECTION_OPTIONS: Array<{ value: StatementMovementDirection; label: string }> = [
+  { value: "debit", label: "مدين" },
+  { value: "credit", label: "دائن" },
+]
 
 export const STATEMENT_TAB_LABELS_AR = {
   movements: "الحركات",
@@ -65,6 +80,11 @@ export const STATEMENT_MOVEMENT_COLUMNS: StatementColumnDefinition<StatementMove
   { id: "credit", label: "دائن", defaultVisible: true },
   { id: "running_balance", label: "الرصيد الجاري", defaultVisible: true, protected: true },
   { id: "user", label: "المستخدم", defaultVisible: true },
+  { id: "actions", label: "الإجراءات", defaultVisible: true, protected: true },
+  { id: "source_type", label: "نوع المصدر", defaultVisible: false },
+  { id: "source_number", label: "رقم المصدر", defaultVisible: false },
+  { id: "created_at", label: "تاريخ التسجيل", defaultVisible: false },
+  { id: "notes", label: "ملاحظات", defaultVisible: false },
 ]
 
 export const STATEMENT_INVOICE_COLUMNS: StatementColumnDefinition<StatementInvoiceColumnId>[] = [

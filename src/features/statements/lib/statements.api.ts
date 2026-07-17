@@ -11,6 +11,11 @@ export function buildStatementQuery(query: StatementQuery): QueryParams {
   const params: QueryParams = {}
   if (query.date_from) params.date_from = query.date_from
   if (query.date_to) params.date_to = query.date_to
+  if (query.search) params.search = query.search
+  if (query.entry_type) params.entry_type = query.entry_type
+  if (query.direction) params.direction = query.direction
+  if (query.amount_min !== undefined) params.amount_min = query.amount_min
+  if (query.amount_max !== undefined) params.amount_max = query.amount_max
   return params
 }
 

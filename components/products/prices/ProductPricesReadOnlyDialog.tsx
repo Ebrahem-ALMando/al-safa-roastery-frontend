@@ -11,44 +11,23 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatProductPrice,
-  PRODUCT_PRICE_TYPES,
-  PRODUCT_PRICE_TYPE_LABELS_AR,
   useProductPrices,
   type Product,
   type ProductPrice,
   type ProductPriceType,
 } from "@/features/products";
 import { cn } from "@/lib/utils";
-import { Boxes, CarFront, CircleDollarSign, ShoppingBag, UserRound, X } from "lucide-react";
+import { CircleDollarSign, X } from "lucide-react";
+import {
+  getProductPriceTheme,
+  PRODUCT_PRICE_DISPLAY_ORDER,
+} from "./product-price-theme";
 
 type ProductPricesReadOnlyDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   product: Product | null;
 };
-
-const cardTheme = {
-  consumer: {
-    icon: UserRound,
-    card: "border-violet-200/80 bg-violet-50/35 dark:border-violet-900 dark:bg-violet-950/25",
-    iconBox: "bg-violet-100 text-violet-700 ring-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:ring-violet-800",
-  },
-  retail: {
-    icon: ShoppingBag,
-    card: "border-emerald-200/80 bg-emerald-50/35 dark:border-emerald-900 dark:bg-emerald-950/25",
-    iconBox: "bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-800",
-  },
-  wholesale: {
-    icon: Boxes,
-    card: "border-amber-200/80 bg-amber-50/35 dark:border-amber-900 dark:bg-amber-950/25",
-    iconBox: "bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800",
-  },
-  car: {
-    icon: CarFront,
-    card: "border-sky-200/80 bg-sky-50/35 dark:border-sky-900 dark:bg-sky-950/25",
-    iconBox: "bg-sky-100 text-sky-700 ring-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:ring-sky-800",
-  },
-} as const;
 
 export function ProductPricesReadOnlyDialog({
   open,
@@ -105,7 +84,7 @@ export function ProductPricesReadOnlyDialog({
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {PRODUCT_PRICE_TYPES.map((type) => (
+              {PRODUCT_PRICE_DISPLAY_ORDER.map((type) => (
                 <ReadOnlyPriceCard
                   key={type}
                   type={type}
@@ -127,20 +106,20 @@ function ReadOnlyPriceCard({
   type: ProductPriceType;
   price?: ProductPrice;
 }) {
-  const theme = cardTheme[type];
+  const theme = getProductPriceTheme(type);
   const Icon = theme.icon;
   const isActive = Boolean(price?.is_active);
 
   return (
-    <div className={cn("rounded-2xl border p-4 shadow-sm", theme.card)}>
+    <div className={cn("rounded-2xl border p-4 shadow-sm", theme.styles.card)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-bold">{PRODUCT_PRICE_TYPE_LABELS_AR[type]}</p>
+          <p className="text-sm font-bold">{theme.title}</p>
           <p className="mt-2 text-2xl font-bold tabular-nums" dir="ltr">
             {price ? formatProductPrice(price.price) : "غير محدد"}
           </p>
         </div>
-        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl ring-1", theme.iconBox)}>
+        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl ring-1", theme.styles.iconBox)}>
           <Icon className="size-5" />
         </span>
       </div>

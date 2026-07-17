@@ -26,6 +26,7 @@ import { ProductColumnCustomizer } from "./ProductColumnCustomizer";
 import { ProductClearPricesDialog } from "./ProductClearPricesDialog";
 import { ProductDeleteDialog } from "./ProductDeleteDialog";
 import { ProductFormDialog } from "./ProductFormDialog";
+import { ProductToggleActiveDialog } from "./ProductToggleActiveDialog";
 import { ProductPricesDialog } from "./prices/ProductPricesDialog";
 import { ProductPricesReadOnlyDialog } from "./prices/ProductPricesReadOnlyDialog";
 import { ProductsDataView } from "./ProductsDataView";
@@ -107,6 +108,7 @@ export function ProductsView() {
   const [priceTarget, setPriceTarget] = useState<Product | null>(null);
   const [viewPricesTarget, setViewPricesTarget] = useState<Product | null>(null);
   const [clearPricesTarget, setClearPricesTarget] = useState<Product | null>(null);
+  const [toggleActiveTarget, setToggleActiveTarget] = useState<Product | null>(null);
 
   const customFrom = customPeriod?.from ?? defaultCustomPeriod().from;
   const customTo = customPeriod?.to ?? defaultCustomPeriod().to;
@@ -264,7 +266,7 @@ export function ProductsView() {
           onViewPrices={setViewPricesTarget}
           onManagePrices={setPriceTarget}
           onClearPrices={setClearPricesTarget}
-          onToggleActive={(product) => void toggleProductActive(product)}
+          onToggleActive={setToggleActiveTarget}
           onDelete={setDeleteTarget}
         />
       </div>
@@ -304,6 +306,18 @@ export function ProductsView() {
         product={clearPricesTarget}
         onConfirm={async (id) => {
           await clearProductPrices(id);
+          void mutate();
+        }}
+      />
+
+      <ProductToggleActiveDialog
+        open={toggleActiveTarget !== null}
+        onOpenChange={(next) => {
+          if (!next) setToggleActiveTarget(null);
+        }}
+        product={toggleActiveTarget}
+        onConfirm={async (product) => {
+          await toggleProductActive(product);
           void mutate();
         }}
       />

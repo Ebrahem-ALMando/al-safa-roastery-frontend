@@ -3,15 +3,15 @@
 import { ArrowDownToLine, ArrowUpFromLine, Calculator, CalendarClock, CreditCard, FileText, Hash, ReceiptText, Scale, WalletCards } from "lucide-react"
 import { SummaryCards, type SummaryCard } from "@/components/ui/summary-cards"
 import { getThemeById } from "@/components/ui/summary-cards-themes"
-import { formatStatementBalanceMoney, formatStatementDate, formatStatementMoney, statementBalanceMeaning, type StatementEntityType, type StatementInvoiceSummary, type StatementPaymentSummary, type StatementReturnSummary, type StatementSummary } from "@/src/features/statements"
+import { formatStatementBalanceMoney, formatStatementDate, formatStatementMoney, statementBalanceMeaning, type StatementEntityType, type StatementInvoiceSummary, type StatementMovementSummary as MovementSummaryData, type StatementPaymentSummary, type StatementReturnSummary } from "@/src/features/statements"
 
 function Cards({ cards, isLoading }: { cards: SummaryCard[]; isLoading: boolean }) {
   return <SummaryCards cards={cards} isLoading={isLoading} theme={getThemeById("default")} className="text-right" />
 }
 
-export function StatementMovementSummary({ entityType, summary, isLoading }: { entityType: StatementEntityType; summary?: StatementSummary; isLoading: boolean }) {
+export function StatementMovementSummary({ entityType, summary, isLoading }: { entityType: StatementEntityType; summary?: MovementSummaryData; isLoading: boolean }) {
   const cards: SummaryCard[] = [
-    { title: "عدد الحركات", value: summary?.entries_count ?? 0, valueDescription: "الحركات المؤثرة ضمن الفترة", icon: Hash, colorKey: "info", showPercentage: false, showProgress: false },
+    { title: "عدد حركات الفترة", value: String(summary?.entries_count ?? 0), valueDir: "ltr", valueDescription: "الحركات المؤثرة ضمن الفترة المحددة دون الرصيد الافتتاحي", icon: Hash, colorKey: "info", showPercentage: false, showProgress: false },
     { title: "إجمالي المدين", value: formatStatementMoney(summary?.total_increase), valueDir: "ltr", valueDescription: "إجمالي زيادات الرصيد", icon: ArrowDownToLine, colorKey: entityType === "customer" ? "success" : "warning", showPercentage: false, showProgress: false },
     { title: "إجمالي الدائن", value: formatStatementMoney(summary?.total_decrease), valueDir: "ltr", valueDescription: "إجمالي تخفيضات الرصيد", icon: ArrowUpFromLine, colorKey: entityType === "customer" ? "warning" : "success", showPercentage: false, showProgress: false },
     { title: "صافي الحركة خلال الفترة", value: formatStatementBalanceMoney(summary?.net_change), valueDir: "ltr", valueDescription: summary ? statementBalanceMeaning(entityType, summary.net_change) : undefined, icon: Scale, colorKey: "secondary", showPercentage: false, showProgress: false },

@@ -22,6 +22,11 @@ export type StatementPeriod = {
   date_to: string | null
   include_opening_balance: boolean
   include_cancelled: boolean
+  search?: string | null
+  entry_type?: string | null
+  direction?: string | null
+  amount_min?: number | null
+  amount_max?: number | null
 }
 
 export type StatementSummary = {
@@ -36,11 +41,18 @@ export type StatementSummary = {
 }
 
 export type StatementEntry = {
+  id: number | null
   entry_type: string
   entry_label: string
+  entry_label_ar: string
   reference_type: string | null
   reference_id: number | null
   reference_number: string | null
+  source_type: string | null
+  source_id: number | null
+  source_number: string | null
+  source_label: string | null
+  description: string
   entry_date: string
   status: string
   total: string | number
@@ -48,17 +60,25 @@ export type StatementEntry = {
   remaining_or_balance_impact: string | number
   increase: string | number
   decrease: string | number
+  debit: string | number
+  credit: string | number
+  balance_before: string | number | null
   balance_after: string | number
+  running_balance: string | number
   allocated_amount: string | number | null
   unallocated_amount: string | number | null
   notes: string | null
+  created_at: string | null
   created_by: StatementUserRef | null
 }
+
+export type StatementMovementSummary = Pick<StatementSummary, "entries_count" | "total_increase" | "total_decrease" | "net_change">
 
 export type StatementResponse = {
   party: StatementParty
   period: StatementPeriod
   summary: StatementSummary
+  movement_summary: StatementMovementSummary
   entries: StatementEntry[]
 }
 
@@ -72,7 +92,15 @@ export type StatementEntityOption = {
 export type StatementQuery = {
   date_from?: string
   date_to?: string
+  search?: string
+  entry_type?: StatementMovementEntryType
+  direction?: StatementMovementDirection
+  amount_min?: number
+  amount_max?: number
 }
+
+export type StatementMovementEntryType = "opening_balance" | "sales_invoice" | "purchase_invoice" | "customer_payment" | "supplier_payment" | "customer_return" | "supplier_return"
+export type StatementMovementDirection = "debit" | "credit"
 
 export type StatementTab = "movements" | "invoices" | "payments" | "returns"
 export type StatementDataTab = Exclude<StatementTab, "movements">
@@ -177,7 +205,7 @@ export type StatementTabQuery = StatementQuery & {
   payment_method?: string
 }
 
-export type StatementMovementColumnId = "entry_date" | "entry_type" | "reference" | "description" | "debit" | "credit" | "running_balance" | "user"
+export type StatementMovementColumnId = "entry_date" | "entry_type" | "reference" | "description" | "debit" | "credit" | "running_balance" | "user" | "actions" | "source_type" | "source_number" | "created_at" | "notes"
 export type StatementInvoiceColumnId = "invoice_number" | "invoice_date" | "total" | "paid_amount" | "remaining_amount" | "payment_status" | "status" | "actions" | "subtotal" | "discount" | "notes" | "created_at" | "completed_at" | "cancelled_at" | "created_by"
 export type StatementPaymentColumnId = "payment_number" | "payment_date" | "amount" | "payment_method" | "reference" | "notes" | "user" | "status" | "allocated_amount" | "unallocated_amount" | "created_at" | "updated_at"
 export type StatementReturnColumnId = "return_number" | "return_date" | "amount" | "status" | "reference" | "reason" | "user" | "notes" | "created_at" | "updated_at"

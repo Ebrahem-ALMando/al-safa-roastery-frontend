@@ -11,7 +11,7 @@ import {
   type StatementPeriodPreset,
 } from "../lib/statements.constants"
 import { defaultStatementPeriod, readStatementPeriod, resolveStatementPeriod } from "../lib/statements.helpers"
-import type { StatementEntityOption, StatementEntityType } from "../types/statement.types"
+import type { StatementEntityOption, StatementEntityType, StatementMovementDirection, StatementMovementEntryType, StatementQuery } from "../types/statement.types"
 import { useStatement } from "./useStatement"
 
 type InitialStatementSelection = {
@@ -31,6 +31,12 @@ export function useStatementPage(initial: InitialStatementSelection = {}) {
   const [periodPreset, setPeriodPresetState] = useState<StatementPeriodPreset>("current_month")
   const [customPeriod, setCustomPeriod] = useState<StatementCustomPeriod | null>(null)
   const [customDialogOpen, setCustomDialogOpen] = useState(false)
+  const [movementSearch, setMovementSearch] = useState("")
+  const [movementEntryType, setMovementEntryType] = useState<StatementMovementEntryType | "">("")
+  const [movementDirection, setMovementDirection] = useState<StatementMovementDirection | "">("")
+  const [movementAmountMin, setMovementAmountMin] = useState("")
+  const [movementAmountMax, setMovementAmountMax] = useState("")
+  const debouncedMovementSearch = useDebouncedValue(movementSearch, 300)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -47,7 +53,18 @@ export function useStatementPage(initial: InitialStatementSelection = {}) {
   }, [periodPreset, customPeriod, hydrated])
 
   const filters = useMemo(() => resolveStatementPeriod(periodPreset, customPeriod), [periodPreset, customPeriod])
-  const statementQuery = useStatement(entityType, selectedEntity?.id ?? null, filters, hydrated)
+  const amountMin = parseMovementAmount(movementAmountMin)
+  const amountMax = parseMovementAmount(movementAmountMax)
+  const movementAmountRangeInvalid = amountMin !== undefined && amountMax !== undefined && amountMax < amountMin
+  const statementFilters = useMemo<StatementQuery>(() => ({
+    ...filters,
+    search: debouncedMovementSearch.trim() || undefined,
+    entry_type: movementEntryType || undefined,
+    direction: movementDirection || undefined,
+    amount_min: movementAmountRangeInvalid ? undefined : amountMin,
+    amount_max: movementAmountRangeInvalid ? undefined : amountMax,
+  }), [filters, debouncedMovementSearch, movementEntryType, movementDirection, movementAmountRangeInvalid, amountMin, amountMax])
+  const statementQuery = useStatement(entityType, selectedEntity?.id ?? null, statementFilters, hydrated)
   const setPeriodPreset = useCallback((preset: StatementPeriodPreset) => {
     if (preset === "custom") {
       setCustomPeriod((value) => value ?? defaultStatementPeriod())
@@ -58,6 +75,11 @@ export function useStatementPage(initial: InitialStatementSelection = {}) {
   const setEntityType = useCallback((type: StatementEntityType) => {
     setEntityTypeState(type)
     setSelectedEntity(null)
+    setMovementSearch("")
+    setMovementEntryType("")
+    setMovementDirection("")
+    setMovementAmountMin("")
+    setMovementAmountMax("")
   }, [])
 
   return {
@@ -77,8 +99,32 @@ export function useStatementPage(initial: InitialStatementSelection = {}) {
       setCustomDialogOpen(false)
     },
     filters,
+    movementSearch,
+    setMovementSearch,
+    movementEntryType,
+    setMovementEntryType,
+    movementDirection,
+    setMovementDirection,
+    movementAmountMin,
+    setMovementAmountMin,
+    movementAmountMax,
+    setMovementAmountMax,
+    movementAmountRangeInvalid,
+    clearMovementFilters: () => {
+      setMovementSearch("")
+      setMovementEntryType("")
+      setMovementDirection("")
+      setMovementAmountMin("")
+      setMovementAmountMax("")
+    },
     ...statementQuery,
   }
+}
+
+function parseMovementAmount(value: string): number | undefined {
+  if (!value.trim()) return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
 }
 
 type EntityApiRow = {
