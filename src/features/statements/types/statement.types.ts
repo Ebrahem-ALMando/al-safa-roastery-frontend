@@ -32,6 +32,8 @@ export type StatementPeriod = {
 export type StatementSummary = {
   entries_count: number
   opening_balance: string | number
+  statement_debit_total: string | number
+  statement_credit_total: string | number
   total_increase: string | number
   total_decrease: string | number
   net_change: string | number
