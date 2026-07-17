@@ -11,10 +11,10 @@ function Cards({ cards, isLoading }: { cards: SummaryCard[]; isLoading: boolean 
 
 export function StatementMovementSummary({ entityType, summary, isLoading }: { entityType: StatementEntityType; summary?: MovementSummaryData; isLoading: boolean }) {
   const cards: SummaryCard[] = [
-    { title: "عدد السجلات المعروضة", value: String(summary?.entries_count ?? 0), valueDir: "ltr", valueDescription: "يشمل الرصيد الافتتاحي عند ظهوره في الجدول.", icon: Hash, colorKey: "info", showPercentage: false, showProgress: false },
-    { title: "إجمالي المدين المعروض", value: formatStatementMoney(summary?.total_increase), valueDir: "ltr", valueDescription: "يعتمد على السجلات الظاهرة في جدول الحركات.", icon: ArrowDownToLine, colorKey: entityType === "customer" ? "success" : "warning", showPercentage: false, showProgress: false },
-    { title: "إجمالي الدائن المعروض", value: formatStatementMoney(summary?.total_decrease), valueDir: "ltr", valueDescription: "يعتمد على السجلات الظاهرة في جدول الحركات.", icon: ArrowUpFromLine, colorKey: entityType === "customer" ? "warning" : "success", showPercentage: false, showProgress: false },
-    { title: "صافي السجلات المعروضة", value: formatStatementBalanceMoney(summary?.net_change), valueDir: "ltr", valueDescription: summary ? `${statementBalanceMeaning(entityType, summary.net_change)} · يعتمد على السجلات الظاهرة.` : undefined, icon: Scale, colorKey: "secondary", showPercentage: false, showProgress: false },
+    { title: "عدد السجلات المعروضة", value: String(summary?.displayed_records_count ?? 0), valueDir: "ltr", valueDescription: "يشمل الرصيد الافتتاحي عند ظهوره في الجدول.", icon: Hash, colorKey: "info", showPercentage: false, showProgress: false },
+    { title: "إجمالي المدين المعروض", value: formatStatementMoney(summary?.displayed_debit_total), valueDir: "ltr", valueDescription: "يعتمد على السجلات الظاهرة في جدول الحركات.", icon: ArrowDownToLine, colorKey: entityType === "customer" ? "success" : "warning", showPercentage: false, showProgress: false },
+    { title: "إجمالي الدائن المعروض", value: formatStatementMoney(summary?.displayed_credit_total), valueDir: "ltr", valueDescription: "يعتمد على السجلات الظاهرة في جدول الحركات.", icon: ArrowUpFromLine, colorKey: entityType === "customer" ? "warning" : "success", showPercentage: false, showProgress: false },
+    { title: "صافي السجلات المعروضة", value: formatStatementBalanceMoney(summary?.displayed_net_total), valueDir: "ltr", valueDescription: summary ? `${statementBalanceMeaning(entityType, summary.displayed_net_total)} · صافي المدين والدائن للسجلات الظاهرة.` : undefined, icon: Scale, colorKey: "secondary", showPercentage: false, showProgress: false },
   ]
   return <Cards cards={cards} isLoading={isLoading} />
 }

@@ -72,7 +72,12 @@ export type StatementEntry = {
   created_by: StatementUserRef | null
 }
 
-export type StatementMovementSummary = Pick<StatementSummary, "entries_count" | "total_increase" | "total_decrease" | "net_change">
+export type StatementMovementSummary = {
+  displayed_records_count: number
+  displayed_debit_total: string | number
+  displayed_credit_total: string | number
+  displayed_net_total: string | number
+}
 
 export type StatementResponse = {
   party: StatementParty
