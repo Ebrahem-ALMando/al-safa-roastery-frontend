@@ -83,7 +83,17 @@ export function ProductPriceFieldset({
                   min="0"
                   value={value.price}
                   disabled={disabled}
-                  onChange={(event) => onChange({ ...value, price: event.target.value })}
+                  onChange={(event) => {
+                    const nextPrice = event.target.value;
+                    const parsed = Number(nextPrice);
+                    onChange({
+                      ...value,
+                      price: nextPrice,
+                      is_active:
+                        value.is_active ||
+                        (nextPrice.trim() !== "" && Number.isFinite(parsed) && parsed > 0),
+                    });
+                  }}
                   placeholder="مثال: 1.50"
                   className="h-11 rounded-xl border-border/60 pl-14 text-left tabular-nums"
                   dir="ltr"

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Product } from "@/features/products";
 import { cn } from "@/lib/utils";
-import { CircleDollarSign, Eye, Pencil, Power, Trash2 } from "lucide-react";
+import { CircleDollarSign, Eye, Pencil, Power, Tags, Trash2 } from "lucide-react";
 import type { MouseEvent } from "react";
 
 const itemClass =
@@ -17,7 +17,9 @@ type ProductRowActionsMenuContentProps = {
   product: Product;
   onViewDetails: () => void;
   onEdit: () => void;
+  onViewPrices?: () => void;
   onManagePrices: () => void;
+  onClearPrices?: () => void;
   onToggleActive: () => void;
   onDelete: () => void;
   stopPropagation?: boolean;
@@ -31,18 +33,17 @@ export function ProductRowActionsMenuContent({
   product,
   onViewDetails,
   onEdit,
+  onViewPrices,
   onManagePrices,
+  onClearPrices,
   onToggleActive,
   onDelete,
   stopPropagation = false,
 }: ProductRowActionsMenuContentProps) {
   return (
-    <DropdownMenuContent align="end" className="min-w-52 text-right">
+    <DropdownMenuContent align="end" className="min-w-56 text-right">
       <DropdownMenuItem
-        className={cn(
-          itemClass,
-          "text-sky-800 focus:bg-sky-50 focus:text-sky-900",
-        )}
+        className={cn(itemClass, "text-sky-800 focus:bg-sky-50 focus:text-sky-900")}
         onClick={(event) => {
           stopIfNeeded(event, stopPropagation);
           onViewDetails();
@@ -52,10 +53,7 @@ export function ProductRowActionsMenuContent({
         عرض التفاصيل
       </DropdownMenuItem>
       <DropdownMenuItem
-        className={cn(
-          itemClass,
-          "text-sky-800 focus:bg-sky-50 focus:text-sky-900",
-        )}
+        className={cn(itemClass, "text-sky-800 focus:bg-sky-50 focus:text-sky-900")}
         onClick={(event) => {
           stopIfNeeded(event, stopPropagation);
           onEdit();
@@ -65,10 +63,18 @@ export function ProductRowActionsMenuContent({
         تعديل
       </DropdownMenuItem>
       <DropdownMenuItem
-        className={cn(
-          itemClass,
-          "text-violet-800 focus:bg-violet-50 focus:text-violet-900",
-        )}
+        className={cn(itemClass, "text-emerald-800 focus:bg-emerald-50 focus:text-emerald-900")}
+        disabled={!onViewPrices}
+        onClick={(event) => {
+          stopIfNeeded(event, stopPropagation);
+          onViewPrices?.();
+        }}
+      >
+        <Eye className="size-4 text-emerald-600" />
+        عرض الأسعار
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className={cn(itemClass, "text-violet-800 focus:bg-violet-50 focus:text-violet-900")}
         onClick={(event) => {
           stopIfNeeded(event, stopPropagation);
           onManagePrices();
@@ -76,6 +82,17 @@ export function ProductRowActionsMenuContent({
       >
         <CircleDollarSign className="size-4 text-violet-600" />
         إدارة الأسعار
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className={cn(itemClass, "text-amber-800 focus:bg-amber-50 focus:text-amber-900")}
+        disabled={!onClearPrices}
+        onClick={(event) => {
+          stopIfNeeded(event, stopPropagation);
+          onClearPrices?.();
+        }}
+      >
+        <Tags className="size-4 text-amber-600" />
+        حذف التسعيرات
       </DropdownMenuItem>
       <DropdownMenuItem
         className={cn(
@@ -89,21 +106,13 @@ export function ProductRowActionsMenuContent({
           onToggleActive();
         }}
       >
-        <Power
-          className={cn(
-            "size-4",
-            product.is_active ? "text-orange-600" : "text-emerald-600",
-          )}
-        />
+        <Power className={cn("size-4", product.is_active ? "text-orange-600" : "text-emerald-600")} />
         {product.is_active ? "إيقاف" : "تفعيل"}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem
         variant="destructive"
-        className={cn(
-          itemClass,
-          "text-rose-700 focus:bg-rose-50 focus:text-rose-800",
-        )}
+        className={cn(itemClass, "text-rose-700 focus:bg-rose-50 focus:text-rose-800")}
         onClick={(event) => {
           stopIfNeeded(event, stopPropagation);
           onDelete();

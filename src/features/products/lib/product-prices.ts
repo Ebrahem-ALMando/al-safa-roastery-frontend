@@ -6,25 +6,25 @@ import type {
 } from "../types/product.types";
 
 export const PRODUCT_PRICE_TYPES: readonly ProductPriceType[] = [
+  "consumer",
   "retail",
   "wholesale",
   "car",
-  "consumer",
 ];
 
 export const PRODUCT_PRICE_TYPE_LABELS_AR: Record<ProductPriceType, string> = {
+  consumer: "سعر المستهلك",
   retail: "سعر المفرق",
   wholesale: "سعر الجملة",
   car: "سعر السيارة",
-  consumer: "سعر المستهلك",
 };
 
 export function emptyProductPricesForm(): ProductPricesFormValue {
   return {
+    consumer: { price: "", is_active: false, notes: "" },
     retail: { price: "", is_active: false, notes: "" },
     wholesale: { price: "", is_active: false, notes: "" },
     car: { price: "", is_active: false, notes: "" },
-    consumer: { price: "", is_active: false, notes: "" },
   };
 }
 
@@ -71,7 +71,7 @@ export function validateProductPrices(
 
     const price = Number(item.price);
     if (!Number.isFinite(price)) {
-      errors[`prices.${index}.price`] = ["يجب أن يكون السعر رقماً صحيحاً."];
+      errors[`prices.${index}.price`] = ["يجب أن يكون السعر رقما صحيحا."];
     } else if (price <= 0) {
       errors[`prices.${index}.price`] = ["يجب أن يكون السعر أكبر من صفر."];
     }
@@ -96,15 +96,27 @@ export function findActiveDisplayPrice(prices?: ProductPrice[] | null): ProductP
   return null;
 }
 
+export function getProductDisplayPrice(product: {
+  current_price: string | number | null;
+  default_price: string | number | null;
+  current_price_type: string | null;
+}): { amount: string; label: string; type: ProductPriceType | null } | null {
+  const raw = product.current_price ?? product.default_price;
+  if (raw === null || raw === undefined || raw === "") return null;
+  const amount = `$${Number(raw).toFixed(2)}`;
+  const type = product.current_price_type as ProductPriceType | null;
+  if (!type || !PRODUCT_PRICE_TYPES.includes(type)) {
+    return { amount, label: "السعر", type: null };
+  }
+  return { amount, label: PRODUCT_PRICE_TYPE_LABELS_AR[type], type };
+}
+
 export function formatProductPriceSummary(product: {
   current_price: string | number | null;
   default_price: string | number | null;
   current_price_type: string | null;
 }): string {
-  const raw = product.current_price ?? product.default_price;
-  if (raw === null || raw === undefined || raw === "") return "غير مسعّر";
-  const amount = `$${Number(raw).toFixed(2)}`;
-  const type = product.current_price_type as ProductPriceType | null;
-  if (!type || type === "retail" || !PRODUCT_PRICE_TYPES.includes(type)) return amount;
-  return `${amount} · ${PRODUCT_PRICE_TYPE_LABELS_AR[type]}`;
+  const display = getProductDisplayPrice(product);
+  if (!display) return "غير مسعّر";
+  return `${display.amount} · ${display.label}`;
 }

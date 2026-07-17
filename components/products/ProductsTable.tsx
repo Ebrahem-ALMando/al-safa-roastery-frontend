@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import {
   formatArDateTime,
-  formatProductPriceSummary,
+  getProductDisplayPrice,
   formatQuantityKg,
   getProductColumnLabel,
   linkedItemCode,
@@ -55,7 +55,9 @@ type ProductsTableProps = {
   onPageChange: (page: number) => void;
   onViewDetails: (product: Product) => void;
   onEdit: (product: Product) => void;
+  onViewPrices?: (product: Product) => void;
   onManagePrices: (product: Product) => void;
+  onClearPrices?: (product: Product) => void;
   onDelete: (product: Product) => void;
   onToggleActive: (product: Product) => void;
 };
@@ -87,7 +89,9 @@ export function ProductsTable({
   canNext,
   onPageChange,
   onEdit,
+  onViewPrices,
   onManagePrices,
+  onClearPrices,
   onDelete,
   onToggleActive,
 }: ProductsTableProps) {
@@ -170,13 +174,24 @@ export function ProductsTable({
           </TableCell>
         );
       case "price":
+        const displayPrice = getProductDisplayPrice(product);
         return (
           <TableCell
             key={key}
-            className="text-center font-semibold tabular-nums"
-            dir="ltr"
+            className="text-center"
           >
-            {formatProductPriceSummary(product)}
+            {displayPrice ? (
+              <div className="space-y-0.5">
+                <p className="font-semibold tabular-nums" dir="ltr">
+                  {displayPrice.amount}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {displayPrice.label}
+                </p>
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground">غير مسعّر</span>
+            )}
           </TableCell>
         );
       case "price_status":
@@ -257,7 +272,9 @@ export function ProductsTable({
                 stopPropagation
                 onViewDetails={() => goToProduct(product.id)}
                 onEdit={() => onEdit(product)}
+                onViewPrices={onViewPrices ? () => onViewPrices(product) : undefined}
                 onManagePrices={() => onManagePrices(product)}
+                onClearPrices={onClearPrices ? () => onClearPrices(product) : undefined}
                 onToggleActive={() => onToggleActive(product)}
                 onDelete={() => onDelete(product)}
               />
@@ -392,10 +409,18 @@ export function ProductsTable({
                 onEdit(contextMenu.product);
                 setContextMenu(null);
               }}
+              onViewPrices={onViewPrices ? () => {
+                onViewPrices(contextMenu.product);
+                setContextMenu(null);
+              } : undefined}
               onManagePrices={() => {
                 onManagePrices(contextMenu.product);
                 setContextMenu(null);
               }}
+              onClearPrices={onClearPrices ? () => {
+                onClearPrices(contextMenu.product);
+                setContextMenu(null);
+              } : undefined}
               onToggleActive={() => {
                 onToggleActive(contextMenu.product);
                 setContextMenu(null);

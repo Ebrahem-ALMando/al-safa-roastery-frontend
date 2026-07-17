@@ -16,6 +16,7 @@ export function buildProductSummaryQueryParams(filters: ProductSummaryFilters): 
   const q: QueryParams = {}
   if (filters.search?.trim()) q.search = filters.search.trim()
   if (typeof filters.is_active === "boolean") q.is_active = filters.is_active ? 1 : 0
+  if (filters.linked_item_ids?.length) q.linked_item_ids = filters.linked_item_ids
   if (typeof filters.linked_item_id === "number") q.linked_item_id = filters.linked_item_id
   if (filters.price_status) q.price_status = filters.price_status
   if (filters.stock_status) q.stock_status = filters.stock_status
@@ -29,6 +30,7 @@ export function buildProductsQueryParams(page: number, filters: ProductsListFilt
 
   if (filters.search?.trim()) q.search = filters.search.trim()
   if (typeof filters.is_active === "boolean") q.is_active = filters.is_active ? 1 : 0
+  if (filters.linked_item_ids?.length) q.linked_item_ids = filters.linked_item_ids
   if (typeof filters.linked_item_id === "number") q.linked_item_id = filters.linked_item_id
   if (filters.price_status) q.price_status = filters.price_status
   if (filters.stock_status) q.stock_status = filters.stock_status

@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  formatProductPriceSummary,
   formatQuantityKg,
+  getProductDisplayPrice,
   linkedItemName,
   type Product,
   type ProductsListMeta,
@@ -39,6 +39,8 @@ type ProductsCardsProps = {
   onViewDetails: (product: Product) => void;
   onEdit: (product: Product) => void;
   onManagePrices: (product: Product) => void;
+  onViewPrices?: (product: Product) => void;
+  onClearPrices?: (product: Product) => void;
   onDelete: (product: Product) => void;
   onToggleActive: (product: Product) => void;
 };
@@ -67,6 +69,8 @@ export function ProductsCards({
   onViewDetails,
   onEdit,
   onManagePrices,
+  onViewPrices,
+  onClearPrices,
   onDelete,
   onToggleActive,
 }: ProductsCardsProps) {
@@ -95,7 +99,7 @@ export function ProductsCards({
     return (
       <div className="flex min-h-[280px] flex-col items-center justify-center gap-5 px-6 py-12 text-center">
         <Package className="size-10 text-primary" strokeWidth={1.25} />
-        <p className="text-lg font-semibold">لا توجد منتجات حالياً</p>
+        <p className="text-lg font-semibold">لا توجد منتجات حاليا</p>
       </div>
     );
   }
@@ -104,72 +108,17 @@ export function ProductsCards({
     <div className="space-y-4 overflow-x-hidden">
       <div className="grid min-w-0 gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3 *:min-w-0">
         {products.map((product) => (
-          <Card
+          <ProductCard
             key={product.id}
-            className="cursor-pointer gap-4 rounded-xl border-border/60 py-4 shadow-sm transition hover:border-primary/30 hover:shadow-md"
-            onClick={() => onViewDetails(product)}
-          >
-            <CardHeader className="px-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <CardTitle className="truncate text-base">
-                    {product.name}
-                  </CardTitle>
-                  <p
-                    className="mt-1 font-mono text-xs text-muted-foreground"
-                    dir="ltr"
-                  >
-                    {product.code || product.barcode || "—"}
-                  </p>
-                </div>
-                <ProductStatusBadge isActive={product.is_active} />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 px-4">
-              <InfoLine label="الصنف المرتبط" value={linkedItemName(product)} />
-              <InfoLine
-                label="السعر"
-                value={formatProductPriceSummary(product)}
-                dir="ltr"
-              />
-              <InfoLine
-                label="المخزون المتاح"
-                value={
-                  product.ready_item_id
-                    ? formatQuantityKg(product.current_quantity_kg)
-                    : "—"
-                }
-                dir="ltr"
-              />
-              <div className="flex flex-wrap gap-2">
-                <ProductPriceStatusBadge status={product.price_status} />
-                <ProductStockStatusBadge product={product} />
-              </div>
-              <div className="flex justify-end border-t border-border/50 pt-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <ProductRowActionsMenuContent
-                    product={product}
-                    stopPropagation
-                    onViewDetails={() => onViewDetails(product)}
-                    onEdit={() => onEdit(product)}
-                    onManagePrices={() => onManagePrices(product)}
-                    onToggleActive={() => onToggleActive(product)}
-                    onDelete={() => onDelete(product)}
-                  />
-                </DropdownMenu>
-              </div>
-            </CardContent>
-          </Card>
+            product={product}
+            onViewDetails={onViewDetails}
+            onEdit={onEdit}
+            onManagePrices={onManagePrices}
+            onViewPrices={onViewPrices}
+            onClearPrices={onClearPrices}
+            onDelete={onDelete}
+            onToggleActive={onToggleActive}
+          />
         ))}
       </div>
 
@@ -199,6 +148,107 @@ export function ProductsCards({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function ProductCard({
+  product,
+  onViewDetails,
+  onEdit,
+  onManagePrices,
+  onViewPrices,
+  onClearPrices,
+  onDelete,
+  onToggleActive,
+}: Pick<
+  ProductsCardsProps,
+  | "onViewDetails"
+  | "onEdit"
+  | "onManagePrices"
+  | "onViewPrices"
+  | "onClearPrices"
+  | "onDelete"
+  | "onToggleActive"
+> & {
+  product: Product;
+}) {
+  const displayPrice = getProductDisplayPrice(product);
+
+  return (
+    <Card
+      className="cursor-pointer gap-4 rounded-xl border-border/60 py-4 shadow-sm transition hover:border-primary/30 hover:shadow-md"
+      onClick={() => onViewDetails(product)}
+    >
+      <CardHeader className="px-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="truncate text-base">
+              {product.name}
+            </CardTitle>
+            <p className="mt-1 font-mono text-xs text-muted-foreground" dir="ltr">
+              {product.code || product.barcode || "غير محدد"}
+            </p>
+          </div>
+          <ProductStatusBadge isActive={product.is_active} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 px-4">
+        <InfoLine label="الصنف المرتبط" value={linkedItemName(product)} />
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">السعر</span>
+          {displayPrice ? (
+            <span className="text-left">
+              <span className="block font-semibold tabular-nums" dir="ltr">
+                {displayPrice.amount}
+              </span>
+              <span className="block text-[11px] text-muted-foreground">
+                {displayPrice.label}
+              </span>
+            </span>
+          ) : (
+            <span className="font-semibold text-muted-foreground">غير مسعّر</span>
+          )}
+        </div>
+        <InfoLine
+          label="المخزون المتاح"
+          value={
+            product.ready_item_id
+              ? formatQuantityKg(product.current_quantity_kg)
+              : "غير مرتبط"
+          }
+          dir="ltr"
+        />
+        <div className="flex flex-wrap gap-2">
+          <ProductPriceStatusBadge status={product.price_status} />
+          <ProductStockStatusBadge product={product} />
+        </div>
+        <div className="flex justify-end border-t border-border/50 pt-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <ProductRowActionsMenuContent
+              product={product}
+              stopPropagation
+              onViewDetails={() => onViewDetails(product)}
+              onEdit={() => onEdit(product)}
+              onViewPrices={onViewPrices ? () => onViewPrices(product) : undefined}
+              onManagePrices={() => onManagePrices(product)}
+              onClearPrices={onClearPrices ? () => onClearPrices(product) : undefined}
+              onToggleActive={() => onToggleActive(product)}
+              onDelete={() => onDelete(product)}
+            />
+          </DropdownMenu>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

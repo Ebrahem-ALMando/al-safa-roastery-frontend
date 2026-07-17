@@ -77,15 +77,15 @@ export const PRODUCT_TABLE_COLUMNS: {
   { id: "available_stock", label: "المخزون المتاح", defaultVisible: true },
   { id: "stock_status", label: "حالة المخزون", defaultVisible: true },
   { id: "is_active", label: "الحالة", defaultVisible: true },
+  { id: "created_at", label: "تاريخ الإنشاء", defaultVisible: true },
   { id: "actions", label: "الإجراءات", defaultVisible: true, essential: true },
-  { id: "code", label: "الكود", defaultVisible: false },
+  { id: "code", label: "كود المنتج", defaultVisible: false },
   { id: "barcode", label: "الباركود", defaultVisible: false },
   { id: "sku", label: "SKU", defaultVisible: false },
   { id: "notes", label: "ملاحظات", defaultVisible: false },
-  { id: "created_at", label: "تاريخ الإنشاء", defaultVisible: false },
   { id: "updated_at", label: "تاريخ التحديث", defaultVisible: false },
   { id: "created_by", label: "أنشئ بواسطة", defaultVisible: false },
-  { id: "updated_by", label: "حُدّث بواسطة", defaultVisible: false },
+  { id: "updated_by", label: "حُدث بواسطة", defaultVisible: false },
 ]
 
 export const DEFAULT_VISIBLE_PRODUCT_COLUMNS: ProductTableColumnId[] = PRODUCT_TABLE_COLUMNS.filter(
@@ -117,11 +117,18 @@ export function normalizeProductVisibleColumns(
   }
 
   if (!result.includes("product")) result.unshift("product")
+  if (!result.includes("created_at")) {
+    const actionsIndex = result.indexOf("actions")
+    if (actionsIndex === -1) result.push("created_at")
+    else result.splice(actionsIndex, 0, "created_at")
+  }
+
   if (!result.includes("actions")) {
     result.push("actions")
   } else {
     const withoutActions = result.filter((id) => id !== "actions")
-    return [...withoutActions, "actions"]
+    const withoutCreatedAt = withoutActions.filter((id) => id !== "created_at")
+    return [...withoutCreatedAt, "created_at", "actions"]
   }
 
   return result

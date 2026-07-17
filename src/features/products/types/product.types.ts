@@ -11,6 +11,7 @@ export type ProductLinkedItem = {
   current_quantity_kg: string | number | null;
   minimum_quantity_kg: string | number | null;
   average_cost: string | number | null;
+  last_purchase_price: string | number | null;
   stock_status?: ProductStockStatus | null;
 };
 
@@ -83,6 +84,7 @@ export type Product = {
   current_quantity_kg: string | number | null;
   minimum_quantity_kg: string | number | null;
   average_cost: string | number | null;
+  last_purchase_price: string | number | null;
   ready_item?: ProductLinkedItem | null;
   linked_item?: ProductLinkedItem | null;
   prices?: ProductPrice[];
@@ -104,6 +106,7 @@ export type ProductsListFilters = {
   search?: string;
   is_active?: boolean;
   linked_item_id?: number;
+  linked_item_ids?: number[];
   price_status?: ProductPriceStatus;
   stock_status?: ProductStockStatus;
   date_from?: string;

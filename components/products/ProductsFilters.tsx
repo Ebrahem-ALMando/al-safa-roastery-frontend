@@ -1,98 +1,93 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Check, ChevronsUpDown, ChevronDown, Filter, Loader2, Search, X } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useEffect, useState } from "react";
+import { ChevronDown, Filter, Package, Search, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { ItemPickerDialog } from "@/components/purchases/editor/ItemPickerDialog";
+import type { ItemPickerRow } from "@/features/purchases/hooks/useItemPickerList";
+import { cn } from "@/lib/utils";
 import {
   PRODUCT_PRICE_STATUS_LABELS_AR,
   PRODUCT_STOCK_STATUS_LABELS_AR,
   type ProductsActiveStatus,
+  type ProductsLinkedItemFilter,
   type ProductsPriceStatusFilter,
   type ProductsStockStatusFilter,
-} from "@/features/products"
-import { useItemPickerList } from "@/features/purchases/hooks/useItemPickerList"
+} from "@/features/products";
 
 export interface ProductsFiltersValue {
-  search: string
-  isActive: ProductsActiveStatus
-  priceStatus: ProductsPriceStatusFilter
-  stockStatus: ProductsStockStatusFilter
-  linkedItemId: number | null
-  linkedItemLabel: string
+  search: string;
+  isActive: ProductsActiveStatus;
+  priceStatus: ProductsPriceStatusFilter;
+  stockStatus: ProductsStockStatusFilter;
+  linkedItems: ProductsLinkedItemFilter[];
 }
 
 type ProductsFiltersProps = {
-  value: ProductsFiltersValue
-  onChange: (value: ProductsFiltersValue) => void
-  isLoading?: boolean
+  value: ProductsFiltersValue;
+  onChange: (value: ProductsFiltersValue) => void;
+  isLoading?: boolean;
+};
+
+const DEBOUNCE_MS = 450;
+
+function itemLabel(item: ItemPickerRow): string {
+  return `${item.name}${item.code !== "—" && item.code !== "â€”" ? ` · ${item.code}` : ""}`;
 }
 
-const DEBOUNCE_MS = 450
-
 export function ProductsFilters({ value, onChange, isLoading = false }: ProductsFiltersProps) {
-  const [localSearch, setLocalSearch] = useState(value.search)
-  const [showAdvanced, setShowAdvanced] = useState(false)
-  const [itemPickerOpen, setItemPickerOpen] = useState(false)
-  const [itemQuery, setItemQuery] = useState("")
+  const [localSearch, setLocalSearch] = useState(value.search);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [itemPickerOpen, setItemPickerOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (localSearch === value.search) return
-      onChange({ ...value, search: localSearch })
-    }, DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [localSearch, onChange, value])
-
-  const { rows, isLoading: itemLoading, error: itemError } = useItemPickerList({
-    open: itemPickerOpen,
-    search: itemQuery,
-  })
+      if (localSearch === value.search) return;
+      onChange({ ...value, search: localSearch });
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [localSearch, onChange, value]);
 
   const statusLabel =
-    value.isActive === "active" ? "فعال" : value.isActive === "inactive" ? "موقوف" : undefined
+    value.isActive === "active" ? "فعال" : value.isActive === "inactive" ? "موقوف" : undefined;
   const priceStatusLabel =
-    value.priceStatus !== "all" ? PRODUCT_PRICE_STATUS_LABELS_AR[value.priceStatus] : undefined
+    value.priceStatus !== "all" ? PRODUCT_PRICE_STATUS_LABELS_AR[value.priceStatus] : undefined;
   const stockStatusLabel =
-    value.stockStatus !== "all" ? PRODUCT_STOCK_STATUS_LABELS_AR[value.stockStatus] : undefined
+    value.stockStatus !== "all" ? PRODUCT_STOCK_STATUS_LABELS_AR[value.stockStatus] : undefined;
 
   const hasActiveFilters =
     Boolean(value.search.trim()) ||
     value.isActive !== "all" ||
     value.priceStatus !== "all" ||
     value.stockStatus !== "all" ||
-    value.linkedItemId != null
+    value.linkedItems.length > 0;
 
   function clearAll() {
-    setLocalSearch("")
-    setItemQuery("")
+    setLocalSearch("");
     onChange({
       search: "",
       isActive: "all",
       priceStatus: "all",
       stockStatus: "all",
-      linkedItemId: null,
-      linkedItemLabel: "",
-    })
+      linkedItems: [],
+    });
+  }
+
+  function removeLinkedItem(id: number) {
+    onChange({
+      ...value,
+      linkedItems: value.linkedItems.filter((item) => item.id !== id),
+    });
   }
 
   return (
@@ -137,7 +132,7 @@ export function ProductsFilters({ value, onChange, isLoading = false }: Products
       <div
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          showAdvanced ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+          showAdvanced ? "max-h-72 opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="grid grid-cols-1 gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4 md:items-end">
@@ -204,74 +199,33 @@ export function ProductsFilters({ value, onChange, isLoading = false }: Products
 
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">الصنف المرتبط</Label>
-            <Popover open={itemPickerOpen} onOpenChange={setItemPickerOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  className="h-10 w-full justify-between rounded-md font-normal"
-                  disabled={isLoading}
-                >
-                  <span className="truncate">{value.linkedItemLabel || "اختر صنفاً..."}</span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-[320px] p-0" dir="rtl">
-                <Command shouldFilter={false}>
-                  <CommandInput
-                    placeholder="ابحث باسم الصنف أو الكود..."
-                    value={itemQuery}
-                    onValueChange={setItemQuery}
-                  />
-                  <CommandList>
-                    {itemLoading ? (
-                      <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                        <Loader2 className="size-4 animate-spin" />
-                        جاري التحميل
-                      </div>
-                    ) : itemError ? (
-                      <CommandEmpty>تعذر تحميل الأصناف.</CommandEmpty>
-                    ) : rows.length === 0 ? (
-                      <CommandEmpty>لا توجد نتائج.</CommandEmpty>
-                    ) : (
-                      <CommandGroup>
-                        {rows.map((row) => {
-                          const id = Number.parseInt(row.id, 10)
-                          const selected = value.linkedItemId === id
-                          return (
-                            <CommandItem
-                              key={row.id}
-                              value={row.id}
-                              onSelect={() => {
-                                onChange({
-                                  ...value,
-                                  linkedItemId: id,
-                                  linkedItemLabel: `${row.name}${row.code !== "—" ? ` · ${row.code}` : ""}`,
-                                })
-                                setItemPickerOpen(false)
-                              }}
-                              className="flex-row-reverse justify-between text-right"
-                            >
-                              <span className="truncate">
-                                {row.name}
-                                <span className="mr-2 font-mono text-xs text-muted-foreground" dir="ltr">
-                                  {row.code}
-                                </span>
-                              </span>
-                              <Check className={cn("size-4", selected ? "opacity-100" : "opacity-0")} />
-                            </CommandItem>
-                          )
-                        })}
-                      </CommandGroup>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-full justify-between rounded-md font-normal"
+              disabled={isLoading}
+              onClick={() => setItemPickerOpen(true)}
+            >
+              <span className="truncate">
+                {value.linkedItems.length === 0
+                  ? "اختر صنفا أو أكثر..."
+                  : value.linkedItems.length === 1
+                    ? value.linkedItems[0]?.label
+                    : `${value.linkedItems.length} أصناف محددة`}
+              </span>
+              <Package className="ml-2 h-4 w-4 shrink-0 opacity-60" />
+            </Button>
           </div>
         </div>
       </div>
+
+      {value.linkedItems.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {value.linkedItems.map((item) => (
+            <FilterChip key={item.id} label={item.label} onClear={() => removeLinkedItem(item.id)} />
+          ))}
+        </div>
+      ) : null}
 
       {hasActiveFilters ? (
         <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -280,24 +234,41 @@ export function ProductsFilters({ value, onChange, isLoading = false }: Products
             <FilterChip
               label={`البحث: ${value.search}`}
               onClear={() => {
-                setLocalSearch("")
-                onChange({ ...value, search: "" })
+                setLocalSearch("");
+                onChange({ ...value, search: "" });
               }}
             />
           ) : null}
           {statusLabel ? <FilterChip label={`الحالة: ${statusLabel}`} onClear={() => onChange({ ...value, isActive: "all" })} /> : null}
           {priceStatusLabel ? <FilterChip label={`التسعير: ${priceStatusLabel}`} onClear={() => onChange({ ...value, priceStatus: "all" })} /> : null}
           {stockStatusLabel ? <FilterChip label={`المخزون: ${stockStatusLabel}`} onClear={() => onChange({ ...value, stockStatus: "all" })} /> : null}
-          {value.linkedItemId != null ? (
-            <FilterChip
-              label={`الصنف: ${value.linkedItemLabel || value.linkedItemId}`}
-              onClear={() => onChange({ ...value, linkedItemId: null, linkedItemLabel: "" })}
-            />
-          ) : null}
         </div>
       ) : null}
+
+      <ItemPickerDialog
+        open={itemPickerOpen}
+        onOpenChange={setItemPickerOpen}
+        onSelect={(item) => {
+          const next = { id: Number(item.id), label: itemLabel(item) };
+          if (value.linkedItems.some((selected) => selected.id === next.id)) return;
+          onChange({ ...value, linkedItems: [...value.linkedItems, next] });
+        }}
+        onSelectMany={(items) => {
+          const map = new Map(value.linkedItems.map((item) => [item.id, item]));
+          items.forEach((item) => {
+            map.set(Number(item.id), { id: Number(item.id), label: itemLabel(item) });
+          });
+          onChange({ ...value, linkedItems: Array.from(map.values()) });
+        }}
+        itemType="ready"
+        activeOnly
+        selectionMode="multiple"
+        excludeItemIds={value.linkedItems.map((item) => item.id)}
+        title="اختيار الأصناف المرتبطة"
+        description="ابحث بالاسم أو الكود ثم اختر صنفا أو أكثر لتصفية المنتجات."
+      />
     </div>
-  )
+  );
 }
 
 function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
@@ -308,5 +279,5 @@ function FilterChip({ label, onClear }: { label: string; onClear: () => void }) 
         <X className="h-3 w-3" />
       </button>
     </Badge>
-  )
+  );
 }

@@ -65,6 +65,7 @@ function readColumnVisibility(): ProductTableColumnId[] {
 export type ProductsActiveStatus = "all" | "active" | "inactive"
 export type ProductsPriceStatusFilter = ProductPriceStatus | "all"
 export type ProductsStockStatusFilter = ProductStockStatus | "all"
+export type ProductsLinkedItemFilter = { id: number; label: string }
 
 export function useProductsPage() {
   const [periodPreset, setPeriodPreset] = useState<ProductsPeriodPreset>(() =>
@@ -79,8 +80,7 @@ export function useProductsPage() {
   const [isActive, setIsActive] = useState<ProductsActiveStatus>("all")
   const [priceStatus, setPriceStatus] = useState<ProductsPriceStatusFilter>("all")
   const [stockStatus, setStockStatus] = useState<ProductsStockStatusFilter>("all")
-  const [linkedItemId, setLinkedItemId] = useState<number | null>(null)
-  const [linkedItemLabel, setLinkedItemLabel] = useState("")
+  const [linkedItems, setLinkedItems] = useState<ProductsLinkedItemFilter[]>([])
   const [page, setPageState] = useState(1)
   const [config, setConfig] = useState<ProductsPageConfig>(() =>
     typeof window !== "undefined" ? readConfig() : defaultConfig
@@ -116,9 +116,9 @@ export function useProductsPage() {
       is_active: isActive === "all" ? undefined : isActive === "active",
       price_status: priceStatus !== "all" ? priceStatus : undefined,
       stock_status: stockStatus !== "all" ? stockStatus : undefined,
-      linked_item_id: linkedItemId ?? undefined,
+      linked_item_ids: linkedItems.map((item) => item.id),
     }),
-    [isActive, priceStatus, stockStatus, linkedItemId]
+    [isActive, priceStatus, stockStatus, linkedItems]
   )
 
   const { products, meta, isLoading, error, mutate } = useProducts({
@@ -133,7 +133,7 @@ export function useProductsPage() {
     isActive !== "all" ||
     priceStatus !== "all" ||
     stockStatus !== "all" ||
-    linkedItemId != null ||
+    linkedItems.length > 0 ||
     periodPreset !== "all"
 
   const isEmpty = !isLoading && products.length === 0
@@ -194,13 +194,9 @@ export function useProductsPage() {
     setStockStatus(value)
   }, [])
 
-  const updateLinkedItemId = useCallback((value: number | null) => {
+  const updateLinkedItems = useCallback((value: ProductsLinkedItemFilter[]) => {
     setPageState(1)
-    setLinkedItemId(value)
-  }, [])
-
-  const updateLinkedItemLabel = useCallback((value: string) => {
-    setLinkedItemLabel(value)
+    setLinkedItems(value)
   }, [])
 
   return {
@@ -219,10 +215,8 @@ export function useProductsPage() {
     setPriceStatus: updatePriceStatus,
     stockStatus,
     setStockStatus: updateStockStatus,
-    linkedItemId,
-    setLinkedItemId: updateLinkedItemId,
-    linkedItemLabel,
-    setLinkedItemLabel: updateLinkedItemLabel,
+    linkedItems,
+    setLinkedItems: updateLinkedItems,
     page,
     setPage,
     config,

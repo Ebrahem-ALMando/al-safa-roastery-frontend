@@ -298,11 +298,59 @@ export function useProductActions() {
     ],
   );
 
+  const clearProductPrices = useCallback(
+    async (id: number) => {
+      const actionId = crypto.randomUUID();
+      try {
+        const res = await execute<ApiSuccessResponse<Product>>({
+          id: actionId,
+          endpoint: `products/${id}/prices`,
+          method: "DELETE",
+          notify: false,
+        });
+        const { data } = extractMutationResult<Product>(res);
+        reportAction({
+          id: actionId,
+          status: "success",
+          error: null,
+          successMessage: PRODUCT_MESSAGES.pricesCleared,
+        });
+        await Promise.all([
+          invalidateList(),
+          invalidateSummary(),
+          revalidateDetail(id),
+          revalidatePrices(id),
+        ]);
+        return data;
+      } catch (error) {
+        reportAction({
+          id: actionId,
+          status: "failed",
+          error: {
+            status: error instanceof ApiRequestError ? error.status : 0,
+            code: error instanceof ApiRequestError ? error.code : undefined,
+            message: PRODUCT_MESSAGES.pricesClearFailure,
+          },
+        });
+        throw error;
+      }
+    },
+    [
+      execute,
+      reportAction,
+      invalidateList,
+      invalidateSummary,
+      revalidateDetail,
+      revalidatePrices,
+    ],
+  );
+
   return {
     createProduct,
     updateProduct,
     toggleProductActive,
     deleteProduct,
     saveProductPrices,
+    clearProductPrices,
   };
 }

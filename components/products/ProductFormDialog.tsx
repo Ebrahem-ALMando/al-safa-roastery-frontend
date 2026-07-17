@@ -28,7 +28,6 @@ import type {
 } from "@/features/products";
 import {
   emptyProductPricesForm,
-  hasProductPriceChanges,
   productPricesToForm,
   productPricesToPayload,
   validateProductPrices,
@@ -216,7 +215,7 @@ export function ProductFormDialog({
       return;
     }
 
-    const shouldSavePrices = priceDirty && hasProductPriceChanges(priceForm);
+    const shouldSavePrices = priceDirty;
     if (shouldSavePrices) {
       const validationErrors = validateProductPrices(priceForm);
       if (Object.keys(validationErrors).length > 0) {

@@ -5,6 +5,7 @@ export { useProducts } from "./hooks/useProducts";
 export {
   useProductsPage,
   type ProductsActiveStatus,
+  type ProductsLinkedItemFilter,
   type ProductsPriceStatusFilter,
   type ProductsStockStatusFilter,
 } from "./hooks/useProductsPage";
@@ -69,6 +70,7 @@ export {
   emptyProductPricesForm,
   findActiveDisplayPrice,
   formatProductPriceSummary,
+  getProductDisplayPrice,
   hasProductPriceChanges,
   PRODUCT_PRICE_TYPES,
   PRODUCT_PRICE_TYPE_LABELS_AR,

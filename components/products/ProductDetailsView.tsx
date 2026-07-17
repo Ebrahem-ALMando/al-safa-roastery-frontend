@@ -1,7 +1,25 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, CalendarClock, CircleDollarSign, DollarSign, Info, Package, RefreshCw, Settings } from "lucide-react"
+import {
+  ArrowRight,
+  BadgeInfo,
+  Barcode,
+  Box,
+  CalendarClock,
+  CircleDollarSign,
+  ClipboardList,
+  DollarSign,
+  FileText,
+  Hash,
+  Info,
+  Package,
+  Pencil,
+  Power,
+  RefreshCw,
+  Settings,
+  Tag,
+} from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,20 +30,37 @@ import {
   formatQuantityKg,
   linkedItemCode,
   linkedItemName,
-  type Product,
+  PRODUCT_PRICE_TYPES,
   PRODUCT_PRICE_TYPE_LABELS_AR,
+  useProductActions,
+  useProductDetails,
+  type Product,
+  type ProductPrice,
   type ProductPriceType,
 } from "@/features/products"
-import { useProductDetails } from "@/features/products"
 import { ItemTypeBadge } from "@/components/items/item-type-badge"
 import { ProductPriceStatusBadge } from "./ProductPriceStatusBadge"
 import { ProductStatusBadge } from "./ProductStatusBadge"
 import { ProductStockStatusBadge } from "./ProductStockStatusBadge"
+import { ProductClearPricesDialog } from "./ProductClearPricesDialog"
+import { ProductFormDialog } from "./ProductFormDialog"
 import { ProductPricesDialog } from "./prices/ProductPricesDialog"
+import { ProductPricesReadOnlyDialog } from "./prices/ProductPricesReadOnlyDialog"
+
+const priceIcons = {
+  consumer: Tag,
+  retail: CircleDollarSign,
+  wholesale: Box,
+  car: Package,
+} as const
 
 export function ProductDetailsView({ productId }: { productId: number }) {
   const { product, isLoading, error, mutate } = useProductDetails(productId)
-  const [pricesOpen, setPricesOpen] = useState(false)
+  const { toggleProductActive, clearProductPrices, updateProduct, saveProductPrices } = useProductActions()
+  const [editOpen, setEditOpen] = useState(false)
+  const [managePricesOpen, setManagePricesOpen] = useState(false)
+  const [viewPricesOpen, setViewPricesOpen] = useState(false)
+  const [clearPricesOpen, setClearPricesOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -50,108 +85,149 @@ export function ProductDetailsView({ productId }: { productId: number }) {
 
   return (
     <div className="space-y-6" dir="rtl" lang="ar">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <Link href="/dashboard/products">
-            <Button variant="ghost" size="icon" className="mt-0.5 rounded-xl" aria-label="العودة">
-              <ArrowRight className="size-5" />
+      <div className="rounded-3xl border border-border/60 bg-linear-to-bl from-primary/10 via-primary/5 to-transparent p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <Button variant="ghost" size="icon" className="mt-0.5 rounded-xl" asChild aria-label="العودة">
+              <Link href="/dashboard/products">
+                <ArrowRight className="size-5" />
+              </Link>
             </Button>
-          </Link>
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">المنتجات / تفاصيل المنتج</p>
-            <h1 className="text-2xl font-bold tracking-tight">{product.name}</h1>
-            <p className="font-mono text-xs text-muted-foreground" dir="ltr">
-              {product.code || product.barcode || "—"}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <ProductStatusBadge isActive={product.is_active} />
-              <ProductPriceStatusBadge status={product.price_status} />
-              <ProductStockStatusBadge product={product} />
+            <div className="min-w-0 space-y-2">
+              <p className="text-sm text-muted-foreground">المنتجات / تفاصيل المنتج</p>
+              <h1 className="text-2xl font-bold tracking-tight">{product.name}</h1>
+              <p className="font-mono text-xs text-muted-foreground" dir="ltr">
+                {product.code || "غير محدد"}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <ProductStatusBadge isActive={product.is_active} />
+                <ProductPriceStatusBadge status={product.price_status} />
+                <ProductStockStatusBadge product={product} />
+              </div>
             </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setEditOpen(true)}>
+              <Pencil className="size-4" />
+              تعديل المنتج
+            </Button>
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setManagePricesOpen(true)}>
+              <CircleDollarSign className="size-4" />
+              إدارة الأسعار
+            </Button>
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setViewPricesOpen(true)}>
+              <BadgeInfo className="size-4" />
+              عرض الأسعار
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 rounded-xl"
+              onClick={() => void toggleProductActive(product).then(() => mutate())}
+            >
+              <Power className="size-4" />
+              {product.is_active ? "إيقاف" : "تفعيل"}
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="space-y-6 xl:col-span-2">
-          <DetailsCard icon={Info} title="معلومات المنتج">
-            <InfoGrid rows={[
-              ["الاسم", product.name],
-              ["الكود", product.code || "—"],
-              ["الباركود", product.barcode || "—"],
-              ["SKU", product.sku || "—"],
-              ["الحالة", product.is_active ? "فعال" : "موقوف"],
-              ["ملاحظات", product.notes || "—"],
-            ]} />
-          </DetailsCard>
-
-          <DetailsCard icon={Package} title="الصنف المرتبط">
-            <InfoGrid rows={[
-              ["الصنف", linkedItemName(product)],
-              ["كود الصنف", linkedItemCode(product) || "—"],
-              ["نوع الصنف", product.linked_item?.item_type ? <ItemTypeBadge key="type" itemType={product.linked_item.item_type} /> : "—"],
-              ["الكمية الحالية", formatQuantityKg(product.current_quantity_kg)],
-              ["الحد الأدنى", formatQuantityKg(product.minimum_quantity_kg)],
-              ["متوسط التكلفة", formatProductPrice(product.average_cost)],
-            ]} />
-          </DetailsCard>
-
-          <DetailsCard icon={DollarSign} title="التسعير">
-            <div className="mb-4 flex justify-end">
-              <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setPricesOpen(true)}>
-                <CircleDollarSign className="size-4" />
-                إدارة الأسعار
-              </Button>
-            </div>
-            <InfoGrid rows={[
-              ["السعر الحالي", formatProductPrice(product.current_price ?? product.default_price)],
-              ["نوع السعر الحالي", product.current_price_type || "—"],
-              ["حالة التسعير", <ProductPriceStatusBadge key="price-status" status={product.price_status} />],
-            ]} />
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {(["consumer", "retail", "wholesale", "car"] as ProductPriceType[]).map((priceType) => {
-                const price = product.prices?.find((item) => item.price_type === priceType)
-                return (
-                  <div key={priceType} className="rounded-xl border border-border/60 bg-muted/15 p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold">{PRODUCT_PRICE_TYPE_LABELS_AR[priceType]}</span>
-                      <span className={price?.is_active ? "text-xs font-medium text-emerald-700 dark:text-emerald-300" : "text-xs font-medium text-muted-foreground"}>
-                        {price?.is_active ? "فعال" : "موقوف"}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-lg font-bold tabular-nums" dir="ltr">
-                      {price ? formatProductPrice(price.price) : "غير محدد"}
-                    </p>
-                    {price?.notes ? <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{price.notes}</p> : null}
-                  </div>
-                )
-              })}
-            </div>
-          </DetailsCard>
+      <DetailsCard icon={Info} title="معلومات المنتج">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <DetailTile icon={Package} label="الاسم" value={product.name} />
+          <DetailTile icon={FileText} label="الملاحظات" value={product.notes || "غير محدد"} />
         </div>
-
-        <div className="space-y-6">
-          <DetailsCard icon={CalendarClock} title="النشاط / آخر تحديث">
-            <InfoGrid rows={[
-              ["آخر نشاط", "—"],
-              ["آخر تحديث", formatArDateTime(product.updated_at)],
-            ]} />
-          </DetailsCard>
-
-          <DetailsCard icon={Settings} title="معلومات النظام">
-            <InfoGrid rows={[
-              ["أنشئ في", formatArDateTime(product.created_at)],
-              ["أنشئ بواسطة", product.created_by?.name || "—"],
-              ["حُدّث في", formatArDateTime(product.updated_at)],
-              ["حُدّث بواسطة", product.updated_by?.name || "—"],
-            ]} />
-          </DetailsCard>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <DetailTile icon={Hash} label="كود المنتج" value={product.code || "غير محدد"} dir="ltr" />
+          <DetailTile icon={Barcode} label="SKU" value={product.sku || "غير محدد"} dir="ltr" />
+          <DetailTile icon={Settings} label="الحالة" value={<ProductStatusBadge isActive={product.is_active} />} />
+          <DetailTile icon={CircleDollarSign} label="حالة التسعير" value={<ProductPriceStatusBadge status={product.price_status} />} />
         </div>
+      </DetailsCard>
+
+      <DetailsCard icon={Package} title="الصنف المرتبط">
+        {product.linked_item || product.ready_item ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <DetailTile icon={Package} label="اسم الصنف" value={linkedItemName(product)} />
+              <DetailTile icon={Hash} label="كود الصنف" value={linkedItemCode(product) || "غير محدد"} dir="ltr" />
+              <DetailTile icon={ClipboardList} label="نوع الصنف" value={product.linked_item?.item_type ? <ItemTypeBadge itemType={product.linked_item.item_type} /> : "غير محدد"} />
+              <DetailTile icon={BadgeInfo} label="حالة المخزون" value={<ProductStockStatusBadge product={product} />} />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <DetailTile icon={Box} label="الكمية الحالية" value={formatQuantityKg(product.current_quantity_kg)} dir="ltr" />
+              <DetailTile icon={Box} label="الحد الأدنى" value={formatQuantityKg(product.minimum_quantity_kg)} dir="ltr" />
+              <DetailTile icon={DollarSign} label="متوسط التكلفة" value={formatProductPrice(product.average_cost)} dir="ltr" />
+              <DetailTile icon={DollarSign} label="آخر سعر شراء" value={formatProductPrice(product.linked_item?.last_purchase_price ?? product.ready_item?.last_purchase_price ?? product.last_purchase_price)} dir="ltr" />
+            </div>
+          </>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border/60 bg-muted/20 p-8 text-center text-sm text-muted-foreground">
+            لا يوجد صنف مرتبط بهذا المنتج.
+          </div>
+        )}
+      </DetailsCard>
+
+      <DetailsCard icon={CircleDollarSign} title="التسعير">
+        <div className="mb-4 flex flex-wrap justify-end gap-2">
+          <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setViewPricesOpen(true)}>
+            <BadgeInfo className="size-4" />
+            عرض الأسعار
+          </Button>
+          <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setManagePricesOpen(true)}>
+            <CircleDollarSign className="size-4" />
+            إدارة الأسعار
+          </Button>
+          <Button variant="outline" className="gap-2 rounded-xl border-amber-500/40 text-amber-700" onClick={() => setClearPricesOpen(true)}>
+            حذف التسعيرات
+          </Button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {PRODUCT_PRICE_TYPES.map((priceType) => (
+            <PriceCard
+              key={priceType}
+              priceType={priceType}
+              price={product.prices?.find((item) => item.price_type === priceType)}
+            />
+          ))}
+        </div>
+      </DetailsCard>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DetailsCard icon={CalendarClock} title="النشاط / آخر تحديث">
+          <InfoGrid rows={[
+            ["آخر نشاط", "غير محدد"],
+            ["آخر تحديث", formatArDateTime(product.updated_at)],
+          ]} />
+        </DetailsCard>
+        <DetailsCard icon={Settings} title="معلومات النظام">
+          <InfoGrid rows={[
+            ["أنشئ في", formatArDateTime(product.created_at)],
+            ["أنشئ بواسطة", product.created_by?.name || "غير محدد"],
+            ["حُدث في", formatArDateTime(product.updated_at)],
+            ["حُدث بواسطة", product.updated_by?.name || "غير محدد"],
+          ]} />
+        </DetailsCard>
       </div>
-      <ProductPricesDialog
-        open={pricesOpen}
-        onOpenChange={setPricesOpen}
+
+      <ProductPricesDialog open={managePricesOpen} onOpenChange={setManagePricesOpen} product={product} />
+      <ProductPricesReadOnlyDialog open={viewPricesOpen} onOpenChange={setViewPricesOpen} product={product} />
+      <ProductFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        mode="edit"
         product={product}
+        onUpdate={updateProduct}
+        onSavePrices={(id, payload) => saveProductPrices(id, payload, { notify: false })}
+        onSaved={() => void mutate()}
+      />
+      <ProductClearPricesDialog
+        open={clearPricesOpen}
+        onOpenChange={setClearPricesOpen}
+        product={product}
+        onConfirm={async (id) => {
+          await clearProductPrices(id)
+          await mutate()
+        }}
       />
     </div>
   )
@@ -176,6 +252,53 @@ function DetailsCard({
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
+  )
+}
+
+function DetailTile({
+  icon: Icon,
+  label,
+  value,
+  dir,
+}: {
+  icon: typeof Info
+  label: string
+  value: React.ReactNode
+  dir?: "ltr" | "rtl"
+}) {
+  return (
+    <div className="rounded-lg border border-border/50 bg-muted/15 px-3 py-2.5">
+      <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Icon className="size-3.5" />
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm font-semibold" dir={dir}>{value}</dd>
+    </div>
+  )
+}
+
+function PriceCard({
+  priceType,
+  price,
+}: {
+  priceType: ProductPriceType
+  price?: ProductPrice
+}) {
+  const Icon = priceIcons[priceType]
+  return (
+    <div className="rounded-xl border border-border/60 bg-muted/15 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold">{PRODUCT_PRICE_TYPE_LABELS_AR[priceType]}</span>
+        <Icon className="size-4 text-primary" />
+      </div>
+      <p className="mt-2 text-lg font-bold tabular-nums" dir="ltr">
+        {price ? formatProductPrice(price.price) : "غير محدد"}
+      </p>
+      <p className={price?.is_active ? "mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-300" : "mt-1 text-xs font-medium text-muted-foreground"}>
+        {price?.is_active ? "فعال" : "موقوف"}
+      </p>
+      {price?.notes ? <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{price.notes}</p> : null}
+    </div>
   )
 }
 

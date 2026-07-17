@@ -1,7 +1,9 @@
 "use client";
 
+import { ProductClearPricesDialog } from "@/components/products/ProductClearPricesDialog";
 import { ProductPriceStatusBadge } from "@/components/products/ProductPriceStatusBadge";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/custom-toast-with-icons";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/custom-toast-with-icons";
 import {
   emptyProductPricesForm,
   productPricesToForm,
@@ -63,16 +64,18 @@ function ProductPricesDialogState({
   isLoading,
   error,
 }: ProductPricesDialogStateProps) {
-  const { saveProductPrices } = useProductActions();
+  const { saveProductPrices, clearProductPrices } = useProductActions();
   const [value, setValue] = React.useState<ProductPricesFormValue>(() => productPricesToForm(prices));
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = React.useState(false);
+  const [clearOpen, setClearOpen] = React.useState(false);
 
   function handleOpenChange(next: boolean) {
     onOpenChange(next);
     if (!next) {
       setValue(emptyProductPricesForm());
       setFieldErrors({});
+      setClearOpen(false);
     }
   }
 
@@ -94,7 +97,7 @@ function ProductPricesDialogState({
       if (submitError instanceof ApiRequestError && submitError.errors) {
         setFieldErrors(submitError.errors);
       } else if (!(submitError instanceof ApiRequestError && submitError.status === 401)) {
-        toast.error("تعذر تنفيذ العملية. حاول مجدداً.");
+        toast.error("تعذر تنفيذ العملية. حاول مجددا.");
       }
     } finally {
       setSubmitting(false);
@@ -123,14 +126,16 @@ function ProductPricesDialogState({
                   <CircleDollarSign className="size-5" />
                 </motion.span>
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <DialogTitle className="text-lg font-bold leading-snug tracking-tight">إدارة أسعار المنتج</DialogTitle>
+                  <DialogTitle className="text-lg font-bold leading-snug tracking-tight">
+                    إدارة أسعار المنتج
+                  </DialogTitle>
                   <DialogDescription asChild>
                     <div className="space-y-1 text-xs leading-relaxed text-muted-foreground">
                       <p>حدد أسعار البيع حسب نوع الزبون. يمكن تفعيل أو إيقاف كل سعر بشكل مستقل.</p>
                       {product ? (
                         <div className="flex flex-wrap items-center gap-2 text-foreground/90">
                           <span className="font-semibold">{product.name}</span>
-                          <span className="font-mono" dir="ltr">{product.code || product.barcode || "—"}</span>
+                          <span className="font-mono" dir="ltr">{product.code || product.barcode || "غير محدد"}</span>
                           <ProductPriceStatusBadge status={product.price_status} />
                         </div>
                       ) : null}
@@ -138,7 +143,12 @@ function ProductPricesDialogState({
                     </div>
                   </DialogDescription>
                 </div>
-                <button type="button" onClick={() => handleOpenChange(false)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground" aria-label="إغلاق">
+                <button
+                  type="button"
+                  onClick={() => handleOpenChange(false)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="إغلاق"
+                >
                   <X className="size-4" />
                 </button>
               </div>
@@ -152,7 +162,7 @@ function ProductPricesDialogState({
                 Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-24 w-full rounded-2xl" />)
               ) : error ? (
                 <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-center text-sm text-destructive">
-                  تعذر تحميل أسعار المنتج. أغلق النافذة وحاول مجدداً.
+                  تعذر تحميل أسعار المنتج. أغلق النافذة وحاول مجددا.
                 </div>
               ) : (
                 <ProductPricesManager value={value} onChange={setValue} defaultExpanded errors={fieldErrors} disabled={submitting} />
@@ -164,15 +174,35 @@ function ProductPricesDialogState({
           <div className="shrink-0 border-t border-border/50 bg-gradient-to-t from-muted/30 to-background px-6 py-4">
             <div className="flex w-full flex-wrap items-center justify-start gap-2">
               <Button type="submit" className="min-w-36 gap-2 rounded-xl shadow-sm" disabled={submitting || isLoading || Boolean(error)} aria-busy={submitting}>
-                {submitting ? <><Loader2 className="size-4 animate-spin" /><span>جارٍ الحفظ</span></> : <><Check className="size-4" />حفظ الأسعار</>}
+                {submitting ? <><Loader2 className="size-4 animate-spin" /><span>جار الحفظ</span></> : <><Check className="size-4" />حفظ الأسعار</>}
               </Button>
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} className="gap-2 rounded-xl">
                 <X className="size-4" />إلغاء
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setClearOpen(true)}
+                className="gap-2 rounded-xl border-amber-500/40 text-amber-700 hover:bg-amber-50"
+                disabled={submitting || isLoading || Boolean(error) || !product}
+              >
+                مسح التسعيرات الحالية
               </Button>
             </div>
           </div>
         </form>
       </DialogContent>
+      <ProductClearPricesDialog
+        open={clearOpen}
+        onOpenChange={setClearOpen}
+        product={product}
+        onConfirm={async (id) => {
+          await clearProductPrices(id);
+          setValue(emptyProductPricesForm());
+          setFieldErrors({});
+          handleOpenChange(false);
+        }}
+      />
     </Dialog>
   );
 }

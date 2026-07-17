@@ -4,7 +4,9 @@ import type { HttpMethod, QueryParams, RequestConfig } from "./api.types"
 function buildQueryString(params: QueryParams): string {
   const searchParams = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
-    if (value !== null && value !== undefined) {
+    if (Array.isArray(value)) {
+      value.forEach((item) => searchParams.append(`${key}[]`, String(item)))
+    } else if (value !== null && value !== undefined) {
       searchParams.append(key, String(value))
     }
   }

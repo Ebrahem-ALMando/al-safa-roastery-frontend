@@ -13,12 +13,27 @@ export function statementNumber(value: unknown): number {
 }
 
 export const formatStatementMoney = (value: unknown) => `$ ${statementNumber(value).toFixed(2)}`
+export const formatStatementBalanceMoney = (value: unknown) => `$ ${Math.abs(statementNumber(value)).toFixed(2)}`
 
 export function formatStatementDate(value: string | null | undefined): string {
   if (!value) return "—"
   const date = new Date(`${value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return "—"
   return new Intl.DateTimeFormat("ar-SY", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date)
+}
+
+export function formatStatementDateTime(value: string | null | undefined): string {
+  if (!value) return "—"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "—"
+  return new Intl.DateTimeFormat("ar-SY", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date)
+}
+
+export function statementBalanceColor(type: StatementEntityType, value: unknown): "success" | "warning" | "muted" {
+  const amount = statementNumber(value)
+  if (amount === 0) return "muted"
+  const inOurFavor = type === "customer" ? amount > 0 : amount < 0
+  return inOurFavor ? "success" : "warning"
 }
 
 export function resolveStatementPeriod(preset: StatementPeriodPreset, custom: StatementCustomPeriod | null): StatementQuery {
