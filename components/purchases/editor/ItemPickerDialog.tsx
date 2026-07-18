@@ -34,6 +34,8 @@ type ItemPickerDialogProps = {
   itemType?: ItemType
   activeOnly?: boolean
   selectionMode?: "single" | "multiple"
+  variant?: "default" | "operation"
+  selectedItemId?: number | string | null
   searchMode?: "local" | "server"
   clearSearchAfterEnterSelection?: boolean
   singleSelectionHint?: string
@@ -62,6 +64,8 @@ export function ItemPickerDialog({
   itemType,
   activeOnly = true,
   selectionMode = "multiple",
+  variant = "default",
+  selectedItemId,
   searchMode = "server",
   clearSearchAfterEnterSelection = false,
   singleSelectionHint = "اختر صنفاً واحداً لتنفيذ العملية عليه.",
@@ -69,8 +73,10 @@ export function ItemPickerDialog({
   const [query, setQuery] = React.useState("")
   const [selectedItems, setSelectedItems] = React.useState<Map<string, ItemPickerRow>>(() => new Map())
   const [activeIndex, setActiveIndex] = React.useState(0)
+  const [operationHasInteracted, setOperationHasInteracted] = React.useState(false)
   const searchInputRef = React.useRef<HTMLInputElement | null>(null)
   const rowRefs = React.useRef<Record<string, HTMLButtonElement | null>>({})
+  const isOperationPicker = variant === "operation" && selectionMode === "single"
 
   const { rows, isLoading, error, isSearchPending } = useItemPickerList({
     open,
@@ -85,10 +91,17 @@ export function ItemPickerDialog({
   )
   const selectedRows = React.useMemo(() => Array.from(selectedItems.values()), [selectedItems])
   const availableRows = React.useMemo(
-    () => filteredRows.filter((row) => !selectedItems.has(row.id)),
-    [filteredRows, selectedItems]
+    () => isOperationPicker ? filteredRows : filteredRows.filter((row) => !selectedItems.has(row.id)),
+    [filteredRows, isOperationPicker, selectedItems]
   )
-  const activeRowIndex = availableRows.length === 0 ? 0 : Math.min(activeIndex, availableRows.length - 1)
+  const initialOperationIndex = isOperationPicker && !operationHasInteracted && query.trim() === "" && selectedItemId != null
+    ? availableRows.findIndex((row) => row.id === String(selectedItemId))
+    : -1
+  const activeRowIndex = availableRows.length === 0
+    ? 0
+    : initialOperationIndex >= 0
+      ? initialOperationIndex
+      : Math.min(activeIndex, availableRows.length - 1)
 
   React.useEffect(() => {
     if (!open) return
@@ -108,6 +121,10 @@ export function ItemPickerDialog({
     if (!nextOpen) {
       setQuery("")
       setSelectedItems(new Map())
+      if (isOperationPicker) {
+        setActiveIndex(0)
+        setOperationHasInteracted(false)
+      }
     }
     onOpenChange(nextOpen)
   }
@@ -142,6 +159,12 @@ export function ItemPickerDialog({
   }
 
   const handleConfirmSelection = () => {
+    if (isOperationPicker) {
+      const activeItem = availableRows[activeRowIndex]
+      if (activeItem) handlePick(activeItem)
+      return
+    }
+
     const items = Array.from(selectedItems.values())
     if (items.length === 0) return
     if (selectionMode === "single") {
@@ -199,13 +222,19 @@ export function ItemPickerDialog({
 
     if (event.key === "ArrowDown") {
       event.preventDefault()
-      setActiveIndex((current) => (availableRows.length === 0 ? 0 : Math.min(current + 1, availableRows.length - 1)))
+      if (isOperationPicker) setOperationHasInteracted(true)
+      setActiveIndex((current) => (
+        availableRows.length === 0
+          ? 0
+          : Math.min((isOperationPicker ? activeRowIndex : current) + 1, availableRows.length - 1)
+      ))
       return
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault()
-      setActiveIndex((current) => Math.max(current - 1, 0))
+      if (isOperationPicker) setOperationHasInteracted(true)
+      setActiveIndex((current) => Math.max((isOperationPicker ? activeRowIndex : current) - 1, 0))
       return
     }
 
@@ -214,8 +243,7 @@ export function ItemPickerDialog({
       const activeItem = availableRows[activeRowIndex]
       if (activeItem) {
         if (selectionMode === "single") {
-          onSelect(activeItem)
-          handleOpenChange(false)
+          handlePick(activeItem)
         } else {
           toggleSelection(activeItem)
           if (clearSearchAfterEnterSelection) {
@@ -288,6 +316,7 @@ export function ItemPickerDialog({
                   onChange={(e) => {
                     setQuery(e.target.value)
                     setActiveIndex(0)
+                    if (isOperationPicker) setOperationHasInteracted(true)
                   }}
                   className={cn(
                     "h-11 rounded-xl border-border/60 bg-card/80 shadow-sm backdrop-blur supports-backdrop-filter:bg-card/70",
@@ -315,7 +344,7 @@ export function ItemPickerDialog({
         <div className="relative z-0 min-h-0 flex-1 overflow-hidden bg-background">
           <ScrollArea className="h-full" dir="rtl">
             <div className="space-y-2 p-4 pb-5" dir="rtl">
-            {selectedRows.length > 0 ? (
+            {!isOperationPicker && selectedRows.length > 0 ? (
               <div className="sticky top-0 z-10 mb-3 space-y-2 rounded-2xl border border-primary/20 bg-background/95 p-3 shadow-sm backdrop-blur">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs font-semibold text-primary">الأصناف المحددة</p>
@@ -352,7 +381,14 @@ export function ItemPickerDialog({
                     ))}
                   </motion.div>
                 ) : showList ? (
-                  <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                  <motion.div
+                    key="list"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="space-y-2"
+                    role={isOperationPicker ? "listbox" : undefined}
+                    aria-label={isOperationPicker ? "الأصناف المتاحة" : undefined}
+                  >
                     {showMetaHint ? (
                       <p className="text-center text-[11px] text-muted-foreground">
                         يُعرض أول {filteredRows.length} نتيجة — زِد دقة البحث.
@@ -373,7 +409,11 @@ export function ItemPickerDialog({
                         transition={{ delay: Math.min(index * 0.02, 0.3) }}
                         onClick={() => {
                           setActiveIndex(index)
-                          toggleSelection(item)
+                          if (isOperationPicker) {
+                            setOperationHasInteracted(true)
+                          } else {
+                            toggleSelection(item)
+                          }
                         }}
                         onDoubleClick={() => handlePick(item)}
                         className={cn(
@@ -382,7 +422,9 @@ export function ItemPickerDialog({
                           isActive && "border-primary/45 ring-2 ring-primary/20"
                         )}
                         dir="rtl"
-                        aria-pressed={false}
+                        role={isOperationPicker ? "option" : undefined}
+                        aria-pressed={isOperationPicker ? undefined : false}
+                        aria-selected={isOperationPicker ? isActive : undefined}
                         aria-current={isActive ? "true" : undefined}
                       >
                         <div
@@ -441,14 +483,16 @@ export function ItemPickerDialog({
         <div className="shrink-0 border-t border-border/50 bg-background px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate text-xs text-muted-foreground">
-                {selectedCount > 0
+              <p className={cn("text-xs text-muted-foreground", isOperationPicker ? "leading-relaxed" : "truncate")}>
+                {isOperationPicker
+                  ? singleSelectionHint
+                  : selectedCount > 0
                   ? `تم تحديد ${selectedCount} صنف`
                   : selectionMode === "single"
                     ? singleSelectionHint
                     : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
               </p>
-              <Tooltip>
+              {!isOperationPicker ? <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
@@ -484,12 +528,12 @@ export function ItemPickerDialog({
                     </p>
                   </div>
                 </TooltipContent>
-              </Tooltip>
+              </Tooltip> : null}
             </div>
             <Button
               type="button"
               className="min-w-32 gap-2 rounded-xl"
-              disabled={selectedCount === 0}
+              disabled={isOperationPicker ? !availableRows[activeRowIndex] : selectedCount === 0}
               onClick={handleConfirmSelection}
             >
               <Check className="size-4" />

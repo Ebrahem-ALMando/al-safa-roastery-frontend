@@ -89,6 +89,8 @@ export function InventoryOperationItemSelector({
         onSelect={(row) => onChange(toInventoryItem(row))}
         activeOnly
         selectionMode="single"
+        variant="operation"
+        selectedItemId={item?.id}
         searchMode="local"
         title="اختيار صنف"
         description="ابحث بالاسم أو الكود ثم اختر الصنف المطلوب."
