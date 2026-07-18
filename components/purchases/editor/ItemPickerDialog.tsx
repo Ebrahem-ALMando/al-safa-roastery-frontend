@@ -35,6 +35,7 @@ type ItemPickerDialogProps = {
   activeOnly?: boolean
   selectionMode?: "single" | "multiple"
   searchMode?: "local" | "server"
+  clearSearchAfterEnterSelection?: boolean
   singleSelectionHint?: string
 }
 
@@ -62,6 +63,7 @@ export function ItemPickerDialog({
   activeOnly = true,
   selectionMode = "multiple",
   searchMode = "server",
+  clearSearchAfterEnterSelection = false,
   singleSelectionHint = "اختر صنفاً واحداً لتنفيذ العملية عليه.",
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
@@ -216,6 +218,10 @@ export function ItemPickerDialog({
           handleOpenChange(false)
         } else {
           toggleSelection(activeItem)
+          if (clearSearchAfterEnterSelection) {
+            setQuery("")
+            setActiveIndex(0)
+          }
         }
       }
     }
@@ -254,8 +260,11 @@ export function ItemPickerDialog({
                 <Package className="size-7" strokeWidth={1.5} />
               </div>
               <div className="min-w-0 flex-1 space-y-2">
+                <DialogTitle className="text-xl font-bold">{title ?? "اختيار صنف"}</DialogTitle>
                 <div className="flex items-start justify-between gap-3">
-                  <DialogTitle className="text-xl font-bold">{title ?? "اختيار صنف"}</DialogTitle>
+                  <DialogDescription className="min-w-0 flex-1 text-sm">
+                    {description ?? "ابحث بالاسم أو الكود ثم اختر صنفاً نشطاً."}
+                  </DialogDescription>
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                     {query.trim() !== "" ? (
                       <Badge variant="secondary" className="gap-1 rounded-lg text-[11px]">
@@ -264,9 +273,6 @@ export function ItemPickerDialog({
                     ) : null}
                   </div>
                 </div>
-                <DialogDescription className="text-sm">
-                  {description ?? "ابحث بالاسم أو الكود ثم اختر صنفاً نشطاً."}
-                </DialogDescription>
               </div>
             </div>
             <div className="mt-5">

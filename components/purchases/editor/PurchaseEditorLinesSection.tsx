@@ -295,6 +295,7 @@ export function PurchaseEditorLinesSection({
         onSelectMany={handleAddItems}
         excludeItemIds={excludeIds}
         searchMode="local"
+        clearSearchAfterEnterSelection
       />
 
       <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
