@@ -1,14 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { ClipboardList, Loader2, SlidersHorizontal, X } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Loader2, SlidersHorizontal, X } from "lucide-react"
+import { OperationNotesAccordion, OtherReasonHelper } from "@/components/shared/OperationNotesAccordion"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import {
   ADJUSTMENT_REASON_LABELS_AR,
   formatInventoryCost,
@@ -122,7 +121,7 @@ export function InventoryAdjustmentDialog({ item, open, onOpenChange }: { item: 
               </div>
             ) : selectedItem ? <p className="text-xs text-muted-foreground">متوسط التكلفة الحالي: <span dir="ltr">{formatInventoryCost(selectedItem.average_cost)}</span></p> : null}
 
-            {reason === "other" ? <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">يمكنك توضيح السبب ضمن الملاحظات.</p> : null}
+            {reason === "other" ? <OtherReasonHelper /> : null}
 
             <div className="grid gap-2 rounded-xl border bg-muted/15 p-3 text-sm sm:grid-cols-3">
               <span>الحالية: <strong dir="ltr">{selectedItem ? formatInventoryQuantity(current) : "—"}</strong></span>
@@ -133,12 +132,7 @@ export function InventoryAdjustmentDialog({ item, open, onOpenChange }: { item: 
             </div>
             {error ? <p className="text-sm font-medium text-destructive" role="alert">{error}</p> : null}
 
-            <Accordion type="single" collapsible>
-              <AccordionItem value="notes" className="overflow-hidden rounded-xl border">
-                <AccordionTrigger className="px-4 hover:no-underline"><span className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" />ملاحظات</span></AccordionTrigger>
-                <AccordionContent className="px-4 pb-4"><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="أضف تفاصيل الجرد أو سبب الفرق (اختياري)" className="min-h-24" disabled={submitting} /></AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            <OperationNotesAccordion value={notes} onChange={setNotes} placeholder="أضف تفاصيل الجرد أو سبب الفرق (اختياري)" tone="amber" disabled={submitting} />
           </section>
         </div>
 

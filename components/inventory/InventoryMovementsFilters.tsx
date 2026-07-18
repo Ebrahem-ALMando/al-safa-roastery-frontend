@@ -40,9 +40,11 @@ export function InventoryMovementsFilters({ value, onChange, onReset, isLoading 
   onReset: () => void
   isLoading?: boolean
 }) {
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [advancedPreference, setAdvancedPreference] = useState<boolean | null>(null)
   const [itemPickerOpen, setItemPickerOpen] = useState(false)
   const hasActive = Boolean(value.search.trim()) || value.selectedItems.length > 0 || value.movementType !== "all" || value.direction !== "all" || value.sourceType !== "all"
+  const hasAdvancedFilters = value.selectedItems.length > 0 || value.movementType !== "all" || value.direction !== "all" || value.sourceType !== "all"
+  const showAdvanced = advancedPreference ?? hasAdvancedFilters
   const movementLabel = INVENTORY_MOVEMENT_TYPE_OPTIONS.find((option) => option.value === value.movementType)?.label
   const sourceLabel = INVENTORY_SOURCE_TYPE_OPTIONS.find((option) => option.value === value.sourceType)?.label
 
@@ -63,10 +65,10 @@ export function InventoryMovementsFilters({ value, onChange, onReset, isLoading 
           <Input value={value.search} onChange={(event) => onChange({ ...value, search: event.target.value })} placeholder="ابحث بالصنف أو الكود أو المرجع..." className="w-full pr-10" />
         </div>
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setShowAdvanced((current) => !current)}>
+          <Button type="button" variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setAdvancedPreference(!showAdvanced)}>
             <Filter className="size-4" />بحث متقدم<ChevronDown className={cn("size-4 transition-transform", showAdvanced && "rotate-180")} />
           </Button>
-          {hasActive ? <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={onReset}><X className="ml-1 size-4" />مسح الفلاتر</Button> : null}
+          {hasActive ? <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => { setAdvancedPreference(null); onReset() }}><X className="ml-1 size-4" />مسح الفلاتر</Button> : null}
         </div>
       </div>
 
@@ -103,10 +105,10 @@ export function InventoryMovementsFilters({ value, onChange, onReset, isLoading 
         </div>
       </div>
 
-      {value.selectedItems.length > 0 ? <div className="flex flex-wrap gap-2">{value.selectedItems.map((item) => <FilterChip key={item.id} label={itemLabel(item)} onClear={() => onChange({ ...value, selectedItems: value.selectedItems.filter((selected) => selected.id !== item.id) })} />)}</div> : null}
       {hasActive ? (
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-sm text-muted-foreground">الفلاتر النشطة:</span>
+          <span className="shrink-0 text-sm text-muted-foreground">الفلاتر النشطة:</span>
+          {value.selectedItems.map((item) => <FilterChip key={item.id} label={`الصنف: ${itemLabel(item)}`} onClear={() => onChange({ ...value, selectedItems: value.selectedItems.filter((selected) => selected.id !== item.id) })} />)}
           {value.search.trim() ? <FilterChip label={`البحث: ${value.search}`} onClear={() => onChange({ ...value, search: "" })} /> : null}
           {movementLabel ? <FilterChip label={`نوع الحركة: ${movementLabel}`} onClear={() => onChange({ ...value, movementType: "all" })} /> : null}
           {value.direction !== "all" ? <FilterChip label={`الاتجاه: ${INVENTORY_DIRECTION_FILTER_LABELS_AR[value.direction]}`} onClear={() => onChange({ ...value, direction: "all" })} /> : null}

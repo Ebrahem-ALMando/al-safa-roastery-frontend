@@ -34,6 +34,8 @@ type ItemPickerDialogProps = {
   itemType?: ItemType
   activeOnly?: boolean
   selectionMode?: "single" | "multiple"
+  searchMode?: "local" | "server"
+  singleSelectionHint?: string
 }
 
 function RowSkeleton() {
@@ -59,6 +61,8 @@ export function ItemPickerDialog({
   itemType,
   activeOnly = true,
   selectionMode = "multiple",
+  searchMode = "server",
+  singleSelectionHint = "اختر صنفاً واحداً لتنفيذ العملية عليه.",
 }: ItemPickerDialogProps) {
   const [query, setQuery] = React.useState("")
   const [selectedItems, setSelectedItems] = React.useState<Map<string, ItemPickerRow>>(() => new Map())
@@ -71,7 +75,7 @@ export function ItemPickerDialog({
     search: query,
     activeOnly,
     itemType,
-    clientSearch: false,
+    clientSearch: searchMode === "local",
   })
   const filteredRows = React.useMemo(
     () => rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10))),
@@ -207,7 +211,12 @@ export function ItemPickerDialog({
       event.preventDefault()
       const activeItem = availableRows[activeRowIndex]
       if (activeItem) {
-        toggleSelection(activeItem)
+        if (selectionMode === "single") {
+          onSelect(activeItem)
+          handleOpenChange(false)
+        } else {
+          toggleSelection(activeItem)
+        }
       }
     }
   }
@@ -248,11 +257,6 @@ export function ItemPickerDialog({
                 <div className="flex items-start justify-between gap-3">
                   <DialogTitle className="text-xl font-bold">{title ?? "اختيار صنف"}</DialogTitle>
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                    {selectedCount > 0 ? (
-                      <Badge className="gap-1 rounded-lg text-[11px]">
-                        {selectedCount} محدد
-                      </Badge>
-                    ) : null}
                     {query.trim() !== "" ? (
                       <Badge variant="secondary" className="gap-1 rounded-lg text-[11px]">
                         {filteredRows.length} مطابقة
@@ -419,7 +423,7 @@ export function ItemPickerDialog({
                     className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/60 bg-muted/20 px-6 py-12 text-center"
                   >
                     <Search className="size-6 text-muted-foreground" />
-                    <p className="font-semibold">لا توجد نتائج</p>
+                    <p className="font-semibold">{selectedCount > 0 ? "لا توجد نتائج إضافية" : "لا توجد نتائج"}</p>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -435,7 +439,7 @@ export function ItemPickerDialog({
                 {selectedCount > 0
                   ? `تم تحديد ${selectedCount} صنف`
                   : selectionMode === "single"
-                    ? "اختر صنفاً واحداً لربطه بالمنتج."
+                    ? singleSelectionHint
                     : "يمكنك تحديد أكثر من صنف ثم إضافتها دفعة واحدة."}
               </p>
               <Tooltip>
@@ -450,7 +454,7 @@ export function ItemPickerDialog({
                     <Info className="size-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
+                <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-sm text-right leading-relaxed">
                   <div className="space-y-2">
                     <p className="font-medium">اختصارات الموديل</p>
                     <p className="flex items-center gap-2">
@@ -464,8 +468,7 @@ export function ItemPickerDialog({
                     </p>
                     {selectionMode === "multiple" ? (
                       <p className="flex items-center gap-2">
-                        <Kbd>Alt</Kbd>
-                        <Kbd>A</Kbd>
+                        <Kbd>Alt+A</Kbd>
                         تحديد النتائج الظاهرة.
                       </p>
                     ) : null}

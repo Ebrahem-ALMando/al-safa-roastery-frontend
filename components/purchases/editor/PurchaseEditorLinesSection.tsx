@@ -6,6 +6,16 @@ import { AlertTriangle, Info, Package, Plus, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/custom-toast-with-icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Kbd } from "@/components/ui/kbd"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -77,7 +87,7 @@ function LineAmountField({
   disabled,
 }: LineAmountFieldProps) {
   return (
-    <label className="block min-w-0 space-y-1.5">
+    <label className="grid h-full min-w-0 grid-rows-[1rem_2.75rem_minmax(2.5rem,auto)] gap-1.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <Input
         inputMode="decimal"
@@ -94,7 +104,7 @@ function LineAmountField({
         )}
         dir="ltr"
       />
-      <p className="h-4 truncate text-[10px] text-destructive" title={error} aria-live="polite">
+      <p className="min-h-10 whitespace-normal break-words text-right text-[10px] leading-4 text-destructive" aria-live="polite">
         {error ?? ""}
       </p>
     </label>
@@ -108,6 +118,7 @@ export function PurchaseEditorLinesSection({
   disabled = false,
 }: PurchaseEditorLinesSectionProps) {
   const [pickerOpen, setPickerOpen] = React.useState(false)
+  const [deleteAllOpen, setDeleteAllOpen] = React.useState(false)
   const [selectedLineKey, setSelectedLineKey] = React.useState<string | null>(null)
   const [duplicateHighlightKey, setDuplicateHighlightKey] = React.useState<string | null>(null)
   const lineRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
@@ -209,6 +220,14 @@ export function PurchaseEditorLinesSection({
     }, 0)
   }
 
+  function clearAllLines() {
+    onChange([])
+    setSelectedLineKey(null)
+    setDuplicateHighlightKey(null)
+    setDeleteAllOpen(false)
+    window.setTimeout(() => addItemsButtonRef.current?.focus(), 80)
+  }
+
   function focusLineInput(lineKey: string | undefined, field: "quantity" | "price") {
     if (!lineKey) return
     window.requestAnimationFrame(() => {
@@ -238,6 +257,15 @@ export function PurchaseEditorLinesSection({
 
   function handleLineKeyDown(event: React.KeyboardEvent<HTMLDivElement>, index: number, lineKey: string) {
     if (disabled) return
+    const altDelete = event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.code === "Delete"
+    if (altDelete) {
+      if (document.querySelector('[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]')) return
+      event.preventDefault()
+      event.stopPropagation()
+      removeLine(lineKey)
+      return
+    }
+
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault()
       const targetIndex = event.key === "ArrowUp" ? index - 1 : index + 1
@@ -266,7 +294,28 @@ export function PurchaseEditorLinesSection({
         onSelect={handleAddItem}
         onSelectMany={handleAddItems}
         excludeItemIds={excludeIds}
+        searchMode="local"
       />
+
+      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+        <AlertDialogContent dir="rtl" lang="ar" className="gap-0 overflow-hidden rounded-2xl border-border/60 p-0 shadow-xl sm:max-w-md">
+          <AlertDialogHeader className="border-b bg-linear-to-b from-rose-50/80 to-background px-6 py-5 text-right sm:text-right dark:from-rose-950/20">
+            <div className="flex items-start gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive ring-1 ring-destructive/20"><Trash2 className="size-5" /></span>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <AlertDialogTitle>حذف جميع أصناف الفاتورة؟</AlertDialogTitle>
+                <AlertDialogDescription className="text-right leading-6">
+                  سيتم حذف جميع أصناف الفاتورة الحالية. لا يمكن التراجع عن هذا الإجراء إلا بإضافة الأصناف مرة أخرى.
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse justify-start border-t bg-muted/20 px-6 py-4 sm:justify-start">
+            <AlertDialogAction onClick={clearAllLines} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف الكل</AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl">إلغاء</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card className="border-border/60 shadow-sm">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
@@ -291,6 +340,16 @@ export function PurchaseEditorLinesSection({
               <Plus className="size-4" />
               إضافة أصناف
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+              disabled={disabled || lines.length === 0}
+              onClick={() => setDeleteAllOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              حذف الكل
+            </Button>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -303,7 +362,7 @@ export function PurchaseEditorLinesSection({
                   <Info className="size-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
+              <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-sm text-right leading-relaxed">
                 <div className="space-y-2">
                   <p className="font-medium">اختصارات إدخال الأصناف</p>
                   <p className="flex items-center gap-2">
@@ -317,6 +376,14 @@ export function PurchaseEditorLinesSection({
                   <p className="flex items-center gap-2">
                     <Kbd>Enter</Kbd>
                     من السعر إلى كمية الصنف التالي.
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Kbd>Alt+Delete</Kbd>
+                    حذف السطر الحالي.
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Kbd>Alt+Enter</Kbd>
+                    اعتماد الفاتورة.
                   </p>
                 </div>
               </TooltipContent>
@@ -380,7 +447,7 @@ export function PurchaseEditorLinesSection({
                         </p>
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(120px,0.8fr)_40px] sm:items-end">
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(120px,0.8fr)_40px] sm:items-stretch">
                         <LineAmountField
                           label="الكمية (كغ)"
                           value={line.quantityKg}
@@ -411,13 +478,14 @@ export function PurchaseEditorLinesSection({
                           onKeyDown={(event) => handleAmountEnter(event, index, "price")}
                           onChange={(value) => updateLine(line.key, { unitPrice: value })}
                         />
-                        <div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2.5 text-center">
+                        <div className="grid h-full min-w-0 grid-rows-[1rem_2.75rem_minmax(2.5rem,auto)] gap-1.5">
                           <p className="text-xs font-medium text-muted-foreground">الإجمالي</p>
-                          <p className="mt-1 truncate text-base font-black tabular-nums text-primary" dir="ltr">
-                            {formatUsd(lineTotal)}
-                          </p>
+                          <div className="flex h-11 items-center justify-center rounded-xl border border-border/60 bg-muted/15 px-3 text-center">
+                            <p className="truncate text-base font-black tabular-nums text-primary" dir="ltr">{formatUsd(lineTotal)}</p>
+                          </div>
+                          <span className="min-h-10" aria-hidden />
                         </div>
-                        <div className="flex h-11 items-center justify-center sm:mb-0.5">
+                        <div className="flex h-11 items-center justify-center sm:mt-[1.375rem]">
                           <Button
                             type="button"
                             variant="ghost"

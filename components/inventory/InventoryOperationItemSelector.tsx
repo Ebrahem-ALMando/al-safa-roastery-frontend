@@ -89,8 +89,10 @@ export function InventoryOperationItemSelector({
         onSelect={(row) => onChange(toInventoryItem(row))}
         activeOnly
         selectionMode="single"
-        title="اختيار صنف المخزون"
+        searchMode="local"
+        title="اختيار صنف"
         description="ابحث بالاسم أو الكود ثم اختر الصنف المطلوب."
+        singleSelectionHint="اختر صنفاً واحداً لتنفيذ العملية عليه."
       />
     </>
   )

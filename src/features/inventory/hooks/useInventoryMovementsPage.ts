@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useApiQuery } from "@/lib/hooks/useApiQuery"
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue"
 import {
@@ -33,7 +34,10 @@ function readInitialItemIds(): number[] {
 }
 
 export function useInventoryMovementsPage() {
+  const router = useRouter()
+  const pathname = usePathname()
   const [hydrated, setHydrated] = useState(false)
+  const [urlFiltersReady, setUrlFiltersReady] = useState(false)
   const [periodPreset, setPeriodPresetState] = useState<InventoryPeriodPreset>("current_month")
   const [customPeriod, setCustomPeriod] = useState<InventoryCustomPeriod | null>(null)
   const [customDialogOpen, setCustomDialogOpen] = useState(false)
@@ -56,6 +60,7 @@ export function useInventoryMovementsPage() {
       const initialIds = readInitialItemIds()
       setPendingUrlItemIds(initialIds)
       setSelectedItems(initialIds.map((id) => ({ id, code: "", name: `الصنف #${id}`, item_type: "raw" })))
+      setUrlFiltersReady(true)
       try {
         const storedConfig = localStorage.getItem(INVENTORY_MOVEMENTS_PAGE_CONFIG_KEY)
         if (storedConfig) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(storedConfig) })
@@ -94,6 +99,18 @@ export function useInventoryMovementsPage() {
   useEffect(() => {
     if (hydrated) localStorage.setItem(INVENTORY_PERIOD_STORAGE_KEY, JSON.stringify({ preset: periodPreset, custom: customPeriod }))
   }, [periodPreset, customPeriod, hydrated])
+  useEffect(() => {
+    if (!hydrated || !urlFiltersReady) return
+    const params = new URLSearchParams(window.location.search)
+    params.delete("item_ids[]")
+    params.delete("item_ids")
+    params.delete("item_id")
+    selectedItems.forEach((item) => params.append("item_ids[]", String(item.id)))
+    const query = params.toString()
+    const nextUrl = query ? `${pathname}?${query}` : pathname
+    const currentUrl = `${window.location.pathname}${window.location.search}`
+    if (nextUrl !== currentUrl) router.replace(nextUrl, { scroll: false })
+  }, [hydrated, pathname, router, selectedItems, urlFiltersReady])
   useEffect(() => {
     const timer = window.setTimeout(() => setPage(1), 0)
     return () => window.clearTimeout(timer)

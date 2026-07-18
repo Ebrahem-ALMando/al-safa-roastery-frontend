@@ -1,14 +1,13 @@
 "use client"
 
 import { useMemo, useState, type ReactNode } from "react"
-import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, Loader2, Wallet, X } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { ArrowDownToLine, ArrowUpFromLine, Loader2, Wallet, X } from "lucide-react"
+import { OperationNotesAccordion, OtherReasonHelper } from "@/components/shared/OperationNotesAccordion"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { ApiRequestError } from "@/lib/api"
 import { formatLocalYmd } from "@/lib/date-scope/resolve-operational-date-range"
 import {
@@ -32,7 +31,6 @@ export function CashboxManualTransactionDialog({ mode, open, onOpenChange, curre
   const [amount, setAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<CashboxPaymentMethod>("cash")
   const [reason, setReason] = useState(mode === "deposit" ? "capital" : "personal_withdrawal")
-  const [reasonText, setReasonText] = useState("")
   const [notes, setNotes] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -56,7 +54,6 @@ export function CashboxManualTransactionDialog({ mode, open, onOpenChange, curre
       setAmount("")
       setPaymentMethod("cash")
       setReason(mode === "deposit" ? "capital" : "personal_withdrawal")
-      setReasonText("")
       setNotes("")
       setError("")
     }
@@ -76,13 +73,7 @@ export function CashboxManualTransactionDialog({ mode, open, onOpenChange, curre
       setError("الرصيد الحالي في الصندوق غير كافٍ لتنفيذ هذا السحب.")
       return
     }
-    if (reason === "other" && !reasonText.trim()) {
-      setError("اكتب السبب التفصيلي عند اختيار أخرى.")
-      return
-    }
-
     const reasonLabel = (reasonLabels as Record<string, string>)[reason] ?? reason
-    const descriptionValue = reason === "other" ? `أخرى: ${reasonText.trim()}` : reasonLabel
     setSubmitting(true)
     setError("")
     try {
@@ -90,7 +81,7 @@ export function CashboxManualTransactionDialog({ mode, open, onOpenChange, curre
         transaction_date: date,
         amount: numericAmount,
         payment_method: paymentMethod,
-        description: descriptionValue,
+        description: reasonLabel,
         notes: notes.trim() || null,
       }
       if (mode === "deposit") await manualDeposit(payload)
@@ -131,13 +122,13 @@ export function CashboxManualTransactionDialog({ mode, open, onOpenChange, curre
                 </Select>
               </Field>
               <Field label="السبب" required>
-                <Select value={reason} onValueChange={(value) => { setReason(value); setReasonText(""); setError("") }} disabled={submitting}>
+                <Select value={reason} onValueChange={(value) => { setReason(value); setError("") }} disabled={submitting}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent dir="rtl">{reasonOptions.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
                 </Select>
               </Field>
             </div>
-            {reason === "other" ? <Field label="السبب التفصيلي" required><Input value={reasonText} onChange={(event) => { setReasonText(event.target.value); setError("") }} placeholder="اكتب سبب العملية" disabled={submitting} /></Field> : null}
+            {reason === "other" ? <OtherReasonHelper /> : null}
           </section>
 
           <section className="space-y-3">
@@ -151,12 +142,7 @@ export function CashboxManualTransactionDialog({ mode, open, onOpenChange, curre
             {error ? <p className="text-sm font-medium text-destructive" role="alert">{error}</p> : null}
           </section>
 
-          <Accordion type="single" collapsible>
-            <AccordionItem value="notes" className="overflow-hidden rounded-xl border">
-              <AccordionTrigger className="px-4 hover:no-underline"><span className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" />ملاحظات</span></AccordionTrigger>
-              <AccordionContent className="px-4 pb-4"><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="ملاحظات إضافية عن العملية (اختياري)" className="min-h-24" disabled={submitting} /></AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <OperationNotesAccordion value={notes} onChange={setNotes} placeholder="ملاحظات إضافية عن العملية (اختياري)" tone={mode === "deposit" ? "emerald" : "rose"} disabled={submitting} />
         </div>
 
         <div className="sticky bottom-0 z-10 flex shrink-0 flex-wrap gap-2 border-t bg-background/95 px-6 py-4 shadow-[0_-8px_24px_rgba(15,23,42,0.05)] backdrop-blur">

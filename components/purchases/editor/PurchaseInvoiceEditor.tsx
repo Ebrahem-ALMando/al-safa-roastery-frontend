@@ -9,7 +9,6 @@ import { toast } from "@/components/ui/custom-toast-with-icons"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
-  calculateRemaining,
   calculateSubtotal,
   calculateTotal,
   emptyPurchaseEditorForm,
@@ -250,8 +249,6 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
 
   const subtotal = calculateSubtotal(form.lines)
   const total = calculateTotal(subtotal, form.discount)
-  const remaining = calculateRemaining(total, form.paidAmount)
-
   return (
     <div className="space-y-6 pb-8" dir="rtl" lang="ar">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -329,10 +326,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
         open={completeOpen}
         onOpenChange={setCompleteOpen}
         onConfirm={handleCompleteConfirmed}
-        supplierName={form.supplier?.name ?? "—"}
-        total={total}
-        paidAmount={Number.parseFloat(form.paidAmount || "0") || 0}
-        remaining={remaining}
+        form={form}
         isSubmitting={isCompleting}
       />
     </div>

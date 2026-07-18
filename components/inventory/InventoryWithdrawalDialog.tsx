@@ -1,14 +1,13 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ClipboardList, Loader2, MinusCircle, X } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Loader2, MinusCircle, X } from "lucide-react"
+import { OperationNotesAccordion, OtherReasonHelper } from "@/components/shared/OperationNotesAccordion"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import {
   formatInventoryQuantity,
   inventoryNumber,
@@ -103,19 +102,14 @@ export function InventoryWithdrawalDialog({ item, open, onOpenChange }: { item: 
               </div>
             </div>
 
-            {reason === "other" ? <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">يمكنك توضيح السبب ضمن الملاحظات.</p> : null}
+            {reason === "other" ? <OtherReasonHelper /> : null}
 
             <div className={`rounded-xl border p-3 text-sm ${remaining < 0 ? "border-destructive/40 bg-destructive/5 text-destructive" : "border-emerald-500/20 bg-emerald-500/5"}`}>
               الكمية بعد السحب: <strong className="tabular-nums" dir="ltr">{selectedItem ? formatInventoryQuantity(Math.max(0, remaining)) : "—"}</strong>
             </div>
             {error ? <p className="text-sm font-medium text-destructive" role="alert">{error}</p> : null}
 
-            <Accordion type="single" collapsible>
-              <AccordionItem value="notes" className="overflow-hidden rounded-xl border">
-                <AccordionTrigger className="px-4 hover:no-underline"><span className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" />ملاحظات</span></AccordionTrigger>
-                <AccordionContent className="px-4 pb-4"><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="أضف تفاصيل مفيدة عن عملية السحب (اختياري)" className="min-h-24" disabled={submitting} /></AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            <OperationNotesAccordion value={notes} onChange={setNotes} placeholder="أضف تفاصيل مفيدة عن عملية السحب (اختياري)" tone="rose" disabled={submitting} />
           </section>
         </div>
 
