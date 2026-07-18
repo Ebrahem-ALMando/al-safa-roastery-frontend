@@ -277,6 +277,7 @@ export function PurchaseEditorSummaryPanel({
               type="button"
               className="h-11 w-full rounded-xl px-4 shadow-sm"
               onClick={onComplete}
+              title="Alt+Enter"
               disabled={disabled || busy}
               aria-busy={isCompleting}
             >

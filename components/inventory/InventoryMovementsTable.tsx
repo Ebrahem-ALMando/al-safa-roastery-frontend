@@ -55,6 +55,9 @@ export function InventoryMovementsTable({ movements, meta, visibleColumns, isLoa
       case "unit_cost": return movement.unit_cost == null ? "—" : <span dir="ltr">{formatInventoryCost(movement.unit_cost)}</span>
       case "total_cost": return movement.total_cost == null ? "—" : <span dir="ltr">{formatInventoryMoney(movement.total_cost)}</span>
       case "created_at": return <span className="whitespace-nowrap text-xs">{formatInventoryDate(movement.created_at, true)}</span>
+      case "quantity": return <span className="font-semibold" dir="ltr">{formatInventoryQuantity(movement.quantity_kg)}</span>
+      case "created_by": return movement.created_by?.name || "—"
+      case "reason": return movementReason(movement) || "—"
     }
   }
 
@@ -77,12 +80,16 @@ function columnLabel(id: InventoryMovementTableColumnId) {
 }
 
 function movementNote(movement: InventoryMovement) {
-  const reason = movement.reason
+  const reason = movementReason(movement)
+  return [reason, movement.notes].filter(Boolean).join(" · ")
+}
+
+function movementReason(movement: InventoryMovement) {
+  return movement.reason
     ? WITHDRAWAL_REASON_LABELS_AR[movement.reason as keyof typeof WITHDRAWAL_REASON_LABELS_AR]
       ?? ADJUSTMENT_REASON_LABELS_AR[movement.reason as keyof typeof ADJUSTMENT_REASON_LABELS_AR]
       ?? movement.reason
     : null
-  return [reason, movement.notes].filter(Boolean).join(" · ")
 }
 
 function MovementSource({ movement }: { movement: InventoryMovement }) {

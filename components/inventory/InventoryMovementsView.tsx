@@ -17,7 +17,7 @@ import { InventoryMovementsSummary } from "./InventoryMovementsSummary"
 export function InventoryMovementsView() {
   const page = useInventoryMovementsPage()
   const dialogDefault = defaultInventoryPeriod()
-  const filterValue = { search: page.search, item: page.item, movementType: page.movementType, direction: page.direction, sourceType: page.sourceType }
+  const filterValue = { search: page.search, selectedItems: page.selectedItems, movementType: page.movementType, direction: page.direction, sourceType: page.sourceType }
 
   return <div className="space-y-6" dir="rtl" lang="ar">
     <DashboardPageHeader>
@@ -32,7 +32,7 @@ export function InventoryMovementsView() {
     </DashboardPageHeader>
 
     {page.config.showKPI ? <InventoryMovementsSummary summary={page.movementSummary} isLoading={page.summaryIsLoading} error={page.summaryError} /> : null}
-    {page.config.showFilters ? <InventoryMovementsFilters value={filterValue} onChange={(next) => { page.setSearch(next.search); page.setItem(next.item); page.setMovementType(next.movementType); page.setDirection(next.direction); page.setSourceType(next.sourceType) }} onReset={page.resetFilters} isLoading={page.isLoading} /> : null}
+    {page.config.showFilters ? <InventoryMovementsFilters value={filterValue} onChange={(next) => { page.setSearch(next.search); page.setSelectedItems(next.selectedItems); page.setMovementType(next.movementType); page.setDirection(next.direction); page.setSourceType(next.sourceType) }} onReset={page.resetFilters} isLoading={page.isLoading} /> : null}
     {page.error && !page.isLoading ? <div className="flex flex-col items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-6"><p className="text-sm text-destructive">تعذر تحميل حركات المخزون. حاول مجدداً.</p><Button variant="outline" onClick={() => void page.mutate()} className="gap-2"><RefreshCw className="size-4" />إعادة المحاولة</Button></div> : <div className={page.config.viewMode === "table" ? "overflow-hidden rounded-xl border shadow-sm" : "overflow-hidden"}><InventoryMovementsDataView viewMode={page.config.viewMode} movements={page.movements} meta={page.meta} visibleColumns={page.visibleColumns} isLoading={page.isLoading} page={page.page} onPageChange={page.setPage} /></div>}
     <DateRangeDialog open={page.customDialogOpen} onOpenChange={page.setCustomDialogOpen} from={page.customPeriod?.from ?? dialogDefault.from} to={page.customPeriod?.to ?? dialogDefault.to} onApply={page.applyCustomPeriod} />
   </div>

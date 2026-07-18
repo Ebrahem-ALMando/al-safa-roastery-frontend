@@ -137,6 +137,8 @@ export function PurchaseEditorSupplierSection({
               animate={{ opacity: 1, scale: 1 }}
               className="group flex items-center gap-3 rounded-2xl border border-primary/25 bg-linear-to-l from-primary/8 via-primary/4 to-transparent p-4 shadow-sm"
               dir="rtl"
+              tabIndex={-1}
+              data-purchase-field="supplier_id"
             >
               <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                 <Truck className="size-5" />
@@ -174,6 +176,7 @@ export function PurchaseEditorSupplierSection({
                   disabled={disabled}
                   onChange={(e) => setSearch(e.target.value)}
                   onFocus={() => setShowDropdown(true)}
+                  data-purchase-field="supplier_id"
                   className={cn(
                     "h-12 rounded-xl border-border/70 pe-10 ps-3 shadow-sm",
                     error && "border-destructive/60"

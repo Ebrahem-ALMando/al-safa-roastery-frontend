@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useApiQuery } from "@/lib/hooks/useApiQuery"
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue"
 import {
   DEFAULT_VISIBLE_INVENTORY_MOVEMENT_COLUMNS,
@@ -14,19 +15,22 @@ import {
   type InventoryViewMode,
 } from "../lib/inventory.constants"
 import { defaultInventoryPeriod, readInventoryPeriod, resolveInventoryPeriod } from "../lib/inventory.helpers"
-import type { InventoryDirectionFilter, InventoryItemType, InventoryMovementFilters } from "../types/inventory.types"
+import type { InventoryDirectionFilter, InventoryMovementFilters, InventoryMovementPickerItem } from "../types/inventory.types"
 import { useInventoryMovementSummary } from "./useInventoryMovementSummary"
 import { useInventoryMovements } from "./useInventoryMovements"
 
-export type InventoryMovementPickerItem = {
-  id: number
-  code: string
-  name: string
-  item_type: InventoryItemType
-}
-
 type PageConfig = { showKPI: boolean; showFilters: boolean; viewMode: InventoryViewMode }
 const DEFAULT_CONFIG: PageConfig = { showKPI: true, showFilters: true, viewMode: "table" }
+
+function readInitialItemIds(): number[] {
+  const params = new URLSearchParams(window.location.search)
+  const values = [
+    ...params.getAll("item_ids[]"),
+    ...params.getAll("item_ids"),
+    ...(params.get("item_id") ? [params.get("item_id") as string] : []),
+  ]
+  return [...new Set(values.flatMap((value) => value.split(",")).map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0))]
+}
 
 export function useInventoryMovementsPage() {
   const [hydrated, setHydrated] = useState(false)
@@ -35,7 +39,8 @@ export function useInventoryMovementsPage() {
   const [customDialogOpen, setCustomDialogOpen] = useState(false)
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebouncedValue(search, 300)
-  const [item, setItem] = useState<InventoryMovementPickerItem | null>(null)
+  const [selectedItems, setSelectedItems] = useState<InventoryMovementPickerItem[]>([])
+  const [pendingUrlItemIds, setPendingUrlItemIds] = useState<number[]>([])
   const [movementType, setMovementType] = useState("all")
   const [direction, setDirection] = useState<InventoryDirectionFilter | "all">("all")
   const [sourceType, setSourceType] = useState("all")
@@ -48,18 +53,37 @@ export function useInventoryMovementsPage() {
       const period = readInventoryPeriod()
       setPeriodPresetState(period.preset)
       setCustomPeriod(period.custom)
+      const initialIds = readInitialItemIds()
+      setPendingUrlItemIds(initialIds)
+      setSelectedItems(initialIds.map((id) => ({ id, code: "", name: `الصنف #${id}`, item_type: "raw" })))
       try {
         const storedConfig = localStorage.getItem(INVENTORY_MOVEMENTS_PAGE_CONFIG_KEY)
         if (storedConfig) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(storedConfig) })
         const storedColumns = localStorage.getItem(INVENTORY_MOVEMENTS_TABLE_COLUMNS_STORAGE_KEY)
         if (storedColumns) setVisibleColumns(normalizeInventoryMovementColumns(JSON.parse(storedColumns)))
       } catch {
-        /* Keep defaults when stored preferences are invalid. */
+        // Keep defaults when stored preferences are invalid.
       }
       setHydrated(true)
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
+
+  const initialItemsQuery = useApiQuery<InventoryMovementPickerItem[]>(
+    hydrated && pendingUrlItemIds.length > 0 ? `inventory-initial-items:${pendingUrlItemIds.join(",")}` : null,
+    "items/picker",
+    { queryParams: { item_ids: pendingUrlItemIds, limit: Math.max(1, pendingUrlItemIds.length) } }
+  )
+
+  useEffect(() => {
+    if (!initialItemsQuery.data || initialItemsQuery.data.length === 0) return
+    const timer = window.setTimeout(() => {
+      const resolved = new Map(initialItemsQuery.data?.map((item) => [item.id, item]) ?? [])
+      setSelectedItems((current) => current.map((item) => resolved.get(item.id) ?? item))
+      setPendingUrlItemIds([])
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [initialItemsQuery.data])
 
   useEffect(() => {
     if (hydrated) localStorage.setItem(INVENTORY_MOVEMENTS_PAGE_CONFIG_KEY, JSON.stringify(config))
@@ -73,18 +97,18 @@ export function useInventoryMovementsPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => setPage(1), 0)
     return () => window.clearTimeout(timer)
-  }, [debouncedSearch, item, movementType, direction, sourceType, periodPreset, customPeriod])
+  }, [debouncedSearch, selectedItems, movementType, direction, sourceType, periodPreset, customPeriod])
 
   const dateRange = useMemo(() => resolveInventoryPeriod(periodPreset, customPeriod), [periodPreset, customPeriod])
   const sharedFilters = useMemo<Omit<InventoryMovementFilters, "page" | "per_page" | "sort_by" | "sort_direction">>(() => ({
     search: debouncedSearch || undefined,
-    item_id: item?.id,
+    item_ids: selectedItems.map((item) => item.id),
     movement_type: movementType === "all" ? undefined : movementType,
     direction: direction === "all" ? undefined : direction,
     source_type: sourceType === "all" ? undefined : sourceType,
     date_from: dateRange?.from,
     date_to: dateRange?.to,
-  }), [debouncedSearch, item, movementType, direction, sourceType, dateRange])
+  }), [debouncedSearch, selectedItems, movementType, direction, sourceType, dateRange])
   const listFilters = useMemo<InventoryMovementFilters>(() => ({
     ...sharedFilters,
     page,
@@ -104,7 +128,8 @@ export function useInventoryMovementsPage() {
   }, [])
   const resetFilters = useCallback(() => {
     setSearch("")
-    setItem(null)
+    setSelectedItems([])
+    setPendingUrlItemIds([])
     setMovementType("all")
     setDirection("all")
     setSourceType("all")
@@ -125,8 +150,8 @@ export function useInventoryMovementsPage() {
     dateRange,
     search,
     setSearch,
-    item,
-    setItem,
+    selectedItems,
+    setSelectedItems,
     movementType,
     setMovementType,
     direction,

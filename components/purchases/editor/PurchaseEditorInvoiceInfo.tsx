@@ -102,7 +102,7 @@ export function PurchaseEditorInvoiceInfo({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start" dir="rtl" className="max-w-xs text-right leading-relaxed">
-              Ctrl + Enter لاعتماد الفاتورة. حفظ كمسودة يبقي المخزون ورصيد المورد دون تغيير حتى الاعتماد.
+              Alt + Enter لاعتماد الفاتورة. حفظ كمسودة يبقي المخزون ورصيد المورد دون تغيير حتى الاعتماد.
             </TooltipContent>
           </Tooltip>
         </>
@@ -119,6 +119,7 @@ export function PurchaseEditorInvoiceInfo({
             </FormFieldIcon>
             <Input
               type="date"
+              data-purchase-field="invoice_date"
               value={form.invoiceDate}
               disabled={disabled}
               onChange={(e) => onChange({ invoiceDate: e.target.value })}
@@ -145,6 +146,7 @@ export function PurchaseEditorInvoiceInfo({
             </FormFieldIcon>
             <Input
               value={form.invoiceNumber}
+              data-purchase-field="invoice_number"
               disabled={disabled}
               onChange={(e) => onChange({ invoiceNumber: e.target.value })}
               placeholder="مثال: رقم الفاتورة المطبوعة من المورد"
@@ -168,6 +170,7 @@ export function PurchaseEditorInvoiceInfo({
               </FormFieldIcon>
               <Input
                 inputMode="decimal"
+                data-purchase-field="paid_amount"
                 value={form.paidAmount}
                 disabled={disabled}
                 onChange={(e) => onChange({ paidAmount: e.target.value })}
@@ -194,6 +197,7 @@ export function PurchaseEditorInvoiceInfo({
               </FormFieldIcon>
               <Input
                 inputMode="decimal"
+                data-purchase-field="discount"
                 value={form.discount}
                 disabled={disabled}
                 onChange={(e) => onChange({ discount: e.target.value })}
@@ -231,6 +235,7 @@ export function PurchaseEditorInvoiceInfo({
                 }
               >
                 <SelectTrigger
+                  data-purchase-field="payment_method"
                   className={cn(
                     adminFormInputClass,
                     "!w-full min-w-0 justify-between",

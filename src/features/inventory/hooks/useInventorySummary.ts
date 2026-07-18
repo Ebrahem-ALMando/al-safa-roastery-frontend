@@ -6,7 +6,7 @@ import { useAuth } from "@/src/features/auth/hooks/useAuth"
 import type { InventoryItemsFilters, InventorySummaryResponse } from "../types/inventory.types"
 import { buildInventoryItemsQuery } from "../lib/inventory.api"
 
-export function useInventorySummary(filters: Pick<InventoryItemsFilters, "date_from" | "date_to" | "item_type" | "stock_status" | "item_id">, enabled = true) {
+export function useInventorySummary(filters: Pick<InventoryItemsFilters, "date_from" | "date_to" | "item_type" | "stock_status" | "item_id" | "item_ids">, enabled = true) {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const queryParams = useMemo(() => buildInventoryItemsQuery(filters), [filters])
   const ready = enabled && !authLoading && isAuthenticated

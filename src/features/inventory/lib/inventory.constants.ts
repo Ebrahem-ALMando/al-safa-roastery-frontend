@@ -5,6 +5,7 @@ export const INVENTORY_PAGE_CONFIG_KEY = "al-safa:inventory-page-config"
 export const INVENTORY_PERIOD_STORAGE_KEY = "al-safa:inventory-period"
 export const INVENTORY_MOVEMENTS_TABLE_COLUMNS_STORAGE_KEY = "al-safa:inventory-movements-table-columns"
 export const INVENTORY_MOVEMENTS_PAGE_CONFIG_KEY = "al-safa:inventory-movements-page-config"
+export const INVENTORY_ITEM_MOVEMENTS_TABLE_COLUMNS_STORAGE_KEY = "al-safa:inventory-item-movements-table-columns"
 
 export type InventoryViewMode = "table" | "cards"
 export type InventoryPeriodPreset = "all" | "today" | "yesterday" | "current_week" | "current_month" | "custom"
@@ -78,6 +79,7 @@ export type InventoryMovementTableColumnId =
   | "row_number" | "movement_date" | "item" | "movement_type" | "source"
   | "incoming" | "outgoing" | "cost" | "balance_after" | "user" | "notes"
   | "direction" | "source_type" | "unit_cost" | "total_cost" | "created_at"
+  | "quantity" | "created_by" | "reason"
 
 export const INVENTORY_MOVEMENT_TABLE_COLUMNS: { id: InventoryMovementTableColumnId; label: string; defaultVisible: boolean }[] = [
   { id: "row_number", label: "#", defaultVisible: true },
@@ -96,6 +98,9 @@ export const INVENTORY_MOVEMENT_TABLE_COLUMNS: { id: InventoryMovementTableColum
   { id: "unit_cost", label: "تكلفة الوحدة", defaultVisible: false },
   { id: "total_cost", label: "إجمالي التكلفة", defaultVisible: false },
   { id: "created_at", label: "تاريخ التسجيل", defaultVisible: false },
+  { id: "quantity", label: "الكمية", defaultVisible: false },
+  { id: "created_by", label: "أنشئت بواسطة", defaultVisible: false },
+  { id: "reason", label: "السبب", defaultVisible: false },
 ]
 
 export const DEFAULT_VISIBLE_INVENTORY_MOVEMENT_COLUMNS = INVENTORY_MOVEMENT_TABLE_COLUMNS
@@ -109,6 +114,26 @@ export function normalizeInventoryMovementColumns(columns: InventoryMovementTabl
   const normalized = [...new Set(columns.filter((id) => VALID_MOVEMENT_COLUMNS.has(id)))]
   if (!normalized.some((id) => MOVEMENT_CONTEXT_COLUMNS.includes(id))) normalized.unshift("movement_date")
   return normalized.length > 0 ? normalized : DEFAULT_VISIBLE_INVENTORY_MOVEMENT_COLUMNS
+}
+
+export const DEFAULT_VISIBLE_INVENTORY_ITEM_MOVEMENT_COLUMNS: InventoryMovementTableColumnId[] = [
+  "movement_date",
+  "movement_type",
+  "direction",
+  "quantity",
+  "unit_cost",
+  "total_cost",
+  "balance_after",
+  "source",
+  "notes",
+]
+
+const ITEM_MOVEMENT_CONTEXT_COLUMNS: InventoryMovementTableColumnId[] = ["movement_date", "movement_type", "source", "balance_after"]
+
+export function normalizeInventoryItemMovementColumns(columns: InventoryMovementTableColumnId[]): InventoryMovementTableColumnId[] {
+  const normalized = [...new Set(columns.filter((id) => VALID_MOVEMENT_COLUMNS.has(id) && id !== "item" && id !== "row_number"))]
+  if (!normalized.some((id) => ITEM_MOVEMENT_CONTEXT_COLUMNS.includes(id))) normalized.unshift("movement_date")
+  return normalized.length > 0 ? normalized : DEFAULT_VISIBLE_INVENTORY_ITEM_MOVEMENT_COLUMNS
 }
 
 export type InventoryTableColumnId = "row_number" | "item" | "item_type" | "current_quantity" |

@@ -71,13 +71,18 @@ export function ItemPickerDialog({
     search: query,
     activeOnly,
     itemType,
-    clientSearch: true,
+    clientSearch: false,
   })
   const filteredRows = React.useMemo(
     () => rows.filter((r) => !excludeItemIds.includes(Number.parseInt(r.id, 10))),
     [excludeItemIds, rows]
   )
-  const activeRowIndex = filteredRows.length === 0 ? 0 : Math.min(activeIndex, filteredRows.length - 1)
+  const selectedRows = React.useMemo(() => Array.from(selectedItems.values()), [selectedItems])
+  const availableRows = React.useMemo(
+    () => filteredRows.filter((row) => !selectedItems.has(row.id)),
+    [filteredRows, selectedItems]
+  )
+  const activeRowIndex = availableRows.length === 0 ? 0 : Math.min(activeIndex, availableRows.length - 1)
 
   React.useEffect(() => {
     if (!open) return
@@ -88,10 +93,10 @@ export function ItemPickerDialog({
   }, [open])
 
   React.useEffect(() => {
-    const activeItem = filteredRows[activeRowIndex]
+    const activeItem = availableRows[activeRowIndex]
     if (!activeItem) return
     rowRefs.current[activeItem.id]?.scrollIntoView({ block: "nearest" })
-  }, [activeRowIndex, filteredRows])
+  }, [activeRowIndex, availableRows])
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -118,6 +123,14 @@ export function ItemPickerDialog({
       } else {
         next.set(item.id, item)
       }
+      return next
+    })
+  }
+
+  const removeSelection = (itemId: string) => {
+    setSelectedItems((prev) => {
+      const next = new Map(prev)
+      next.delete(itemId)
       return next
     })
   }
@@ -157,7 +170,7 @@ export function ItemPickerDialog({
         handleConfirmSelection()
         return
       }
-      const activeItem = filteredRows[activeRowIndex]
+      const activeItem = availableRows[activeRowIndex]
       if (activeItem) {
         onSelect(activeItem)
         handleOpenChange(false)
@@ -165,7 +178,14 @@ export function ItemPickerDialog({
       return
     }
 
-    if (selectionMode === "multiple" && event.altKey && event.key.toLowerCase() === "a") {
+    if (selectionMode === "multiple" && event.altKey && event.code === "KeyS") {
+      event.preventDefault()
+      event.stopPropagation()
+      handleConfirmSelection()
+      return
+    }
+
+    if (selectionMode === "multiple" && event.altKey && event.code === "KeyA") {
       event.preventDefault()
       selectVisibleRows()
       return
@@ -173,7 +193,7 @@ export function ItemPickerDialog({
 
     if (event.key === "ArrowDown") {
       event.preventDefault()
-      setActiveIndex((current) => (filteredRows.length === 0 ? 0 : Math.min(current + 1, filteredRows.length - 1)))
+      setActiveIndex((current) => (availableRows.length === 0 ? 0 : Math.min(current + 1, availableRows.length - 1)))
       return
     }
 
@@ -185,7 +205,7 @@ export function ItemPickerDialog({
 
     if (event.key === "Enter") {
       event.preventDefault()
-      const activeItem = filteredRows[activeRowIndex]
+      const activeItem = availableRows[activeRowIndex]
       if (activeItem) {
         toggleSelection(activeItem)
       }
@@ -193,10 +213,10 @@ export function ItemPickerDialog({
   }
 
   const showMetaHint = false
-  const showSkeleton = isLoading && filteredRows.length === 0
-  const showEmpty = !isLoading && !error && filteredRows.length === 0
-  const showList = filteredRows.length > 0
-  const showEndSpinner = isSearchPending || (isLoading && filteredRows.length > 0)
+  const showSkeleton = isLoading && availableRows.length === 0 && selectedRows.length === 0
+  const showEmpty = !isLoading && !error && availableRows.length === 0
+  const showList = availableRows.length > 0
+  const showEndSpinner = isSearchPending || (isLoading && (availableRows.length > 0 || selectedRows.length > 0))
   const selectedCount = selectedItems.size
 
   return (
@@ -285,6 +305,29 @@ export function ItemPickerDialog({
         <div className="relative z-0 min-h-0 flex-1 overflow-hidden bg-background">
           <ScrollArea className="h-full" dir="rtl">
             <div className="space-y-2 p-4 pb-5" dir="rtl">
+            {selectedRows.length > 0 ? (
+              <div className="sticky top-0 z-10 mb-3 space-y-2 rounded-2xl border border-primary/20 bg-background/95 p-3 shadow-sm backdrop-blur">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-primary">الأصناف المحددة</p>
+                  <Badge variant="secondary" className="rounded-lg">{selectedCount} محدد</Badge>
+                </div>
+                <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+                  {selectedRows.map((item) => (
+                    <Badge key={item.id} variant="outline" className="max-w-full gap-1.5 bg-primary/5 py-1.5 pe-1.5 ps-2">
+                      <span className="max-w-52 truncate">{item.name}</span>
+                      <button
+                        type="button"
+                        className="rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => removeSelection(item.id)}
+                        aria-label={`إزالة ${item.name}`}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {error ? (
               <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center">
                 <AlertCircle className="size-6 text-destructive" />
@@ -305,9 +348,8 @@ export function ItemPickerDialog({
                         يُعرض أول {filteredRows.length} نتيجة — زِد دقة البحث.
                       </p>
                     ) : null}
-                    {filteredRows.map((item, index) => {
+                    {availableRows.map((item, index) => {
                       const isActive = index === activeRowIndex
-                      const isSelected = selectedItems.has(item.id)
 
                       return (
                       <motion.button
@@ -327,20 +369,18 @@ export function ItemPickerDialog({
                         className={cn(
                           "group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-right transition-all",
                           "hover:border-primary/35 hover:bg-card hover:shadow-md",
-                          isActive && "border-primary/45 ring-2 ring-primary/20",
-                          isSelected && "border-primary/50 bg-primary/5 ring-2 ring-primary/15"
+                          isActive && "border-primary/45 ring-2 ring-primary/20"
                         )}
                         dir="rtl"
-                        aria-pressed={isSelected}
+                        aria-pressed={false}
                         aria-current={isActive ? "true" : undefined}
                       >
                         <div
                           className={cn(
-                            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground",
-                            isSelected && "bg-primary text-primary-foreground"
+                            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
                           )}
                         >
-                          {isSelected ? <Check className="size-4" /> : <Package className="size-4" />}
+                          <Package className="size-4" />
                         </div>
                         <div className="min-w-0 flex-1 text-right">
                           <div className="flex flex-wrap items-center justify-start gap-2">
@@ -430,8 +470,7 @@ export function ItemPickerDialog({
                       </p>
                     ) : null}
                     <p className="flex items-center gap-2">
-                      <Kbd>Ctrl</Kbd>
-                      <Kbd>Enter</Kbd>
+                      <Kbd>{selectionMode === "multiple" ? "Alt+S" : "Ctrl+Enter"}</Kbd>
                       {selectionMode === "single" ? "اختيار الصنف المحدد." : "إضافة المحدد دفعة واحدة."}
                     </p>
                   </div>

@@ -35,6 +35,7 @@ type LineAmountFieldProps = {
   onChange: (value: string) => void
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
   inputRef?: React.Ref<HTMLInputElement>
+  dataField: string
   error?: string
   disabled?: boolean
 }
@@ -71,6 +72,7 @@ function LineAmountField({
   onChange,
   onKeyDown,
   inputRef,
+  dataField,
   error,
   disabled,
 }: LineAmountFieldProps) {
@@ -83,6 +85,7 @@ function LineAmountField({
         disabled={disabled}
         placeholder="0.00"
         ref={inputRef}
+        data-purchase-field={dataField}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         className={cn(
@@ -91,7 +94,9 @@ function LineAmountField({
         )}
         dir="ltr"
       />
-      {error ? <p className="text-[10px] text-destructive">{error}</p> : null}
+      <p className="h-4 truncate text-[10px] text-destructive" title={error} aria-live="polite">
+        {error ?? ""}
+      </p>
     </label>
   )
 }
@@ -103,33 +108,35 @@ export function PurchaseEditorLinesSection({
   disabled = false,
 }: PurchaseEditorLinesSectionProps) {
   const [pickerOpen, setPickerOpen] = React.useState(false)
+  const [selectedLineKey, setSelectedLineKey] = React.useState<string | null>(null)
+  const [duplicateHighlightKey, setDuplicateHighlightKey] = React.useState<string | null>(null)
   const lineRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const inputRefs = React.useRef<Record<string, { quantity?: HTMLInputElement | null; price?: HTMLInputElement | null }>>({})
+  const addItemsButtonRef = React.useRef<HTMLButtonElement | null>(null)
+  const duplicateHighlightTimerRef = React.useRef<number | null>(null)
 
   const excludeIds = lines.map((l) => l.itemId)
 
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (disabled || pickerOpen) return
-      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return
-
-      const target = event.target as HTMLElement | null
-      const tagName = target?.tagName
-      const isTyping =
-        tagName === "INPUT" ||
-        tagName === "TEXTAREA" ||
-        tagName === "SELECT" ||
-        target?.isContentEditable
-
-      if (isTyping) return
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.code !== "KeyN") return
+      if (document.querySelector('[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]')) return
 
       event.preventDefault()
+      event.stopPropagation()
       setPickerOpen(true)
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [disabled, pickerOpen])
+
+  React.useEffect(() => () => {
+    if (duplicateHighlightTimerRef.current !== null) {
+      window.clearTimeout(duplicateHighlightTimerRef.current)
+    }
+  }, [])
 
   function handleAddItem(row: ItemPickerRow) {
     const itemId = Number.parseInt(row.id, 10)
@@ -138,13 +145,14 @@ export function PurchaseEditorLinesSection({
       toast.info(PURCHASE_MESSAGES.duplicateItem)
       const el = lineRefs.current[existing.key]
       el?.scrollIntoView({ behavior: "smooth", block: "center" })
-      onChange(
-        lines.map((l) =>
-          l.key === existing.key ? { ...l, highlight: true } : { ...l, highlight: false }
-        )
-      )
-      window.setTimeout(() => {
-        onChange(lines.map((l) => ({ ...l, highlight: l.key === existing.key ? false : l.highlight })))
+      setSelectedLineKey(existing.key)
+      setDuplicateHighlightKey(existing.key)
+      if (duplicateHighlightTimerRef.current !== null) {
+        window.clearTimeout(duplicateHighlightTimerRef.current)
+      }
+      duplicateHighlightTimerRef.current = window.setTimeout(() => {
+        setDuplicateHighlightKey(null)
+        duplicateHighlightTimerRef.current = null
       }, 1500)
       return
     }
@@ -186,7 +194,19 @@ export function PurchaseEditorLinesSection({
   }
 
   function removeLine(key: string) {
-    onChange(lines.filter((l) => l.key !== key))
+    const index = lines.findIndex((line) => line.key === key)
+    if (index < 0) return
+    const nextLines = lines.filter((line) => line.key !== key)
+    const nextTarget = nextLines[index] ?? nextLines[index - 1]
+    onChange(nextLines)
+    setSelectedLineKey(nextTarget?.key ?? null)
+    window.setTimeout(() => {
+      if (nextTarget) {
+        focusLineInput(nextTarget.key, "quantity")
+      } else {
+        addItemsButtonRef.current?.focus()
+      }
+    }, 0)
   }
 
   function focusLineInput(lineKey: string | undefined, field: "quantity" | "price") {
@@ -216,6 +236,28 @@ export function PurchaseEditorLinesSection({
     focusLineInput(lines[index + 1]?.key, "quantity")
   }
 
+  function handleLineKeyDown(event: React.KeyboardEvent<HTMLDivElement>, index: number, lineKey: string) {
+    if (disabled) return
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault()
+      const targetIndex = event.key === "ArrowUp" ? index - 1 : index + 1
+      const targetLine = lines[targetIndex]
+      if (targetLine) {
+        setSelectedLineKey(targetLine.key)
+        focusLineInput(targetLine.key, "quantity")
+      }
+      return
+    }
+
+    const target = event.target as HTMLElement
+    const lineContainerFocused = target === event.currentTarget
+    const shiftedDelete = event.shiftKey && event.key === "Delete"
+    if (event.key === "Delete" && (lineContainerFocused || shiftedDelete)) {
+      event.preventDefault()
+      removeLine(lineKey)
+    }
+  }
+
   return (
     <>
       <ItemPickerDialog
@@ -239,10 +281,12 @@ export function PurchaseEditorLinesSection({
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
+              ref={addItemsButtonRef}
               type="button"
               className="gap-2 rounded-xl"
               disabled={disabled}
               onClick={() => setPickerOpen(true)}
+              data-purchase-field="lines"
             >
               <Plus className="size-4" />
               إضافة أصناف
@@ -263,7 +307,7 @@ export function PurchaseEditorLinesSection({
                 <div className="space-y-2">
                   <p className="font-medium">اختصارات إدخال الأصناف</p>
                   <p className="flex items-center gap-2">
-                    <Kbd>/</Kbd>
+                    <Kbd>Alt+N</Kbd>
                     فتح اختيار الأصناف.
                   </p>
                   <p className="flex items-center gap-2">
@@ -312,13 +356,22 @@ export function PurchaseEditorLinesSection({
                     }}
                     layout
                     className={cn(
-                      "rounded-2xl border border-border/60 bg-background p-4 shadow-sm transition-[box-shadow,border-color]",
-                      line.highlight && "border-amber-400/70 bg-amber-50/60 ring-2 ring-amber-400/40 dark:bg-amber-950/25"
+                      "rounded-2xl border border-border/60 bg-background p-4 shadow-sm outline-none transition-[box-shadow,border-color,background-color] focus-visible:ring-2 focus-visible:ring-primary/30",
+                      selectedLineKey === line.key && "border-primary/55 bg-primary/[0.025] shadow-md ring-2 ring-primary/10",
+                      (line.highlight || duplicateHighlightKey === line.key) && "border-amber-400/70 bg-amber-50/60 ring-2 ring-amber-400/40 dark:bg-amber-950/25"
                     )}
+                    tabIndex={0}
+                    role="group"
+                    data-purchase-line-index={index}
+                    onFocusCapture={() => setSelectedLineKey(line.key)}
+                    onKeyDown={(event) => handleLineKeyDown(event, index, line.key)}
                   >
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(380px,1.8fr)] lg:items-center">
                       <div className="min-w-0 space-y-1 text-right">
                         <div className="flex flex-wrap items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border bg-muted/40 text-xs font-bold tabular-nums text-muted-foreground">
+                            {index + 1}
+                          </span>
                           <p className="truncate font-semibold">{line.itemName}</p>
                           <ItemTypeBadge itemType={line.itemType} />
                         </div>
@@ -333,6 +386,7 @@ export function PurchaseEditorLinesSection({
                           value={line.quantityKg}
                           disabled={disabled}
                           error={qtyError}
+                          dataField={`lines.${index}.quantity_kg`}
                           inputRef={(el) => {
                             inputRefs.current[line.key] = {
                               ...inputRefs.current[line.key],
@@ -347,6 +401,7 @@ export function PurchaseEditorLinesSection({
                           value={line.unitPrice}
                           disabled={disabled}
                           error={priceError}
+                          dataField={`lines.${index}.unit_price`}
                           inputRef={(el) => {
                             inputRefs.current[line.key] = {
                               ...inputRefs.current[line.key],

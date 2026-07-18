@@ -53,6 +53,38 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
   const [completeOpen, setCompleteOpen] = React.useState(false)
   const submitLock = React.useRef(false)
 
+  const focusFirstInvalid = React.useCallback((errors: PurchaseEditorFieldErrors) => {
+    const lineFields = Object.keys(errors).filter((field) => field.startsWith("lines."))
+    const priority = [
+      "supplier_id",
+      "invoice_date",
+      ...lineFields,
+      "lines",
+      "discount",
+      "paid_amount",
+      "payment_method",
+      "invoice_number",
+    ]
+    const field = priority.find((candidate) => Boolean(errors[candidate]))
+    if (!field) return
+
+    window.setTimeout(() => {
+      let target = document.querySelector<HTMLElement>(`[data-purchase-field="${field}"]`)
+      if (!target && field.startsWith("lines.")) {
+        const lineIndex = Number.parseInt(field.split(".")[1] ?? "", 10)
+        if (Number.isFinite(lineIndex)) {
+          target = document.querySelector<HTMLElement>(`[data-purchase-line-index="${lineIndex}"]`)
+        }
+      }
+      if (!target && field.startsWith("lines")) {
+        target = document.querySelector<HTMLElement>('[data-purchase-field="lines"]')
+      }
+      if (!target) return
+      target.scrollIntoView({ behavior: "smooth", block: "center" })
+      window.requestAnimationFrame(() => target?.focus({ preventScroll: true }))
+    }, 0)
+  }, [])
+
   React.useEffect(() => {
     if (!isEdit || !purchase) return
     if (purchase.status !== "draft") {
@@ -87,6 +119,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
     const errors = validatePurchaseEditorForm(form)
     if (hasPurchaseEditorErrors(errors)) {
       setFieldErrors(errors)
+      focusFirstInvalid(errors)
       toast.error("يرجى تصحيح الأخطاء قبل الحفظ.")
       return null
     }
@@ -115,7 +148,9 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
       }
     } catch (err) {
       if (err instanceof ApiRequestError) {
-        setFieldErrors(mapPurchaseEditorApiErrors(err))
+        const errors = mapPurchaseEditorApiErrors(err)
+        setFieldErrors(errors)
+        focusFirstInvalid(errors)
       }
       toast.error(PURCHASE_MESSAGES.failure)
     } finally {
@@ -132,6 +167,7 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
       const errors = validatePurchaseEditorForm(form)
       if (hasPurchaseEditorErrors(errors)) {
         setFieldErrors(errors)
+        focusFirstInvalid(errors)
         toast.error("يرجى تصحيح الأخطاء قبل الاعتماد.")
         setCompleteOpen(false)
         return
@@ -156,7 +192,9 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
       router.push(`/dashboard/purchases/${resultId}`)
     } catch (err) {
       if (err instanceof ApiRequestError) {
-        setFieldErrors(mapPurchaseEditorApiErrors(err))
+        const errors = mapPurchaseEditorApiErrors(err)
+        setFieldErrors(errors)
+        focusFirstInvalid(errors)
       }
       toast.error(PURCHASE_MESSAGES.failure)
       setCompleteOpen(false)
@@ -170,18 +208,22 @@ export function PurchaseInvoiceEditor({ mode, purchaseId }: PurchaseInvoiceEdito
     const errors = validatePurchaseEditorForm(form)
     if (hasPurchaseEditorErrors(errors)) {
       setFieldErrors(errors)
+      focusFirstInvalid(errors)
       toast.error("يرجى تصحيح الأخطاء قبل الاعتماد.")
       return
     }
     setCompleteOpen(true)
-  }, [form])
+  }, [focusFirstInvalid, form])
 
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (!(event.ctrlKey || event.metaKey) || event.key !== "Enter") return
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      if (event.code !== "Enter" && event.code !== "NumpadEnter") return
       if (isSaving || isCompleting || completeOpen) return
+      if (document.querySelector('[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]')) return
 
       event.preventDefault()
+      event.stopPropagation()
       openCompleteDialog()
     }
 

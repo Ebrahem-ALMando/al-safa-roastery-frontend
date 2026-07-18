@@ -35,6 +35,7 @@ export type CashboxTransaction = {
   cancelled_at: string | null
   cancel_reason: string | null
   created_at: string
+  updated_at?: string | null
   created_by?: CashboxUserRef
 }
 
@@ -69,3 +70,11 @@ export type CashboxFilters = {
 }
 
 export type CashboxDateRange = ResolvedOperationalDateRange | null
+
+export type ManualCashboxTransactionInput = {
+  transaction_date: string
+  amount: number
+  payment_method: CashboxPaymentMethod
+  description: string
+  notes?: string | null
+}

@@ -59,6 +59,11 @@ function isItemsSummaryKey(k: unknown): boolean {
   return false
 }
 
+function isPurchaseDownstreamKey(k: unknown): boolean {
+  const value = typeof k === "string" ? k : Array.isArray(k) && typeof k[0] === "string" ? k[0] : ""
+  return ["inventory-", "cashbox-", "statement:", "statement-tab:"].some((prefix) => value.startsWith(prefix))
+}
+
 export function usePurchaseEditorMutations() {
   const { execute } = useAction()
   const { reportAction } = useActionToast()
@@ -71,6 +76,7 @@ export function usePurchaseEditorMutations() {
       mutateGlobal((key) => isItemsKey(key), undefined, { revalidate: true }),
       mutateGlobal((key) => isItemsSummaryKey(key), undefined, { revalidate: true }),
       mutateGlobal((key) => isSuppliersKey(key), undefined, { revalidate: true }),
+      mutateGlobal((key) => isPurchaseDownstreamKey(key), undefined, { revalidate: true }),
     ])
   }, [mutateGlobal])
 

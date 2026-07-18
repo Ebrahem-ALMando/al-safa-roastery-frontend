@@ -32,23 +32,23 @@ export function CashboxFilters({ value, onChange, onReset, isLoading = false }: 
   onReset: () => void
   isLoading?: boolean
 }) {
-  const [advanced, setAdvanced] = useState(true)
+  const [advanced, setAdvanced] = useState(false)
   const hasActive = Boolean(value.search.trim()) || value.direction !== "all" || value.sourceType !== "all" || value.paymentMethod !== "all" || value.transactionType !== "all"
   const sourceLabel = CASHBOX_SOURCE_TYPE_OPTIONS.find((option) => option.value === value.sourceType)?.label
   const transactionLabel = CASHBOX_TRANSACTION_TYPE_OPTIONS.find((option) => option.value === value.transactionType)?.label
 
-  return <div className="rounded-xl border bg-card p-4 shadow-sm">
-    <div className="flex flex-col gap-3 md:flex-row">
+  return <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="flex flex-col gap-4 md:flex-row md:items-center">
       <div className="relative flex-1">
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input value={value.search} onChange={(event) => onChange({ ...value, search: event.target.value })} placeholder="ابحث بالرقم أو الوصف أو المرجع..." className="pr-10" />
       </div>
-      <Button type="button" variant="outline" onClick={() => setAdvanced((current) => !current)} className="gap-2"><Filter className="size-4" />بحث متقدم<ChevronDown className={cn("size-4 transition-transform", advanced && "rotate-180")} /></Button>
-      {hasActive ? <Button type="button" variant="ghost" onClick={onReset} className="gap-2 text-rose-600"><X className="size-4" />مسح الفلاتر</Button> : null}
+      <Button type="button" variant="outline" onClick={() => setAdvanced((current) => !current)} className="gap-2 bg-transparent"><Filter className="size-4" />بحث متقدم<ChevronDown className={cn("size-4 transition-transform", advanced && "rotate-180")} /></Button>
+      {hasActive ? <Button type="button" variant="ghost" size="sm" onClick={onReset} className="h-10 gap-2 px-3 text-rose-600 hover:bg-rose-50 hover:text-rose-700"><X className="size-4" />مسح الفلاتر</Button> : null}
     </div>
 
-    <div className={cn("overflow-hidden transition-all duration-300", advanced ? "max-h-56 opacity-100" : "max-h-0 opacity-0")}>
-      <div className="mt-4 grid gap-4 border-t pt-4 md:grid-cols-4 md:items-end">
+    <div className={cn("overflow-hidden transition-all duration-300 ease-in-out", advanced ? "max-h-72 opacity-100" : "max-h-0 opacity-0")}>
+      <div className="grid gap-4 border-t border-border/60 pb-2 pt-4 md:grid-cols-4 md:items-end">
         <FilterSelect label="نوع الحركة" value={value.direction} disabled={isLoading} onChange={(direction) => onChange({ ...value, direction: direction as CashboxDirection | "all" })} options={Object.entries(CASHBOX_DIRECTION_LABELS_AR).map(([optionValue, label]) => ({ value: optionValue, label }))} />
         <FilterSelect label="مصدر الحركة" value={value.sourceType} disabled={isLoading} onChange={(sourceType) => onChange({ ...value, sourceType })} options={CASHBOX_SOURCE_TYPE_OPTIONS} />
         <FilterSelect label="طريقة الدفع" value={value.paymentMethod} disabled={isLoading} onChange={(paymentMethod) => onChange({ ...value, paymentMethod: paymentMethod as CashboxPaymentMethod | "all" })} options={Object.entries(CASHBOX_PAYMENT_METHOD_LABELS_AR).map(([optionValue, label]) => ({ value: optionValue, label }))} />
@@ -68,7 +68,7 @@ export function CashboxFilters({ value, onChange, onReset, isLoading = false }: 
 }
 
 function FilterSelect({ label, value, disabled, onChange, options }: { label: string; value: string; disabled: boolean; onChange: (value: string) => void; options: readonly { value: string; label: string }[] }) {
-  return <div className="space-y-2"><Label>{label}</Label><Select value={value} onValueChange={onChange} disabled={disabled}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem>{options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
+  return <div className="space-y-2"><Label className="text-xs text-muted-foreground">{label}</Label><Select value={value} onValueChange={onChange} disabled={disabled}><SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem>{options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
 }
 
 function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {

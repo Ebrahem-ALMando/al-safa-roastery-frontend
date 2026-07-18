@@ -58,6 +58,20 @@ export const CASHBOX_SOURCE_TYPE_LABELS_AR: Record<string, string> = Object.from
   CASHBOX_SOURCE_TYPE_OPTIONS.map((option) => [option.value, option.label]),
 )
 
+export const CASHBOX_MANUAL_DEPOSIT_REASON_LABELS_AR = {
+  capital: "رأس مال",
+  balance_correction: "تصحيح رصيد",
+  internal_transfer: "تحويل داخلي",
+  other: "أخرى",
+} as const
+
+export const CASHBOX_MANUAL_WITHDRAWAL_REASON_LABELS_AR = {
+  personal_withdrawal: "سحب شخصي",
+  balance_correction: "تصحيح رصيد",
+  internal_transfer: "تحويل داخلي",
+  other: "أخرى",
+} as const
+
 export type CashboxTableColumnId =
   | "row_number"
   | "transaction_date"
@@ -75,8 +89,9 @@ export type CashboxTableColumnId =
   | "source_number"
   | "description"
   | "created_at"
+  | "actions"
 
-export const CASHBOX_TABLE_COLUMNS: { id: CashboxTableColumnId; label: string; defaultVisible: boolean }[] = [
+export const CASHBOX_TABLE_COLUMNS: { id: CashboxTableColumnId; label: string; defaultVisible: boolean; essential?: boolean }[] = [
   { id: "row_number", label: "#", defaultVisible: true },
   { id: "transaction_date", label: "التاريخ", defaultVisible: true },
   { id: "transaction_number", label: "رقم الحركة", defaultVisible: true },
@@ -93,6 +108,7 @@ export const CASHBOX_TABLE_COLUMNS: { id: CashboxTableColumnId; label: string; d
   { id: "source_number", label: "رقم المصدر", defaultVisible: false },
   { id: "description", label: "الوصف", defaultVisible: false },
   { id: "created_at", label: "تاريخ التسجيل", defaultVisible: false },
+  { id: "actions", label: "الإجراءات", defaultVisible: true, essential: true },
 ]
 
 export const DEFAULT_VISIBLE_CASHBOX_COLUMNS = CASHBOX_TABLE_COLUMNS
@@ -105,5 +121,6 @@ export const CASHBOX_CONTEXT_COLUMNS: CashboxTableColumnId[] = ["transaction_dat
 export function normalizeCashboxColumns(columns: CashboxTableColumnId[]): CashboxTableColumnId[] {
   const normalized = [...new Set(columns.filter((id) => VALID_COLUMNS.has(id)))]
   if (!normalized.some((id) => CASHBOX_CONTEXT_COLUMNS.includes(id))) normalized.unshift("transaction_date")
-  return normalized.length > 0 ? normalized : DEFAULT_VISIBLE_CASHBOX_COLUMNS
+  const withoutActions = normalized.filter((id) => id !== "actions")
+  return [...withoutActions, "actions"]
 }

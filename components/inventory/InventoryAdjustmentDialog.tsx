@@ -9,19 +9,146 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ADJUSTMENT_REASON_LABELS_AR, formatInventoryCost, formatInventoryQuantity, inventoryNumber, type AdjustmentReason, type InventoryItem, useInventoryActions } from "@/src/features/inventory"
-import { InventoryStockStatusBadge } from "./InventoryStockStatusBadge"
+import {
+  ADJUSTMENT_REASON_LABELS_AR,
+  formatInventoryCost,
+  formatInventoryQuantity,
+  inventoryNumber,
+  type AdjustmentReason,
+  type InventoryItem,
+  useInventoryActions,
+} from "@/src/features/inventory"
+import { InventoryOperationItemSelector } from "./InventoryOperationItemSelector"
 
 export function InventoryAdjustmentDialog({ item, open, onOpenChange }: { item: InventoryItem | null; open: boolean; onOpenChange: (open: boolean) => void }) {
-  const [actual, setActual] = useState(""); const [reason, setReason] = useState<AdjustmentReason>("stock_count"); const [unitCost, setUnitCost] = useState(""); const [notes, setNotes] = useState(""); const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false); const { adjust } = useInventoryActions()
-  const current = inventoryNumber(item?.current_quantity_kg); const actualValue = inventoryNumber(actual); const difference = actual.trim() ? actualValue - current : 0; const needsCost = difference > 0 && inventoryNumber(item?.average_cost) <= 0
-  function handleOpenChange(next: boolean) { if (!next) { setActual(""); setReason("stock_count"); setUnitCost(""); setNotes(""); setError("") }; onOpenChange(next) }
-  async function submit() { if (!item) return; if (actual.trim() === "" || actualValue < 0) { setError("أدخل كمية فعلية صحيحة."); return }; if (Math.abs(difference) < 0.0005) { setError("لا يوجد فرق بين الكمية الحالية والكمية الفعلية."); return }; if (needsCost && inventoryNumber(unitCost) <= 0) { setError("أدخل تكلفة الوحدة لتسجيل الزيادة لهذا الصنف."); return }; setSubmitting(true); setError(""); try { await adjust({ item_id: item.id, actual_quantity_kg: actualValue, reason, unit_cost: needsCost ? inventoryNumber(unitCost) : undefined, notes: notes.trim() || null }); handleOpenChange(false) } catch { /* toast handled */ } finally { setSubmitting(false) } }
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent dir="rtl" showCloseButton={false} className="flex max-h-[92vh] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl"><DialogHeader className="border-b bg-linear-to-bl from-amber-500/10 via-background to-background px-6 py-5 text-right sm:text-right"><div className="flex items-start gap-3"><span className="flex size-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><SlidersHorizontal className="size-5" /></span><div className="flex-1"><DialogTitle>تسوية المخزون</DialogTitle><DialogDescription className="mt-1.5 leading-relaxed">أدخل الكمية الفعلية بعد الجرد، وسيحسب النظام فرق التسوية ويسجل حركة مخزون.</DialogDescription><p className="mt-2 text-xs text-muted-foreground"><span className="text-destructive">*</span> يشير إلى حقل مطلوب.</p></div><Button variant="ghost" size="icon-sm" onClick={() => onOpenChange(false)}><X className="size-4" /></Button></div></DialogHeader>
-    <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">{item ? <section className="space-y-2"><h3 className="text-sm font-semibold">معلومات الصنف</h3><div className="grid gap-3 rounded-2xl border bg-muted/20 p-4 sm:grid-cols-2"><div><p className="font-semibold">{item.name}</p><p className="font-mono text-xs text-muted-foreground" dir="ltr">{item.code}</p></div><div className="flex flex-wrap items-center gap-2 sm:justify-end"><InventoryStockStatusBadge item={item} /><span dir="ltr">{formatInventoryQuantity(current)}</span><span dir="ltr">{formatInventoryCost(item.average_cost)}</span></div></div></section> : null}
-      <section className="space-y-4"><h3 className="text-sm font-semibold">بيانات التسوية</h3><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>الكمية الفعلية (كغ) <span className="text-destructive">*</span></Label><Input value={actual} onChange={(e) => setActual(e.target.value)} inputMode="decimal" placeholder="مثال: 97.000" dir="ltr" /></div><div className="space-y-2"><Label>سبب التسوية <span className="text-destructive">*</span></Label><Select value={reason} onValueChange={(v) => setReason(v as AdjustmentReason)}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(ADJUSTMENT_REASON_LABELS_AR).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div></div>{needsCost ? <div className="space-y-2"><Label>تكلفة الوحدة (USD / كغ) <span className="text-destructive">*</span></Label><Input value={unitCost} onChange={(e) => setUnitCost(e.target.value)} inputMode="decimal" dir="ltr" /></div> : null}
-      <div className="grid gap-2 rounded-xl border bg-muted/20 p-3 text-sm sm:grid-cols-3"><span>الحالية: <strong dir="ltr">{formatInventoryQuantity(current)}</strong></span><span>الفعلية: <strong dir="ltr">{actual.trim() ? formatInventoryQuantity(actualValue) : "—"}</strong></span><span className={difference > 0 ? "text-emerald-700" : difference < 0 ? "text-rose-700" : "text-muted-foreground"}>فرق التسوية: <strong dir="ltr">{difference > 0 ? `زيادة: +${formatInventoryQuantity(difference)}` : difference < 0 ? `نقص: -${formatInventoryQuantity(Math.abs(difference))}` : "لا يوجد فرق"}</strong></span></div>{error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Accordion type="single" collapsible><AccordionItem value="notes" className="overflow-hidden rounded-xl border"><AccordionTrigger className="px-4 hover:no-underline"><span className="flex items-center gap-2"><ClipboardList className="size-4" />ملاحظات</span></AccordionTrigger><AccordionContent className="px-4 pb-4"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات التسوية (اختياري)" /></AccordionContent></AccordionItem></Accordion></section></div>
-    <div className="flex gap-2 border-t bg-muted/20 px-6 py-4"><Button onClick={submit} disabled={submitting || !item} className="gap-2 rounded-xl">{submitting ? <Loader2 className="size-4 animate-spin" /> : <SlidersHorizontal className="size-4" />}تسجيل التسوية</Button><Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">إلغاء</Button></div>
-  </DialogContent></Dialog>
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(item)
+  const [actual, setActual] = useState("")
+  const [reason, setReason] = useState<AdjustmentReason>("stock_count")
+  const [unitCost, setUnitCost] = useState("")
+  const [notes, setNotes] = useState("")
+  const [error, setError] = useState("")
+  const [itemError, setItemError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const { adjust } = useInventoryActions()
+  const current = inventoryNumber(selectedItem?.current_quantity_kg)
+  const actualValue = inventoryNumber(actual)
+  const difference = actual.trim() ? actualValue - current : 0
+  const needsCost = difference > 0 && inventoryNumber(selectedItem?.average_cost) <= 0
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setActual("")
+      setReason("stock_count")
+      setUnitCost("")
+      setNotes("")
+      setError("")
+      setItemError("")
+      setSelectedItem(item)
+    }
+    onOpenChange(next)
+  }
+
+  async function submit() {
+    if (!selectedItem) {
+      setItemError("اختر الصنف أولًا.")
+      return
+    }
+    if (actual.trim() === "" || actualValue < 0) {
+      setError("أدخل كمية فعلية صحيحة.")
+      return
+    }
+    if (Math.abs(difference) < 0.0005) {
+      setError("لا يوجد فرق بين الكمية الحالية والكمية الفعلية.")
+      return
+    }
+    if (needsCost && inventoryNumber(unitCost) <= 0) {
+      setError("أدخل تكلفة الوحدة لتسجيل الزيادة لهذا الصنف.")
+      return
+    }
+    setSubmitting(true)
+    setError("")
+    try {
+      await adjust({ item_id: selectedItem.id, actual_quantity_kg: actualValue, reason, unit_cost: needsCost ? inventoryNumber(unitCost) : undefined, notes: notes.trim() || null })
+      handleOpenChange(false)
+    } catch {
+      setError("تعذر تسجيل التسوية. تحقق من البيانات وحاول مجددًا.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent dir="rtl" showCloseButton={false} className="flex max-h-[94vh] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-2xl">
+        <DialogHeader className="shrink-0 border-b bg-linear-to-bl from-amber-500/10 via-background to-background px-6 py-5 text-right sm:text-right">
+          <div className="flex items-start gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-600"><SlidersHorizontal className="size-5" /></span>
+            <div className="min-w-0 flex-1">
+              <DialogTitle>تسوية المخزون</DialogTitle>
+              <DialogDescription className="mt-1.5 leading-relaxed">أدخل الكمية الفعلية بعد الجرد، وسيحسب النظام الفرق ويسجل حركة مخزون موجبة أو سالبة.</DialogDescription>
+              <p className="mt-2 text-xs text-muted-foreground"><span className="text-destructive">*</span> يشير إلى حقل مطلوب.</p>
+            </div>
+            <Button type="button" variant="ghost" size="icon-sm" className="shrink-0" onClick={() => handleOpenChange(false)} aria-label="إغلاق"><X className="size-4" /></Button>
+          </div>
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
+          <section className="space-y-2">
+            <h3 className="text-sm font-semibold">الصنف <span className="text-destructive">*</span></h3>
+            <InventoryOperationItemSelector item={selectedItem} onChange={(next) => { setSelectedItem(next); setItemError(""); setError("") }} error={itemError} disabled={submitting} />
+          </section>
+
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold">بيانات التسوية</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>الكمية الفعلية (كغ) <span className="text-destructive">*</span></Label>
+                <Input value={actual} onChange={(event) => { setActual(event.target.value); setError("") }} inputMode="decimal" placeholder="مثال: 97.000" dir="ltr" disabled={submitting} />
+              </div>
+              <div className="space-y-2">
+                <Label>سبب التسوية <span className="text-destructive">*</span></Label>
+                <Select value={reason} onValueChange={(next) => setReason(next as AdjustmentReason)} disabled={submitting}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent dir="rtl">{Object.entries(ADJUSTMENT_REASON_LABELS_AR).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {needsCost ? (
+              <div className="space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+                <Label>تكلفة الوحدة (USD / كغ) <span className="text-destructive">*</span></Label>
+                <Input value={unitCost} onChange={(event) => { setUnitCost(event.target.value); setError("") }} inputMode="decimal" dir="ltr" disabled={submitting} />
+                <p className="text-xs text-muted-foreground">متوسط تكلفة الصنف يساوي صفرًا، لذلك تلزم تكلفة للكمية المضافة.</p>
+              </div>
+            ) : selectedItem ? <p className="text-xs text-muted-foreground">متوسط التكلفة الحالي: <span dir="ltr">{formatInventoryCost(selectedItem.average_cost)}</span></p> : null}
+
+            {reason === "other" ? <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">يمكنك توضيح السبب ضمن الملاحظات.</p> : null}
+
+            <div className="grid gap-2 rounded-xl border bg-muted/15 p-3 text-sm sm:grid-cols-3">
+              <span>الحالية: <strong dir="ltr">{selectedItem ? formatInventoryQuantity(current) : "—"}</strong></span>
+              <span>الفعلية: <strong dir="ltr">{actual.trim() ? formatInventoryQuantity(actualValue) : "—"}</strong></span>
+              <span className={difference > 0 ? "text-emerald-700" : difference < 0 ? "text-rose-700" : "text-muted-foreground"}>
+                الفرق: <strong dir="ltr">{difference > 0 ? `+${formatInventoryQuantity(difference)}` : difference < 0 ? `-${formatInventoryQuantity(Math.abs(difference))}` : "لا يوجد فرق"}</strong>
+              </span>
+            </div>
+            {error ? <p className="text-sm font-medium text-destructive" role="alert">{error}</p> : null}
+
+            <Accordion type="single" collapsible>
+              <AccordionItem value="notes" className="overflow-hidden rounded-xl border">
+                <AccordionTrigger className="px-4 hover:no-underline"><span className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" />ملاحظات</span></AccordionTrigger>
+                <AccordionContent className="px-4 pb-4"><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="أضف تفاصيل الجرد أو سبب الفرق (اختياري)" className="min-h-24" disabled={submitting} /></AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </section>
+        </div>
+
+        <div className="sticky bottom-0 z-10 flex shrink-0 flex-wrap gap-2 border-t bg-background/95 px-6 py-4 shadow-[0_-8px_24px_rgba(15,23,42,0.05)] backdrop-blur">
+          <Button type="button" onClick={submit} disabled={submitting || !selectedItem} className="gap-2 rounded-xl">
+            {submitting ? <Loader2 className="size-4 animate-spin" /> : <SlidersHorizontal className="size-4" />}تسجيل التسوية
+          </Button>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting} className="rounded-xl">إلغاء</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }

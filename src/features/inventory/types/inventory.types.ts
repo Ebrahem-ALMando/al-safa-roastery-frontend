@@ -8,6 +8,12 @@ export type InventoryDirectionFilter = InventoryDirection | "adjustment"
 
 export type InventoryUserRef = { id: number; name: string; username?: string }
 export type InventoryLastActivity = { type: string; label: string; number: string | null; date: string }
+export type InventoryMovementPickerItem = {
+  id: number
+  code: string
+  name: string
+  item_type: InventoryItemType
+}
 
 export type InventoryMovement = {
   id: number
@@ -80,14 +86,14 @@ export type InventoryPaginationMeta = {
 }
 
 export type InventoryItemsFilters = {
-  search?: string; item_id?: number; item_type?: InventoryItemType
+  search?: string; item_id?: number; item_ids?: number[]; item_type?: InventoryItemType
   stock_status?: InventoryStockStatusFilter; quantity_min?: number; quantity_max?: number
   page?: number; per_page?: number; sort_by?: string; sort_direction?: "asc" | "desc"
   date_from?: string; date_to?: string
 }
 
 export type InventoryMovementFilters = {
-  search?: string; item_id?: number; item_type?: InventoryItemType; movement_type?: string
+  search?: string; item_id?: number; item_ids?: number[]; item_type?: InventoryItemType; movement_type?: string
   direction?: InventoryDirectionFilter; source_type?: string; page?: number; per_page?: number
   sort_by?: string; sort_direction?: "asc" | "desc"; date_from?: string; date_to?: string
 }

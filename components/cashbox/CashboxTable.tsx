@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { WalletCards } from "lucide-react"
+import { MoreHorizontal, WalletCards } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
@@ -20,6 +22,7 @@ import {
   type CashboxTransactionType,
 } from "@/src/features/cashbox"
 import { CashboxDirectionBadge } from "./CashboxDirectionBadge"
+import { CashboxRowActionsMenuContent, CashboxRowContextMenuContent } from "./cashbox-row-actions-menu"
 
 type Props = {
   transactions: CashboxTransaction[]
@@ -28,9 +31,10 @@ type Props = {
   isLoading: boolean
   page: number
   onPageChange: (page: number) => void
+  onDetails: (transaction: CashboxTransaction) => void
 }
 
-export function CashboxTable({ transactions, meta, visibleColumns, isLoading, page, onPageChange }: Props) {
+export function CashboxTable({ transactions, meta, visibleColumns, isLoading, page, onPageChange, onDetails }: Props) {
   const perPage = meta?.per_page ?? 15
   const lastPage = meta?.last_page ?? 1
 
@@ -53,13 +57,14 @@ export function CashboxTable({ transactions, meta, visibleColumns, isLoading, pa
       case "source_number": return transaction.source_number || "—"
       case "description": return <p className="max-w-64 line-clamp-2 text-right" title={transaction.description || undefined}>{transaction.description || "—"}</p>
       case "created_at": return <span className="whitespace-nowrap text-xs">{formatCashboxDate(transaction.created_at, true)}</span>
+      case "actions": return <DropdownMenu><DropdownMenuTrigger asChild><Button type="button" variant="ghost" size="icon-sm" aria-label="إجراءات الحركة"><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger><CashboxRowActionsMenuContent onDetails={() => onDetails(transaction)} /></DropdownMenu>
     }
   }
 
   return <div>
     {isLoading ? <Table dir="rtl"><TableHeader><TableRow>{visibleColumns.map((id) => <TableHead key={id} className="text-center">{columnLabel(id)}</TableHead>)}</TableRow></TableHeader><TableBody>{Array.from({ length: 6 }).map((_, row) => <TableRow key={row}>{visibleColumns.map((id) => <TableCell key={id}><Skeleton className="mx-auto h-5 w-20" /></TableCell>)}</TableRow>)}</TableBody></Table>
       : transactions.length === 0 ? <div className="flex min-h-72 flex-col items-center justify-center gap-3 text-muted-foreground"><WalletCards className="size-10" /><p>{CASHBOX_MESSAGES.empty}</p></div>
-        : <Table dir="rtl"><TableHeader><TableRow>{visibleColumns.map((id) => <TableHead key={id} className="whitespace-nowrap text-center font-semibold">{columnLabel(id)}</TableHead>)}</TableRow></TableHeader><TableBody>{transactions.map((transaction, index) => <TableRow key={transaction.id}>{visibleColumns.map((column) => <TableCell key={column} className="text-center text-sm">{cell(column, transaction, index)}</TableCell>)}</TableRow>)}</TableBody></Table>}
+        : <Table dir="rtl"><TableHeader><TableRow>{visibleColumns.map((id) => <TableHead key={id} className="whitespace-nowrap text-center font-semibold">{columnLabel(id)}</TableHead>)}</TableRow></TableHeader><TableBody>{transactions.map((transaction, index) => <ContextMenu key={transaction.id}><ContextMenuTrigger asChild><TableRow>{visibleColumns.map((column) => <TableCell key={column} className="text-center text-sm">{cell(column, transaction, index)}</TableCell>)}</TableRow></ContextMenuTrigger><CashboxRowContextMenuContent onDetails={() => onDetails(transaction)} /></ContextMenu>)}</TableBody></Table>}
     {!isLoading && transactions.length > 0 && lastPage > 1 ? <div className="flex items-center justify-between border-t p-3"><p className="text-sm text-muted-foreground">{meta?.total ?? transactions.length} حركة · صفحة {page} من {lastPage}</p><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>السابق</Button><Button variant="outline" size="sm" disabled={page >= lastPage} onClick={() => onPageChange(page + 1)}>التالي</Button></div></div> : null}
   </div>
 }
