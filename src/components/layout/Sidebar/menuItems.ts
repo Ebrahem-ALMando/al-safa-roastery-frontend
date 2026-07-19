@@ -4,6 +4,7 @@ import {
   ClipboardList,
   ClipboardPenLine,
   FolderTree,
+  Factory,
   History,
   LayoutDashboard,
   Package,
@@ -89,6 +90,14 @@ export const menuItems: readonly MenuItem[] = [
     section: "management",
     matchPrefix: true,
     excludedPrefixes: ["/dashboard/inventory/movements"],
+  },
+  {
+    id: "production",
+    label: "الإنتاج",
+    href: "/dashboard/production",
+    icon: Factory,
+    section: "management",
+    matchPrefix: true,
   },
   {
     id: "inventory-movements",

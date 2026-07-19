@@ -1,0 +1,13 @@
+"use client"
+
+import { Factory, Loader2, PackageCheck, Scale, TriangleAlert } from "lucide-react"
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+
+export type ProductionConfirmationPreview = { batchNumber?: string; outputName: string; outputQuantity: string; inputsCount: number; totalInputCost: string; inventoryEffects: string }
+
+export function ProductionCompleteConfirmDialog({ open, onOpenChange, preview, onConfirm, isSubmitting }: { open: boolean; onOpenChange: (open: boolean) => void; preview: ProductionConfirmationPreview | null; onConfirm: () => void | Promise<void>; isSubmitting?: boolean }) {
+  return <AlertDialog open={open} onOpenChange={(next) => { if (!isSubmitting) onOpenChange(next) }}><AlertDialogContent dir="rtl" className="max-w-lg"><AlertDialogHeader className="text-right"><div className="mb-2 flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700"><Factory className="size-5" /></div><AlertDialogTitle>اعتماد عملية الإنتاج؟</AlertDialogTitle><AlertDialogDescription className="leading-relaxed">سيتم تسجيل حركات مخزون نهائية للمواد الداخلة والصنف الناتج. لا يمكن تعديل العملية بعد الاعتماد.</AlertDialogDescription></AlertDialogHeader>{preview ? <div className="grid gap-2 rounded-xl border bg-muted/15 p-3 text-sm sm:grid-cols-2"><Info icon={PackageCheck} label="الصنف الناتج" value={preview.outputName} /><Info icon={Scale} label="الكمية الناتجة" value={preview.outputQuantity} /><Info icon={Factory} label="عدد المواد الداخلة" value={`${preview.inputsCount} صنف`} /><Info icon={TriangleAlert} label="تكلفة المواد المتوقعة" value={preview.totalInputCost} /><p className="sm:col-span-2 rounded-lg bg-amber-500/10 p-2 text-xs text-amber-800">{preview.inventoryEffects}</p></div> : null}<AlertDialogFooter className="gap-2"><AlertDialogCancel disabled={isSubmitting}>تراجع</AlertDialogCancel><Button onClick={() => void onConfirm()} disabled={isSubmitting} className="gap-2">{isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <PackageCheck className="size-4" />}اعتماد الإنتاج</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
+}
+
+function Info({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) { return <div className="rounded-lg border bg-background p-2"><p className="flex items-center gap-1 text-xs text-muted-foreground"><Icon className="size-3.5" />{label}</p><p className="mt-1 font-semibold">{value}</p></div> }
