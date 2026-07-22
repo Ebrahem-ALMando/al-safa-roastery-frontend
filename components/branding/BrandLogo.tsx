@@ -43,11 +43,11 @@ const variantStyles: Record<
     containerClassName: "size-14",
   },
   hero: {
-    width: 88,
-    height: 88,
-    imageClassName: "object-contain p-1.5",
+    width: 160,
+    height: 160,
+    imageClassName: "size-[88%] object-contain",
     containerClassName: cn(
-      "size-20 rounded-full border border-primary/15 bg-white shadow-md sm:size-24 md:size-28",
+      "size-28 rounded-full border border-primary/15 bg-white shadow-md sm:size-32 md:size-36 lg:size-40",
       "ring-4 ring-primary/10 dark:bg-white"
     ),
   },

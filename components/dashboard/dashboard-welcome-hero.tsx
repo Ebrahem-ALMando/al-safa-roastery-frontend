@@ -69,7 +69,7 @@ export function DashboardWelcomeHero() {
           </dl>
         </div>
 
-        <div className="order-1 flex shrink-0 justify-center md:order-2">
+        <div className="order-1 flex shrink-0 justify-center md:order-2 md:ps-2">
           <div
             className={cn(
               "relative motion-reduce:animate-none",
@@ -77,7 +77,7 @@ export function DashboardWelcomeHero() {
             )}
           >
             <div
-              className="absolute inset-0 rounded-full bg-primary/20 blur-xl motion-reduce:hidden"
+              className="absolute -inset-3 rounded-full bg-primary/20 blur-2xl motion-reduce:hidden sm:-inset-4"
               aria-hidden
             />
             <div
