@@ -3,13 +3,7 @@ import { BrandLogo } from "@/components/branding/BrandLogo"
 import { BRAND_SYSTEM_TITLE_AR } from "@/lib/brand"
 import { LoginForm } from "@/components/auth/LoginForm"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 
 export default async function LoginPage({
   searchParams,
@@ -42,10 +36,7 @@ export default async function LoginPage({
 
       <div className="relative z-10 mx-auto flex min-h-svh max-w-6xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-md page-enter">
-          <header className="mb-10 text-center">
-            <div className="mx-auto mb-6 transition-all duration-300 ease-out hover:-translate-y-0.5">
-              <BrandLogo variant="login" priority />
-            </div>
+          <header className="mb-8 text-center">
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {BRAND_SYSTEM_TITLE_AR}
             </h1>
@@ -55,9 +46,9 @@ export default async function LoginPage({
           </header>
 
           <Card className="border-border/50 bg-card/90 shadow-2xl ring-1 ring-border/40 backdrop-blur-xl transition-shadow duration-300 ease-out hover:shadow-[0_1.5rem_3rem_-0.75rem_rgba(0,0,0,0.1)] dark:bg-card/80 dark:ring-border/30">
-            <CardHeader className="space-y-2 pb-2 text-right">
-              <CardTitle className="text-xl font-semibold">تسجيل الدخول</CardTitle>
-              <CardDescription className="text-pretty text-sm">
+            <CardHeader className="space-y-4 pb-2 pt-6 text-center">
+              <BrandLogo variant="loginCard" priority />
+              <CardDescription className="text-pretty text-sm text-muted-foreground">
                 أدخل اسم المستخدم وكلمة المرور المعتمدة لدى محمصة الصفا
               </CardDescription>
             </CardHeader>

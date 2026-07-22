@@ -2,7 +2,7 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { BRAND_LOGO_ALT, BRAND_LOGO_PATH } from "@/lib/brand"
 
-export type BrandLogoVariant = "sidebar" | "header" | "login" | "loading" | "hero"
+export type BrandLogoVariant = "sidebar" | "header" | "login" | "loginCard" | "loading" | "hero"
 
 const variantStyles: Record<
   BrandLogoVariant,
@@ -35,6 +35,15 @@ const variantStyles: Record<
     imageClassName: "object-contain",
     containerClassName:
       "size-20 rounded-2xl border border-primary/20 bg-white p-2 shadow-md ring-1 ring-primary/5 dark:bg-white",
+  },
+  loginCard: {
+    width: 96,
+    height: 96,
+    imageClassName: "size-[88%] object-contain",
+    containerClassName: cn(
+      "mx-auto size-20 rounded-full border border-primary/15 bg-white shadow-md sm:size-24",
+      "ring-4 ring-primary/10 dark:bg-white"
+    ),
   },
   loading: {
     width: 56,
