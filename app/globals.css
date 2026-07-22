@@ -241,6 +241,16 @@ body[data-scroll-locked] {
       transform: translateY(0);
     }
   }
+
+  @keyframes hero-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
 }
 
 /* تقليل الحركات عند تعطيلها من الإعدادات (dataset على html) */

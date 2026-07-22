@@ -8,102 +8,89 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react"
-import Link from "next/link"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { BrandedEmptyState } from "@/components/shared/BrandedEmptyState"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BRAND_NAME_AR } from "@/lib/brand"
-
-const quickLinks = [
-  { href: "/dashboard/items", label: "إضافة صنف" },
-  { href: "/dashboard/products", label: "إضافة منتج" },
-  { href: "/dashboard/purchases/new", label: "فاتورة شراء" },
-  { href: "/dashboard/production/new", label: "عملية إنتاج" },
-] as const
+import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions"
+import { DashboardWelcomeHero } from "@/components/dashboard/dashboard-welcome-hero"
 
 export default function DashboardPage() {
   return (
-    <div className="page-enter space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">لوحة تحكم {BRAND_NAME_AR}</h1>
-        <p className="text-muted-foreground">
-          نظرة سريعة على أداء المحمصة — المبيعات، المخزون، والصندوق
+    <div className="page-enter space-y-8">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">لوحة التحكم</h1>
+        <p className="text-sm text-muted-foreground sm:text-base">
+          نظرة سريعة على أداء {BRAND_NAME_AR}
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard
-          title="قيمة المخزون"
-          value="—"
-          description="إجمالي قيمة الأصناف والمنتجات"
-          icon={Package}
-          iconClassName="bg-primary/10 text-primary"
-        />
-        <StatCard
-          title="مبيعات اليوم"
-          value="—"
-          description="إجمالي مبيعات اليوم الحالي"
-          icon={ShoppingBag}
-          iconClassName="bg-chart-2/15 text-amber-700"
-        />
-        <StatCard
-          title="أرباح الشهر"
-          value="—"
-          description="صافي الأرباح للشهر الجاري"
-          icon={TrendingUp}
-          iconClassName="bg-success/10 text-success"
-        />
-        <StatCard
-          title="المصاريف"
-          value="—"
-          description="مصاريف التشغيل للفترة الحالية"
-          icon={Banknote}
-          iconClassName="bg-destructive/10 text-destructive"
-        />
-        <StatCard
-          title="رصيد الصندوق"
-          value="—"
-          description="الرصيد الحالي للصندوق"
-          icon={Wallet}
-          iconClassName="bg-warning/10 text-amber-700"
-        />
-        <StatCard
-          title="عدد المنتجات"
-          value="—"
-          description="المنتجات النشطة في النظام"
-          icon={CircleDollarSign}
-          iconClassName="bg-accent text-accent-foreground"
-        />
-      </div>
+      <DashboardWelcomeHero />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">إجراءات سريعة</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            {quickLinks.map((link) => (
-              <Button key={link.href} asChild variant="outline" className="rounded-xl">
-                <Link href={link.href}>{link.label}</Link>
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
+      <DashboardQuickActions />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">آخر النشاط</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BrandedEmptyState
-              title="لا توجد بيانات حالياً"
-              description={`ابدأ بإضافة أول صنف في ${BRAND_NAME_AR} لمتابعة النشاط هنا`}
-              className="min-h-40 border-none bg-transparent p-4"
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <section aria-labelledby="dashboard-kpi-title" className="space-y-4">
+        <h2 id="dashboard-kpi-title" className="sr-only">
+          مؤشرات الأداء
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <StatCard
+            title="قيمة المخزون"
+            value="—"
+            description="إجمالي قيمة الأصناف والمنتجات"
+            icon={Package}
+            iconClassName="bg-primary/10 text-primary"
+          />
+          <StatCard
+            title="مبيعات اليوم"
+            value="—"
+            description="إجمالي مبيعات اليوم الحالي"
+            icon={ShoppingBag}
+            iconClassName="bg-chart-2/15 text-amber-700"
+          />
+          <StatCard
+            title="أرباح الشهر"
+            value="—"
+            description="صافي الأرباح للشهر الجاري"
+            icon={TrendingUp}
+            iconClassName="bg-success/10 text-success"
+          />
+          <StatCard
+            title="المصاريف"
+            value="—"
+            description="مصاريف التشغيل للفترة الحالية"
+            icon={Banknote}
+            iconClassName="bg-destructive/10 text-destructive"
+          />
+          <StatCard
+            title="رصيد الصندوق"
+            value="—"
+            description="الرصيد الحالي للصندوق"
+            icon={Wallet}
+            iconClassName="bg-warning/10 text-amber-700"
+          />
+          <StatCard
+            title="عدد المنتجات"
+            value="—"
+            description="المنتجات النشطة في النظام"
+            icon={CircleDollarSign}
+            iconClassName="bg-accent text-accent-foreground"
+          />
+        </div>
+      </section>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">آخر النشاط</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BrandedEmptyState
+            title="لا توجد بيانات حالياً"
+            description={`ابدأ بإضافة أول صنف في ${BRAND_NAME_AR} لمتابعة النشاط هنا`}
+            className="min-h-36 border-none bg-transparent p-2"
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

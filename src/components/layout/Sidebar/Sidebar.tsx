@@ -81,13 +81,15 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
           </Button>
         </div>
 
-        <UserProfile
-          name={user?.name}
-          avatar={user?.avatar_url}
-          role={user?.role}
-          isLoading={isLoading}
-          collapsed={collapsed}
-        />
+        <div className="md:pt-2">
+          <UserProfile
+            name={user?.name}
+            avatar={user?.avatar_url}
+            role={user?.role}
+            isLoading={isLoading}
+            collapsed={collapsed}
+          />
+        </div>
 
         <nav className={cn("flex-1 overflow-y-auto p-3", collapsed ? "space-y-3" : "space-y-4")}>
           {menuSectionOrder.map((section) => {
