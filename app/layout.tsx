@@ -3,6 +3,7 @@ import { Tajawal, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AppStatusProviders } from '@/src/components/status'
+import { BRAND_LOGO_PATH, BRAND_METADATA } from '@/lib/brand'
 import './globals.css'
 
 const tajawal = Tajawal({ 
@@ -18,13 +19,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'نظام إدارة محمصة الصفا',
-  description: 'نظام إدارة محمصة الصفا',
-  // TODO: Replace icons with Al Safa Roastery branding
+  title: {
+    default: BRAND_METADATA.title,
+    template: BRAND_METADATA.titleTemplate,
+  },
+  description: BRAND_METADATA.description,
+  applicationName: BRAND_METADATA.openGraph.siteName,
   icons: {
-    icon: [{ url: '/brain-lab2.png', type: 'image/png', sizes: 'any' }],
-    shortcut: '/brain-lab2.png',
-    apple: '/brain-lab2.png',
+    icon: [{ url: BRAND_LOGO_PATH, type: 'image/png', sizes: 'any' }],
+    shortcut: BRAND_LOGO_PATH,
+    apple: BRAND_LOGO_PATH,
+  },
+  openGraph: {
+    title: BRAND_METADATA.openGraph.title,
+    description: BRAND_METADATA.openGraph.description,
+    siteName: BRAND_METADATA.openGraph.siteName,
+    locale: BRAND_METADATA.openGraph.locale,
+    type: 'website',
   },
 }
 

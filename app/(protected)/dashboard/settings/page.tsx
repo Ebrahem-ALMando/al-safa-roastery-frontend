@@ -146,7 +146,7 @@ export default function SettingsPage() {
            
             </h1>
             <p className="max-w-2xl text-pretty text-muted-foreground sm:text-base">
-              ضبط بيانات الملف الشخصي،المختبر، الإشعارات والمظهر — التغييرات
+              ضبط بيانات الملف الشخصي، المحمصة، الإشعارات والمظهر — التغييرات
               المرتبطة بالشريط الجانبي والحركة تُطبَّق مباشرة على لوحة التحكم.
             </p>
           </div>
@@ -168,7 +168,7 @@ export default function SettingsPage() {
             className="gap-2 rounded-xl py-2.5 data-[state=active]:border-teal-500/30 data-[state=active]:bg-teal-50 data-[state=active]:shadow-sm dark:data-[state=active]:bg-teal-950/50"
           >
             <Building className="size-4 shrink-0" />
-            المختبر
+            المحمصة
           </TabsTrigger>
         
           <TabsTrigger
@@ -193,7 +193,7 @@ export default function SettingsPage() {
               <CardHeader className="space-y-1 text-right">
                 <CardTitle className="flex items-center  gap-2 text-lg">
                   <Building className="size-5 text-teal-600 dark:text-teal-400" />
-                  معلومات المختبر
+                  معلومات المحمصة
                 </CardTitle>
                 <CardDescription className="text-pretty">
                   البيانات الأساسية التي تظهر في التقارير والوثائق الرسمية
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="labName" className="text-right">
-                      اسم المختبر
+                      اسم المحمصة
                     </Label>
                     <Input
                       id="labName"
@@ -293,7 +293,7 @@ export default function SettingsPage() {
                     className="rounded-xl px-6"
                     onClick={() => {
                       writeLabProfile(lab)
-                      toast.success("تم حفظ بيانات المختبر")
+                      toast.success("تم حفظ بيانات المحمصة")
                     }}
                   >
                     حفظ التغييرات

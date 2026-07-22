@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Medical Laboratory Color System */
+/* Al Safa Roastery — Brand color system */
 :root {
   /* Core backgrounds */
   --background: oklch(0.99 0.002 220);
@@ -19,17 +19,17 @@
   --primary: oklch(0.55 0.15 230);
   --primary-foreground: oklch(0.99 0 0);
   
-  /* Secondary - Soft Teal */
-  --secondary: oklch(0.92 0.03 185);
-  --secondary-foreground: oklch(0.35 0.08 185);
+  /* Secondary - Premium Gold */
+  --secondary: oklch(0.94 0.04 85);
+  --secondary-foreground: oklch(0.38 0.10 75);
   
   /* Muted surfaces */
   --muted: oklch(0.96 0.01 220);
   --muted-foreground: oklch(0.50 0.02 230);
   
-  /* Accent - Light Teal */
-  --accent: oklch(0.88 0.06 185);
-  --accent-foreground: oklch(0.30 0.08 185);
+  /* Accent - Warm Gold */
+  --accent: oklch(0.90 0.06 85);
+  --accent-foreground: oklch(0.32 0.08 75);
   
   /* Success - Medical Green */
   --success: oklch(0.70 0.15 155);
@@ -50,7 +50,7 @@
   
   /* Charts - Medical themed */
   --chart-1: oklch(0.55 0.15 230);
-  --chart-2: oklch(0.65 0.12 185);
+  --chart-2: oklch(0.72 0.11 85);
   --chart-3: oklch(0.70 0.15 155);
   --chart-4: oklch(0.75 0.10 75);
   --chart-5: oklch(0.60 0.18 25);
@@ -82,15 +82,15 @@
   --primary: oklch(0.65 0.15 230);
   --primary-foreground: oklch(0.15 0.02 230);
   
-  /* Secondary - Soft Teal */
-  --secondary: oklch(0.30 0.05 185);
-  --secondary-foreground: oklch(0.85 0.06 185);
+  /* Secondary - Premium Gold */
+  --secondary: oklch(0.32 0.05 85);
+  --secondary-foreground: oklch(0.88 0.06 85);
   
   --muted: oklch(0.26 0.02 240);
   --muted-foreground: oklch(0.70 0.02 220);
   
-  --accent: oklch(0.32 0.05 185);
-  --accent-foreground: oklch(0.85 0.06 185);
+  --accent: oklch(0.34 0.06 85);
+  --accent-foreground: oklch(0.88 0.06 85);
   
   /* Success - Medical Green */
   --success: oklch(0.65 0.15 155);
@@ -109,7 +109,7 @@
   
   /* Charts */
   --chart-1: oklch(0.65 0.15 230);
-  --chart-2: oklch(0.70 0.12 185);
+  --chart-2: oklch(0.75 0.10 85);
   --chart-3: oklch(0.65 0.15 155);
   --chart-4: oklch(0.75 0.10 75);
   --chart-5: oklch(0.55 0.18 25);
@@ -226,13 +226,28 @@ body[data-scroll-locked] {
   ::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50;
   }
+
+  .page-enter {
+    animation: page-fade-in 0.35s ease-out both;
+  }
+
+  @keyframes page-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 /* تقليل الحركات عند تعطيلها من الإعدادات (dataset على html) */
-html[data-lab-motion="reduce"] :where(*) {
+html[data-app-motion="reduce"] :where(*) {
   scroll-behavior: auto !important;
 }
-html[data-lab-motion="reduce"] :where(*):not(.lab-preserve-motion) {
+html[data-app-motion="reduce"] :where(*):not(.preserve-motion) {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 60ms !important;
@@ -344,7 +359,7 @@ html[data-lab-motion="reduce"] :where(*):not(.lab-preserve-motion) {
    * إزاحة مساحة الطباعة فوق واجهة الـ dashboard عند الطباعة من الصفحة المحمية.
    * لا تُطبَّق على /print/report حيث الغلاف بسيط — وإلا يُفسد الارتفاع ويُفرغ صفحة كاملة.
    */
-  body:has([data-lab-app-shell]):has(#report-print-surface) #report-print-surface {
+  body:has([data-app-shell]):has(#report-print-surface) #report-print-surface {
     position: absolute;
     left: 0;
     top: 0;

@@ -1,18 +1,18 @@
 'use client'
 
 import * as React from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Moon, Printer, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { BrandLogo } from '@/components/branding/BrandLogo'
 import { Button } from '@/components/ui/button'
-import { LAB_LOGO_PATH } from '@/lib/lab-brand'
+import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/lib/brand'
 
-const LAB_NAME =
-  process.env.NEXT_PUBLIC_LAB_DISPLAY_NAME_AR ?? 'مختبر التحاليل الطبية'
+const DISPLAY_NAME_AR =
+  process.env.NEXT_PUBLIC_BRAND_NAME_AR ?? BRAND_NAME_AR
 
-const LAB_NAME_EN =
-  process.env.NEXT_PUBLIC_LAB_DISPLAY_NAME_EN ?? 'Medical Laboratory'
+const DISPLAY_NAME_EN =
+  process.env.NEXT_PUBLIC_BRAND_NAME_EN ?? BRAND_NAME_EN
 
 export function VerifyHeader() {
   const { theme, setTheme } = useTheme()
@@ -34,22 +34,13 @@ export function VerifyHeader() {
           href="/"
           className="group flex min-w-0 items-center gap-3 text-white print:text-foreground"
         >
-          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-white/30 bg-white p-0.5 print:border-border print:bg-white">
-            <Image
-              src={LAB_LOGO_PATH}
-              alt=""
-              width={36}
-              height={36}
-              className="object-contain"
-              priority
-            />
-          </div>
+          <BrandLogo variant="sidebar" className="border-white/30 print:border-border" priority />
           <div className="min-w-0 text-right leading-tight">
             <p className="truncate text-sm font-bold tracking-tight sm:text-[15px]">
-              {LAB_NAME}
+              {DISPLAY_NAME_AR}
             </p>
             <p className="truncate text-[10px] font-medium tracking-widest text-white/85 print:text-muted-foreground">
-              {LAB_NAME_EN.toUpperCase()}
+              {DISPLAY_NAME_EN.toUpperCase()}
             </p>
             <p className="mt-0.5 truncate text-[10px] text-white/75 print:text-muted-foreground">
               بوابة التحقق الرسمية

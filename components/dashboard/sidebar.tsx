@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
 import {
   LayoutDashboard,
   Users,
@@ -17,7 +16,8 @@ import {
   ChevronRight,
   FolderTree,
 } from "lucide-react"
-import { LAB_LOGO_PATH } from "@/lib/lab-brand"
+import { BrandLogo } from "@/components/branding/BrandLogo"
+import { BRAND_NAME_AR, BRAND_TAGLINE_AR } from "@/lib/brand"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -149,36 +149,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               transition={{ duration: 0.2 }}
               className="flex items-center gap-3"
             >
-              <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm dark:bg-white">
-                <Image
-                  src={LAB_LOGO_PATH}
-                  alt=""
-                  width={40}
-                  height={40}
-                  className="object-contain p-1"
-                  priority
-                />
-              </div>
+              <BrandLogo variant="sidebar" priority />
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-sidebar-foreground">محمصة الصفا</span>
-                <span className="text-xs text-muted-foreground">نظام إدارة</span>
+                <span className="text-sm font-bold text-sidebar-foreground">{BRAND_NAME_AR}</span>
+                <span className="text-xs text-muted-foreground">{BRAND_TAGLINE_AR}</span>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         
-        {collapsed && (
-          <div className="relative mx-auto flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm dark:bg-white">
-            <Image
-              src={LAB_LOGO_PATH}
-              alt=""
-              width={40}
-              height={40}
-              className="object-contain p-1"
-              priority
-            />
-          </div>
-        )}
+        {collapsed && <BrandLogo variant="sidebar" className="mx-auto" priority />}
       </div>
 
       {/* Navigation */}

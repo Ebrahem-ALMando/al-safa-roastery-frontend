@@ -3,6 +3,23 @@ import type { NextRequest } from "next/server"
 
 const ACCESS_COOKIE = "access_token"
 
+/** Legacy lab modules hidden from the roastery ERP — redirect to dashboard */
+const LEGACY_LAB_ROUTE_PREFIXES = [
+  "/dashboard/patients",
+  "/dashboard/orders",
+  "/dashboard/results",
+  "/dashboard/categories",
+  "/dashboard/tests",
+  "/dashboard/barcode-test",
+  "/dashboard/barcode-scan-test",
+] as const
+
+function isLegacyLabRoute(pathname: string): boolean {
+  return LEGACY_LAB_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
+}
+
 /**
  * Public paths: no session required. All other app paths require `access_token`
  * (opt-out model — new top-level routes stay protected by default).
@@ -36,6 +53,10 @@ export function proxy(request: NextRequest) {
     const login = new URL("/login", request.url)
     login.searchParams.set("from", original)
     return NextResponse.redirect(login)
+  }
+
+  if (isLegacyLabRoute(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   return NextResponse.next()

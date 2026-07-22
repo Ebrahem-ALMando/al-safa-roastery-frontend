@@ -48,7 +48,7 @@ export function Topbar({ sidebarCollapsed }: TopbarProps) {
         <Search className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="بحث عن مريض أو طلب..."
+          placeholder="بحث في النظام..."
           className="h-10 w-full rounded-xl border-muted bg-muted/50 pr-10 text-sm placeholder:text-muted-foreground focus:bg-background"
         />
       </div>
@@ -112,13 +112,13 @@ export function Topbar({ sidebarCollapsed }: TopbarProps) {
           <DropdownMenuTrigger asChild>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button variant="ghost" className="gap-3 rounded-xl px-2">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium">د. مهران قهواتي</p>
-                  <p className="text-xs text-muted-foreground">مدير المختبر</p>
+                <div className="hidden text-right sm:block">
+                  <p className="text-sm font-medium">مدير النظام</p>
+                  <p className="text-xs text-muted-foreground">محمصة الصفا</p>
                 </div>
                 <Avatar className="size-9">
-                  <AvatarImage src="/doctor.png" alt="المستخدم" />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">مق</AvatarFallback>
+                  <AvatarImage src="/logo.png" alt="المستخدم" />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">ص</AvatarFallback>
                 </Avatar>
               </Button>
             </motion.div>

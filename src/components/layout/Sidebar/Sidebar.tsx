@@ -1,17 +1,19 @@
 "use client"
 
 import { useMemo } from "react"
-import Image from "next/image"
-import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, LogOut, X } from "lucide-react"
 import { useAuth, useAuthActions } from "@/src/features/auth"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { UserProfile } from "../UserProfile"
-import { menuItems } from "./menuItems"
+import {
+  menuItems,
+  menuSectionLabels,
+  menuSectionOrder,
+  type MenuSection,
+} from "./menuItems"
 import { SidebarItem } from "./SidebarItem"
-import { LAB_LOGO_PATH } from "@/lib/lab-brand"
 
 interface SidebarProps {
   isOpen: boolean
@@ -20,7 +22,12 @@ interface SidebarProps {
   onToggleCollapse: () => void
 }
 
-function isItemActive(pathname: string, href: string, matchPrefix?: boolean, excludedPrefixes: readonly string[] = []) {
+function isItemActive(
+  pathname: string,
+  href: string,
+  matchPrefix?: boolean,
+  excludedPrefixes: readonly string[] = []
+) {
   if (excludedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
     return false
   }
@@ -34,17 +41,19 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
   const { user, isLoading } = useAuth()
   const { logout } = useAuthActions()
 
-  const visibleItems = useMemo(() => {
-    const role = user?.role
-    return menuItems.filter((item) => !item.hiddenForRoles?.includes(role ?? ""))
-  }, [user?.role])
-
   const grouped = useMemo(() => {
-    return {
-      main: visibleItems.filter((item) => item.section === "main"),
-      management: visibleItems.filter((item) => item.section !== "main"),
-    }
-  }, [visibleItems])
+    const role = user?.role
+    const visibleItems = menuItems.filter((item) => !item.hiddenForRoles?.includes(role ?? ""))
+
+    return menuSectionOrder.reduce(
+      (acc, section) => {
+        const items = visibleItems.filter((item) => item.section === section)
+        if (items.length > 0) acc[section] = items
+        return acc
+      },
+      {} as Partial<Record<MenuSection, typeof menuItems>>
+    )
+  }, [user?.role])
 
   return (
     <>
@@ -52,51 +61,25 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
         <button
           type="button"
           aria-label="إغلاق القائمة"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] transition-opacity md:hidden"
           onClick={onClose}
         />
       ) : null}
 
       <aside
         className={cn(
-          "fixed right-0 top-0 z-40 flex h-dvh flex-col border-l border-sidebar-border bg-sidebar transition-all duration-300 print:hidden",
+          "fixed right-0 top-0 z-40 flex h-dvh flex-col border-l border-sidebar-border bg-sidebar shadow-lg transition-all duration-300 ease-out print:hidden",
           collapsed ? "md:w-20" : "md:w-[260px]",
           "w-[260px]",
           isOpen ? "translate-x-0" : "translate-x-full",
           "md:translate-x-0"
         )}
       >
-        <div className={cn("flex items-center border-b border-sidebar-border p-3 md:hidden", collapsed ? "justify-center" : "justify-end")}>
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose}>
+        <div className="flex items-center justify-end border-b border-sidebar-border p-2 md:hidden">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="إغلاق القائمة">
             <X className="h-4 w-4" />
           </Button>
         </div>
-
-        {/* <div
-          className={cn(
-            "border-b border-sidebar-border px-3 py-2.5",
-            collapsed ? "flex justify-center" : "flex justify-center md:justify-start"
-          )}
-        >
-          <Link
-            href="/dashboard"
-            className={cn(
-              "flex items-center gap-2.5 rounded-xl border border-sidebar-border/80 bg-white/90 p-1.5 shadow-sm transition-colors hover:bg-white dark:bg-white/95 dark:hover:bg-white",
-              collapsed ? "justify-center" : "w-full max-w-full"
-            )}
-            onClick={onClose}
-          >
-            <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-              <Image src={LAB_LOGO_PATH} alt="" width={36} height={36} className="object-contain" priority />
-            </span>
-            {!collapsed ? (
-              <span className="min-w-0 flex-1 text-right leading-tight">
-                <span className="block truncate text-[13px] font-bold text-sidebar-foreground">مختبر التحاليل الطبية</span>
-                <span className="block truncate text-[10px] font-medium text-muted-foreground">نظام الإدارة</span>
-              </span>
-            ) : null}
-          </Link>
-        </div> */}
 
         <UserProfile
           name={user?.name}
@@ -106,39 +89,38 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
           collapsed={collapsed}
         />
 
-        <nav className={cn("flex-1 overflow-y-auto p-3", collapsed ? "space-y-4" : "space-y-5")}>
-          <div className="space-y-1">
-            {grouped.main.map((item) => (
-              <SidebarItem
-                key={item.id}
-                href={item.href}
-                label={item.label}
-                icon={item.icon}
-                isActive={isItemActive(pathname, item.href, item.matchPrefix, item.excludedPrefixes)}
-                collapsed={collapsed}
-                onNavigate={onClose}
-              />
-            ))}
-          </div>
+        <nav className={cn("flex-1 overflow-y-auto p-3", collapsed ? "space-y-3" : "space-y-4")}>
+          {menuSectionOrder.map((section) => {
+            const items = grouped[section]
+            if (!items?.length) return null
 
-          {grouped.management.length > 0 ? (
-            <div className="space-y-1">
-              {!collapsed ? (
-                <p className="px-3 text-[11px] font-semibold text-muted-foreground">الإدارة</p>
-              ) : null}
-              {grouped.management.map((item) => (
-                <SidebarItem
-                  key={item.id}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  isActive={isItemActive(pathname, item.href, item.matchPrefix, item.excludedPrefixes)}
-                  collapsed={collapsed}
-                  onNavigate={onClose}
-                />
-              ))}
-            </div>
-          ) : null}
+            return (
+              <div key={section} className="space-y-1">
+                {!collapsed ? (
+                  <p className="px-3 pb-1 text-[11px] font-semibold text-muted-foreground">
+                    {menuSectionLabels[section]}
+                  </p>
+                ) : null}
+                {items.map((item) => (
+                  <SidebarItem
+                    key={item.id}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    isActive={isItemActive(
+                      pathname,
+                      item.href,
+                      item.matchPrefix,
+                      item.excludedPrefixes
+                    )}
+                    collapsed={collapsed}
+                    onNavigate={onClose}
+                    comingSoon={item.comingSoon}
+                  />
+                ))}
+              </div>
+            )
+          })}
         </nav>
 
         <div className="border-t border-sidebar-border p-3">

@@ -1,12 +1,13 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Metadata } from "next"
+import { BRAND_METADATA } from "@/lib/brand"
 
 const ACCESS = "access_token"
 
 export const metadata: Metadata = {
-  title: "تسجيل الدخول | نظام إدارة المختبرات",
-  description: "بوابة دخول آمنة لنظام إدارة المختبرات الطبية",
+  title: "تسجيل الدخول",
+  description: `بوابة دخول آمنة إلى ${BRAND_METADATA.title}`,
   robots: { index: false, follow: false },
 }
 

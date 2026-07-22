@@ -18,7 +18,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <LabCatalogProvider>
       <GlobalBarcodeScannerListener />
-      <div className="h-dvh overflow-hidden bg-background" data-lab-app-shell>
+      <div className="h-dvh overflow-hidden bg-background" data-app-shell>
         <Sidebar
           isOpen={mobileSidebarOpen}
           onClose={() => setMobileSidebarOpen(false)}
@@ -33,7 +33,7 @@ export function AppShell({ children }: AppShellProps) {
           )}
         >
           <Header onMenuToggle={() => setMobileSidebarOpen((prev) => !prev)} />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+          <main className="page-enter flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
         </div>
       </div>
     </LabCatalogProvider>

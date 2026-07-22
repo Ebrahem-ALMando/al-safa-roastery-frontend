@@ -1,6 +1,6 @@
-import Image from "next/image"
 import { ShieldCheck } from "lucide-react"
-import { LAB_LOGO_PATH } from "@/lib/lab-brand"
+import { BrandLogo } from "@/components/branding/BrandLogo"
+import { BRAND_SYSTEM_TITLE_AR } from "@/lib/brand"
 import { LoginForm } from "@/components/auth/LoginForm"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import {
@@ -30,7 +30,7 @@ export default async function LoginPage({
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-20 -left-32 h-72 w-72 rounded-full bg-chart-2/15 blur-3xl dark:bg-chart-2/10"
+        className="pointer-events-none absolute -bottom-20 -left-32 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl"
         aria-hidden
       />
       <div
@@ -41,22 +41,13 @@ export default async function LoginPage({
       <ThemeToggle />
 
       <div className="relative z-10 mx-auto flex min-h-svh max-w-6xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md page-enter">
           <header className="mb-10 text-center">
-            <div
-              className="mx-auto mb-6 flex size-20 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-white p-2 shadow-md ring-1 ring-primary/5 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg dark:bg-white"
-            >
-              <Image
-                src={LAB_LOGO_PATH}
-                alt=""
-                width={72}
-                height={72}
-                className="object-contain"
-                priority
-              />
+            <div className="mx-auto mb-6 transition-all duration-300 ease-out hover:-translate-y-0.5">
+              <BrandLogo variant="login" priority />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              نظام إدارة محمصة الصفا
+              {BRAND_SYSTEM_TITLE_AR}
             </h1>
             <p className="mt-2 text-balance text-sm leading-relaxed text-muted-foreground sm:text-base">
               تسجيل الدخول إلى نظام محمصة الصفا
@@ -67,7 +58,7 @@ export default async function LoginPage({
             <CardHeader className="space-y-2 pb-2 text-right">
               <CardTitle className="text-xl font-semibold">تسجيل الدخول</CardTitle>
               <CardDescription className="text-pretty text-sm">
-                أدخل اسم المستخدم وكلمة المرور المعتمدة لدى المختبر
+                أدخل اسم المستخدم وكلمة المرور المعتمدة لدى محمصة الصفا
               </CardDescription>
             </CardHeader>
             <CardContent>

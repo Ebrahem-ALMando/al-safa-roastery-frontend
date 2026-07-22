@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { VerifyView } from '@/components/verify/verify-view'
+import { BRAND_NAME_AR } from '@/lib/brand'
 import { getLabApiBase } from '@/lib/lab-api'
 import type { VerifyOrderPayload } from '@/lib/verify-types'
 
@@ -20,8 +21,8 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { order_number } = await params
   return {
-    title: `التحقق من الطلب ${decodeURIComponent(order_number)} | مختبر التحاليل`,
-    description: 'التحقق من صحة تقرير التحاليل الطبية',
+    title: `التحقق من الطلب ${decodeURIComponent(order_number)} | ${BRAND_NAME_AR}`,
+    description: `التحقق من صحة الوثائق — ${BRAND_NAME_AR}`,
   }
 }
 

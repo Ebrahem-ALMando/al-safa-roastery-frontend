@@ -11,6 +11,7 @@ interface SidebarItemProps {
   isActive?: boolean
   collapsed?: boolean
   onNavigate?: () => void
+  comingSoon?: boolean
 }
 
 export function SidebarItem({
@@ -20,6 +21,7 @@ export function SidebarItem({
   isActive = false,
   collapsed = false,
   onNavigate,
+  comingSoon = false,
 }: SidebarItemProps) {
   return (
     <Link
@@ -54,7 +56,16 @@ export function SidebarItem({
         <Icon className="relative h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
       </div>
 
-      {!collapsed ? <span className="flex-1 truncate text-sm">{label}</span> : null}
+      {!collapsed ? (
+        <span className="flex flex-1 items-center gap-2 truncate text-sm">
+          <span className="truncate">{label}</span>
+          {comingSoon ? (
+            <span className="shrink-0 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+              قريباً
+            </span>
+          ) : null}
+        </span>
+      ) : null}
 
       {collapsed ? (
         <span className="pointer-events-none absolute right-full top-1/2 z-50 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md group-hover:block">

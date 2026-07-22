@@ -1,37 +1,67 @@
 import {
+  ArrowLeftRight,
+  Banknote,
   BarChart3,
   BookOpenText,
-  ClipboardList,
-  ClipboardPenLine,
-  FolderTree,
+  CreditCard,
   Factory,
-  History,
   LayoutDashboard,
   Package,
   PackageCheck,
-  Warehouse,
-  ScanBarcode,
-  ScanLine,
+  Receipt,
+  RotateCcw,
   Settings,
   ShoppingCart,
-  TestTubes,
+  TrendingUp,
   Truck,
+  UserCog,
   Users,
   Wallet,
+  Warehouse,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
-export type UserRole = "admin" | "staff" | "lab_manager" | "technician" | string
+export type UserRole = "admin" | "staff" | "manager" | string
+
+export type MenuSection =
+  | "main"
+  | "admin"
+  | "inventory"
+  | "operations"
+  | "finance"
+  | "reports"
+  | "settings"
+
+export const menuSectionLabels: Record<MenuSection, string> = {
+  main: "الرئيسية",
+  admin: "الإدارة",
+  inventory: "المخزون",
+  operations: "التشغيل",
+  finance: "المالية",
+  reports: "التقارير",
+  settings: "الإعدادات",
+}
+
+export const menuSectionOrder: readonly MenuSection[] = [
+  "main",
+  "admin",
+  "inventory",
+  "operations",
+  "finance",
+  "reports",
+  "settings",
+]
 
 export interface MenuItem {
   id: string
   label: string
   href: string
   icon: LucideIcon
-  section?: "main" | "management"
+  section: MenuSection
   matchPrefix?: boolean
   excludedPrefixes?: readonly string[]
   hiddenForRoles?: UserRole[]
+  comingSoon?: boolean
 }
 
 export const menuItems: readonly MenuItem[] = [
@@ -47,31 +77,32 @@ export const menuItems: readonly MenuItem[] = [
     label: "الموردون",
     href: "/dashboard/suppliers",
     icon: Truck,
-    section: "management",
+    section: "admin",
     matchPrefix: true,
   },
   {
     id: "customers",
-    label: "الزبائن",
+    label: "العملاء",
     href: "/dashboard/customers",
     icon: Users,
-    section: "management",
+    section: "admin",
     matchPrefix: true,
   },
   {
-    id: "statements",
-    label: "كشوف الحساب",
-    href: "/dashboard/statements",
-    icon: BookOpenText,
-    section: "management",
+    id: "employees",
+    label: "الموظفون",
+    href: "/dashboard/employees",
+    icon: UserCog,
+    section: "admin",
     matchPrefix: true,
+    comingSoon: true,
   },
   {
     id: "items",
     label: "الأصناف",
     href: "/dashboard/items",
     icon: Package,
-    section: "management",
+    section: "inventory",
     matchPrefix: true,
   },
   {
@@ -79,32 +110,15 @@ export const menuItems: readonly MenuItem[] = [
     label: "المنتجات",
     href: "/dashboard/products",
     icon: PackageCheck,
-    section: "management",
-    matchPrefix: true,
-  },
-  {
-    id: "inventory",
-    label: "المستودع",
-    href: "/dashboard/inventory",
-    icon: Warehouse,
-    section: "management",
-    matchPrefix: true,
-    excludedPrefixes: ["/dashboard/inventory/movements"],
-  },
-  {
-    id: "production",
-    label: "الإنتاج",
-    href: "/dashboard/production",
-    icon: Factory,
-    section: "management",
+    section: "inventory",
     matchPrefix: true,
   },
   {
     id: "inventory-movements",
-    label: "حركات المستودع",
+    label: "حركة المخزون",
     href: "/dashboard/inventory/movements",
-    icon: History,
-    section: "management",
+    icon: ArrowLeftRight,
+    section: "inventory",
     matchPrefix: true,
   },
   {
@@ -112,55 +126,67 @@ export const menuItems: readonly MenuItem[] = [
     label: "المشتريات",
     href: "/dashboard/purchases",
     icon: ShoppingCart,
-    section: "management",
+    section: "operations",
     matchPrefix: true,
+  },
+  {
+    id: "production",
+    label: "الإنتاج",
+    href: "/dashboard/production",
+    icon: Factory,
+    section: "operations",
+    matchPrefix: true,
+  },
+  {
+    id: "sales",
+    label: "المبيعات",
+    href: "/dashboard/sales",
+    icon: Receipt,
+    section: "operations",
+    matchPrefix: true,
+    comingSoon: true,
+  },
+  {
+    id: "returns",
+    label: "المرتجعات",
+    href: "/dashboard/returns",
+    icon: RotateCcw,
+    section: "operations",
+    matchPrefix: true,
+    comingSoon: true,
   },
   {
     id: "cashbox",
     label: "الصندوق",
     href: "/dashboard/cashbox",
     icon: Wallet,
-    section: "management",
+    section: "finance",
     matchPrefix: true,
   },
   {
-    id: "patients",
-    label: "المرضى",
-    href: "/dashboard/patients",
-    icon: Users,
-    section: "management",
+    id: "expenses",
+    label: "المصاريف",
+    href: "/dashboard/expenses",
+    icon: Banknote,
+    section: "finance",
     matchPrefix: true,
+    comingSoon: true,
   },
   {
-    id: "orders",
-    label: "طلبات التحاليل",
-    href: "/dashboard/orders",
-    icon: ClipboardList,
-    section: "management",
+    id: "payments",
+    label: "الدفعات",
+    href: "/dashboard/payments",
+    icon: CreditCard,
+    section: "finance",
     matchPrefix: true,
+    comingSoon: true,
   },
   {
-    id: "results",
-    label: "إدخال النتائج",
-    href: "/dashboard/results",
-    icon: ClipboardPenLine,
-    section: "management",
-    matchPrefix: true,
-  },
-  {
-    id: "categories",
-    label: "تصنيفات الفحوصات",
-    href: "/dashboard/categories",
-    icon: FolderTree,
-    section: "management",
-    matchPrefix: true,
-  },
-  {
-    id: "tests",
-    label: "إدارة الفحوصات",
-    href: "/dashboard/tests",
-    icon: TestTubes,
-    section: "management",
+    id: "statements",
+    label: "كشوف الحساب",
+    href: "/dashboard/statements",
+    icon: BookOpenText,
+    section: "finance",
     matchPrefix: true,
   },
   {
@@ -168,29 +194,47 @@ export const menuItems: readonly MenuItem[] = [
     label: "التقارير",
     href: "/dashboard/reports",
     icon: BarChart3,
-    section: "management",
+    section: "reports",
     matchPrefix: true,
+    excludedPrefixes: [
+      "/dashboard/reports/profits",
+      "/dashboard/reports/sales",
+      "/dashboard/reports/inventory",
+    ],
+  },
+  {
+    id: "reports-profits",
+    label: "الأرباح",
+    href: "/dashboard/reports/profits",
+    icon: TrendingUp,
+    section: "reports",
+    matchPrefix: true,
+    comingSoon: true,
+  },
+  {
+    id: "reports-sales",
+    label: "المبيعات",
+    href: "/dashboard/reports/sales",
+    icon: Receipt,
+    section: "reports",
+    matchPrefix: true,
+    comingSoon: true,
+  },
+  {
+    id: "reports-inventory",
+    label: "المخزون",
+    href: "/dashboard/reports/inventory",
+    icon: Warehouse,
+    section: "reports",
+    matchPrefix: true,
+    comingSoon: true,
   },
   {
     id: "settings",
     label: "الإعدادات",
     href: "/dashboard/settings",
     icon: Settings,
-    section: "management",
+    section: "settings",
     matchPrefix: true,
-  },
-  {
-    id: "barcode-test",
-    label: "تجربة الباركود",
-    href: "/dashboard/barcode-test",
-    icon: ScanBarcode,
-    section: "management",
-  },
-  {
-    id: "barcode-scan-test",
-    label: "تجربة قراءة الباركود",
-    href: "/dashboard/barcode-scan-test",
-    icon: ScanLine,
-    section: "management",
   },
 ]

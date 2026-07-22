@@ -47,9 +47,9 @@ export function readMotionEnabled(): boolean {
 export function applyMotionDataset(enabled: boolean) {
   if (typeof document === "undefined") return
   if (enabled) {
-    delete document.documentElement.dataset.labMotion
+    delete document.documentElement.dataset.appMotion
   } else {
-    document.documentElement.dataset.labMotion = "reduce"
+    document.documentElement.dataset.appMotion = "reduce"
   }
 }
 
@@ -112,11 +112,11 @@ export type LabProfile = {
 }
 
 export const defaultLabProfile: LabProfile = {
-  labName: "مختبر التحاليل الطبية",
+  labName: "محمصة الصفا",
   labPhone: "920012345",
-  labEmail: "info@lab.com",
-  labLicense: "LAB-12345-SA",
-  labAddress: "الرياض - حي النخيل - شارع الملك فهد",
+  labEmail: "info@alsafaroastery.com",
+  labLicense: "CR-12345-SA",
+  labAddress: "الرياض - المملكة العربية السعودية",
 }
 
 export function readLabProfile(): LabProfile {
@@ -147,10 +147,10 @@ export type AccountProfile = {
 }
 
 export const defaultAccountProfile: AccountProfile = {
-  userName: "د. مهران قهواتي",
-  userEmail: "ahmed@lab.com",
+  userName: "مدير النظام",
+  userEmail: "admin@alsafaroastery.com",
   userPhone: "0501234567",
-  userRole: "مدير المختبر",
+  userRole: "مدير المحمصة",
 }
 
 export function readAccountProfile(): AccountProfile {

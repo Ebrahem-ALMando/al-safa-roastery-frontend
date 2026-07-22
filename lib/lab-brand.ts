@@ -1,2 +1,2 @@
-/** شعار المختبر في `public/` — يُستخدم للتبويبات والشريط والدخول */
-export const LAB_LOGO_PATH = "/brain-lab.png" as const
+/** @deprecated Import from `@/lib/brand` instead */
+export { BRAND_LOGO_PATH as LAB_LOGO_PATH } from "./brand"

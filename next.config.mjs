@@ -18,7 +18,7 @@ const nextConfig = {
   },
   serverExternalPackages: ["puppeteer-core"],
   async redirects() {
-    return [{ source: "/favicon.ico", destination: "/brain-lab.png", permanent: false }]
+    return [{ source: "/favicon.ico", destination: "/logo.png", permanent: false }]
   },
 }
 
