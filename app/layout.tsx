@@ -7,6 +7,9 @@ import {
   BRAND_LOGO_ALT,
   BRAND_LOGO_PATH,
   BRAND_METADATA,
+  BRAND_OG_IMAGE_HEIGHT,
+  BRAND_OG_IMAGE_PATH,
+  BRAND_OG_IMAGE_WIDTH,
   getMetadataBaseUrl,
 } from '@/lib/brand'
 import './globals.css'
@@ -47,9 +50,9 @@ export const metadata: Metadata = {
     url: metadataBase,
     images: [
       {
-        url: BRAND_LOGO_PATH,
-        width: 512,
-        height: 512,
+        url: BRAND_OG_IMAGE_PATH,
+        width: BRAND_OG_IMAGE_WIDTH,
+        height: BRAND_OG_IMAGE_HEIGHT,
         alt: BRAND_LOGO_ALT,
         type: 'image/png',
       },
@@ -59,7 +62,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: BRAND_METADATA.openGraph.title,
     description: BRAND_METADATA.openGraph.description,
-    images: [BRAND_LOGO_PATH],
+    images: [BRAND_OG_IMAGE_PATH],
   },
 }
 

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Metadata } from "next"
-import { BRAND_LOGO_ALT, BRAND_LOGO_PATH, BRAND_METADATA } from "@/lib/brand"
+import { BRAND_LOGO_ALT, BRAND_METADATA, BRAND_OG_IMAGE_HEIGHT, BRAND_OG_IMAGE_PATH, BRAND_OG_IMAGE_WIDTH } from "@/lib/brand"
 
 const ACCESS = "access_token"
 
@@ -14,9 +14,9 @@ export const metadata: Metadata = {
     description: BRAND_METADATA.openGraph.description,
     images: [
       {
-        url: BRAND_LOGO_PATH,
-        width: 512,
-        height: 512,
+        url: BRAND_OG_IMAGE_PATH,
+        width: BRAND_OG_IMAGE_WIDTH,
+        height: BRAND_OG_IMAGE_HEIGHT,
         alt: BRAND_LOGO_ALT,
         type: "image/png",
       },
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    images: [BRAND_LOGO_PATH],
+    images: [BRAND_OG_IMAGE_PATH],
   },
 }
 

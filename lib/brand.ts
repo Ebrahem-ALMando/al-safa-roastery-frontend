@@ -1,6 +1,10 @@
 /** Official Al Safa Roastery branding — single source of truth */
 
 export const BRAND_LOGO_PATH = "/logo.png" as const
+/** Optimized share preview image (1200×630, ~120KB) — used for Open Graph / WhatsApp */
+export const BRAND_OG_IMAGE_PATH = "/og-image.png" as const
+export const BRAND_OG_IMAGE_WIDTH = 1200 as const
+export const BRAND_OG_IMAGE_HEIGHT = 630 as const
 export const BRAND_LOGO_ALT = "شعار محمصة الصفا" as const
 export const BRAND_NAME_AR = "محمصة الصفا" as const
 export const BRAND_NAME_EN = "Al Safa Roastery" as const
@@ -29,7 +33,7 @@ export function getMetadataBaseUrl(): string {
   return fromEnv
 }
 
-/** Full HTTPS URL to the logo for og:image / Twitter cards. */
+/** Full HTTPS URL to the share preview image for og:image / WhatsApp. */
 export function getBrandOgImageUrl(): string {
-  return `${getMetadataBaseUrl()}${BRAND_LOGO_PATH}`
+  return `${getMetadataBaseUrl()}${BRAND_OG_IMAGE_PATH}`
 }
