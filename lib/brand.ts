@@ -18,3 +18,18 @@ export const BRAND_METADATA = {
     locale: "ar_SA",
   },
 } as const
+
+/** Absolute site origin for Open Graph, canonical URLs, and share previews. */
+export function getMetadataBaseUrl(): string {
+  const fromEnv =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+
+  return fromEnv
+}
+
+/** Full HTTPS URL to the logo for og:image / Twitter cards. */
+export function getBrandOgImageUrl(): string {
+  return `${getMetadataBaseUrl()}${BRAND_LOGO_PATH}`
+}

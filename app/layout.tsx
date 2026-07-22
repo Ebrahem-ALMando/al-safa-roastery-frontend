@@ -3,8 +3,15 @@ import { Tajawal, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AppStatusProviders } from '@/src/components/status'
-import { BRAND_LOGO_PATH, BRAND_METADATA } from '@/lib/brand'
+import {
+  BRAND_LOGO_ALT,
+  BRAND_LOGO_PATH,
+  BRAND_METADATA,
+  getMetadataBaseUrl,
+} from '@/lib/brand'
 import './globals.css'
+
+const metadataBase = new URL(getMetadataBaseUrl())
 
 const tajawal = Tajawal({ 
   subsets: ["arabic", "latin"],
@@ -19,6 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase,
   title: {
     default: BRAND_METADATA.title,
     template: BRAND_METADATA.titleTemplate,
@@ -36,6 +44,22 @@ export const metadata: Metadata = {
     siteName: BRAND_METADATA.openGraph.siteName,
     locale: BRAND_METADATA.openGraph.locale,
     type: 'website',
+    url: metadataBase,
+    images: [
+      {
+        url: BRAND_LOGO_PATH,
+        width: 512,
+        height: 512,
+        alt: BRAND_LOGO_ALT,
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: BRAND_METADATA.openGraph.title,
+    description: BRAND_METADATA.openGraph.description,
+    images: [BRAND_LOGO_PATH],
   },
 }
 
